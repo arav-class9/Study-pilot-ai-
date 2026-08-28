@@ -1,0 +1,6 @@
+{
+  "name": "StudyPilot AI",
+  "description": "AI-powered study coach for students featuring step-by-step doubt solver, weakness radar, adaptive quizzes, notes generator, and personalized study planner.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

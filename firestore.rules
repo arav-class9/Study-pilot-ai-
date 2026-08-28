@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    match /profiles/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /subscriptions/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    match /usageLimits/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /quizAttempts/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    match /examAttempts/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    match /mistakes/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    match /weaknesses/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    match /studyPlans/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    match /studySessions/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    match /revisionItems/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    match /notes/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    match /aiConversations/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    match /aiMessages/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    match /bookmarks/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    match /achievements/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    match /notifications/{docId} {
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    
+    match /subjects/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /chapters/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /topics/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /questions/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
