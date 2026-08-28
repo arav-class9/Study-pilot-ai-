@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import {
   Flame,
   CheckCircle2,
@@ -23,6 +24,32 @@ import {
 import { SUBJECTS_META } from '../data/curriculum';
 import { RevisionSessionModal } from '../components/repetition/RevisionSessionModal';
 import { HandwrittenSolutionModal } from '../components/ai/HandwrittenSolutionModal';
+
+const PersonalizedGreeting: React.FC = () => {
+  const { user: authUser } = useAuth();
+  const displayName = authUser?.displayName || 'Student';
+  const [greeting, setGreeting] = useState('Welcome');
+
+  useEffect(() => {
+    const updateGreeting = () => {
+      const hour = new Date().getHours();
+      if (hour < 12) setGreeting('Good morning');
+      else if (hour < 17) setGreeting('Good afternoon');
+      else setGreeting('Good evening');
+    };
+    
+    updateGreeting();
+    // Optional: update every minute so it changes if the user leaves the tab open
+    const interval = setInterval(updateGreeting, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+      {greeting}, {displayName} 👋
+    </h1>
+  );
+};
 
 export const HomePage: React.FC = () => {
   const {
@@ -67,13 +94,6 @@ export const HomePage: React.FC = () => {
     setActiveTab('radar');
   };
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  };
-
   return (
     <div id="home-dashboard-page" className="space-y-6 pb-20 md:pb-8">
       {/* Top Greeting & Hero Card */}
@@ -87,9 +107,7 @@ export const HomePage: React.FC = () => {
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>Class {user.classLevel} {user.board} Curriculum Grounding</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-              {getGreeting()}, {user.name} 👋
-            </h1>
+            <PersonalizedGreeting />
             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
               Study smarter. Improve every day. Active learning loop: Learn → Practice → Detect Weaknesses → Revise & Master.
             </p>
