@@ -1,8 +1,9 @@
 import { generateContentWithRetry } from '../gemini.js';
 import { Type } from '@google/genai';
-import { verifyNumericalSolution } from './verification.js';
+import { verifyNumericalSolution, verifyMCQQuestion } from './verification.js';
+import { executeWithSafetyLayer } from './safety/aiQualityLayer.js';
 
-export interface SolveDoubtInput {
+export interface DoubtInput {
   questionText?: string;
   imageBase64?: string;
   imageMimeType?: string;
@@ -11,9 +12,8 @@ export interface SolveDoubtInput {
   chapter?: string;
 }
 
-export async function solveDoubt(input: SolveDoubtInput) {
-  const systemInstruction = `
-You are StudyPilot AI, an elite, patient, and pedagogical AI Academic Coach specializing in CBSE/NCERT, ICSE, IGCSE, and K-12 STEM & Humanities (Classes 6 to 12).
+export async function solveDoubt(input: DoubtInput) {
+  const systemInstruction = `You are StudyPilot AI, an elite, patient, and pedagogical AI Academic Coach specializing in CBSE/NCERT, ICSE, IGCSE, and K-12 STEM & Humanities (Classes 6 to 12).
 When solving academic questions for students:
 1. Identify the core underlying academic concept clearly.
 2. Explain the intuition before jumping into algebra/mechanics/equations.
@@ -23,32 +23,27 @@ When solving academic questions for students:
 6. If the uploaded image or text is blurry, truncated, or unreadable, set "unclearImageWarning": true and provide the exact message in conceptExplanation: "I can't read part of the question clearly. Please upload a clearer image."
 7. Highlight 1 or 2 common student mistakes/misconceptions for this topic.
 8. Provide 1 similar practice drill with a helpful hint and the final answer to reinforce learning.
-9. Ground the explanation strictly in rigorous curriculum standards.
-`;
+9. Ground the explanation strictly in rigorous curriculum standards.`;
 
-  const promptText = `
-Subject: ${input.subject || 'General Academic'}
+  const promptText = `Subject: ${input.subject || 'General Academic'}
 Target Class: Class ${input.classLevel || '10'}
 Chapter Reference: ${input.chapter || 'Curriculum'}
 Student Question / Problem:
 ${input.questionText || (input.imageBase64 ? 'Please analyze and solve the question in the attached image.' : 'Explain fundamental academic concepts')}
 
-Provide a structured, step-by-step educational solution for the student in valid JSON format.
-`;
+Provide a structured, step-by-step educational solution for the student in valid JSON format.`;
 
-  try {
+  const generator = async (validatedInput: DoubtInput) => {
     const contents: any = [];
-
-    if (input.imageBase64) {
-      const cleanBase64 = input.imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+    if (validatedInput.imageBase64) {
+      const cleanBase64 = validatedInput.imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
       contents.push({
         inlineData: {
-          mimeType: input.imageMimeType || 'image/jpeg',
+          mimeType: validatedInput.imageMimeType || 'image/jpeg',
           data: cleanBase64,
         },
       });
     }
-
     contents.push({
       text: promptText,
     });
@@ -122,81 +117,66 @@ Provide a structured, step-by-step educational solution for the student in valid
 
     const text = response.text?.trim() || '{}';
     const parsed = JSON.parse(text);
-
     if (parsed.unclearImageWarning) {
       parsed.conceptExplanation = "I can't read part of the question clearly. Please upload a clearer image.";
     }
-
-    // Apply verification layer
-    const verification = verifyNumericalSolution(parsed);
-    parsed.verificationStatus = verification.status;
-    parsed.verificationConfidence = verification.confidenceScore;
-    parsed.verificationMessage = verification.message;
+    
     parsed.source = {
-      sourceType: input.imageBase64 ? 'user_uploaded' : 'curriculum',
-      sourceTitle: input.chapter ? `Curriculum • ${input.chapter}` : `Curriculum • Class ${input.classLevel || '10'}`,
+      sourceType: validatedInput.imageBase64 ? 'user_uploaded' : 'curriculum',
+      sourceTitle: validatedInput.chapter ? `Curriculum • ${validatedInput.chapter}` : `Curriculum • Class ${validatedInput.classLevel || '10'}`,
     };
-
     return parsed;
-  } catch (error: any) {
-    console.error('Error in solveDoubt service:', error);
-    const fallbackSolution = {
+  };
+
+  const validator = (result: any) => {
+    return verifyNumericalSolution(result);
+  };
+
+  const safetyResult = await executeWithSafetyLayer(
+    { actionName: 'SolveDoubt', input },
+    generator,
+    validator
+  );
+
+  if (safetyResult.success && safetyResult.data) {
+    const finalData = safetyResult.data;
+    finalData.verificationStatus = safetyResult.status;
+    finalData.verificationConfidence = safetyResult.metadata.confidenceScore;
+    finalData.verificationMessage = safetyResult.status === 'verified' ? 'Verified by AI Verification Engine' : 'Needs review by student.';
+    return finalData;
+  } else {
+    // Fallback if AI Safety Layer rejects or fails entirely
+    console.error('Safety Layer Fallback triggered for solveDoubt');
+    return {
       question: input.questionText || 'Uploaded Academic Question',
       detectedSubject: input.subject || 'Science',
       detectedTopic: 'Core Principles',
-      concept: "Newton's Second Law & Momentum",
-      conceptExplanation: input.imageBase64 ? "I can't read part of the question clearly. Please upload a clearer image." : 'The rate of change of momentum of a body is directly proportional to the applied unbalanced force and takes place in the direction of the force.',
-      isNumerical: true,
+      concept: "System Error or Unsafe Request",
+      conceptExplanation: "The request could not be processed due to a timeout, safety violation, or system error. Please try again with a clearer question.",
+      isNumerical: false,
       unclearImageWarning: !!input.imageBase64,
-      numericalBreakdown: {
-        given: ['Mass (m) = 5 kg', 'Initial velocity (u) = 0 m/s', 'Final velocity (v) = 20 m/s', 'Time (t) = 4 s'],
-        formula: 'F = m × a, where a = (v - u) / t',
-        substitution: 'a = (20 - 0) / 4 = 5 m/s²; F = 5 × 5',
-        calculation: 'F = 25 N',
-        answer: '25',
-        unit: 'Newtons (N)',
-      },
       stepByStep: [
         {
           stepNumber: 1,
-          title: 'Extract Given Variables & Units',
-          explanation: 'Identify the mass m = 5 kg, initial velocity u = 0, final velocity v = 20 m/s, and duration t = 4 s.',
-          whyItWorks: 'Always check if all values are in standard SI units before applying formulas.',
-        },
-        {
-          stepNumber: 2,
-          title: 'Calculate Acceleration (a)',
-          explanation: 'Use the first equation of motion: a = (v - u) / t = (20 - 0) / 4 = 5 m/s².',
-          calculation: 'a = 5 m/s²',
-          whyItWorks: 'Acceleration measures the rate at which velocity changes per second.',
-        },
-        {
-          stepNumber: 3,
-          title: "Apply Newton's Second Law Formula",
-          explanation: 'Force is the product of mass and acceleration: F = m × a = 5 kg × 5 m/s² = 25 N.',
-          calculation: 'F = 25 N',
-          whyItWorks: 'According to Newton, force is directly proportional to mass times acceleration.',
-        },
+          title: 'Error Encountered',
+          explanation: safetyResult.error || 'The AI verification system blocked this request or failed.',
+          whyItWorks: 'Safety First',
+        }
       ],
-      finalAnswer: 'The required force acting on the body is 25 N.',
-      commonMistakes: [
-        'Forgetting to convert time from minutes to seconds or mass from grams to kilograms.',
-        'Confusing momentum (p = mv) with force (F = ma).',
-      ],
+      finalAnswer: 'Unable to resolve question.',
+      commonMistakes: [],
       similarPracticeQuestion: {
-        question: 'A constant force acts on an object of mass 4 kg, changing its velocity from 2 m/s to 14 m/s in 3 seconds. Find the magnitude of the force applied.',
-        hint: 'First find acceleration using a = (v - u) / t, then multiply by mass m.',
-        answer: 'Acceleration a = (14 - 2)/3 = 4 m/s². Force F = 4 kg × 4 m/s² = 16 N.',
+        question: 'Try asking a standard syllabus question.',
+        hint: 'N/A',
+        answer: 'N/A',
       },
-      verificationStatus: 'verified',
-      verificationConfidence: 95,
-      verificationMessage: 'Deterministically verified against curriculum physics syllabus.',
+      verificationStatus: safetyResult.status || 'verification_failed',
+      verificationConfidence: 0,
+      verificationMessage: safetyResult.error || 'Request failed.',
       source: {
-        sourceType: 'curriculum',
-        sourceTitle: 'Science • Laws of Motion',
+        sourceType: 'system',
+        sourceTitle: 'System Guardrail',
       },
     };
-    return fallbackSolution;
   }
 }
-

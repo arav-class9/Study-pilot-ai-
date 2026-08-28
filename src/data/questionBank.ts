@@ -15,6 +15,12 @@ export interface BankQuestion {
   explanation: string;
   concept: string;
   difficulty: DifficultyLevel;
+  questionType?: 'mcq' | 'numerical' | 'assertion_reason' | 'conceptual';
+  estimatedSolvingTimeSeconds?: number;
+  source?: string;
+  tags?: string[];
+  prerequisiteConcepts?: string[];
+  qualityStatus?: 'verified' | 'needs_review';
   hint?: string;
 }
 

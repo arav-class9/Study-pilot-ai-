@@ -21,8 +21,12 @@ export const db = getFirestore(app, import.meta.env.VITE_FIREBASE_DATABASE_ID);
 
 // Enable offline persistence
 try {
-  Promise.resolve().catch((err) => {
-    console.warn('Persistence error:', err);
+  enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code == 'failed-precondition') {
+      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+    } else if (err.code == 'unimplemented') {
+      console.warn('The current browser does not support all of the features required to enable persistence');
+    }
   });
 } catch(e) {
   console.warn('Persistence sync error:', e);

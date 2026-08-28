@@ -15,29 +15,34 @@ export interface GenerateExamInput {
 
 export async function generateExamPaper(input: GenerateExamInput) {
   const targetCount = Math.min(Math.max(input.questionCount || 10, 5), 120);
+  
+  // Dynamic Exam Blueprint construction
+  let difficultyDistribution = "30% Easy, 50% Medium, 20% Hard";
+  if (input.difficulty === 'easy') difficultyDistribution = "70% Easy, 30% Medium";
+  if (input.difficulty === 'hard') difficultyDistribution = "20% Medium, 60% Hard, 20% Challenge";
+  if (input.difficulty === 'challenge') difficultyDistribution = "20% Hard, 80% Challenge (HOTS)";
 
-  const systemInstruction = `
-You are the Advanced Exam Simulator & Mock Test Generator for StudyPilot AI.
+  const systemInstruction = `You are the Advanced Exam Simulator & Mock Test Generator for StudyPilot AI.
 Generate a rigorous, authentic board-aligned examination paper for Class ${input.classLevel} (${input.board}).
-Rules:
-1. Provide exactly ${targetCount} questions testing both theoretical intuition and numerical calculation across the specified chapters: ${input.chapters?.join(', ') || 'All Chapters'}.
-2. Mix standard multiple-choice questions, assertion-reason items, and conceptual calculation problems.
-3. Every MCQ must have 4 distinct options with exactly one correct option.
-4. Provide comprehensive scoring mark schemes and detailed pedagogical rationales.
-5. Emphasize standard board curriculum patterns.
-`;
+
+CRITICAL BLUEPRINT:
+1. Provide exactly ${targetCount} questions testing across the specified chapters: ${input.chapters?.join(', ') || 'All Chapters'}.
+2. Difficulty Distribution: ${difficultyDistribution}.
+3. Question Types: Mix standard multiple-choice questions, assertion-reason items, and conceptual calculation problems based on real syllabus patterns.
+4. Every MCQ must have 4 distinct options with exactly one correct option. No duplicate options.
+5. Provide comprehensive scoring mark schemes and detailed pedagogical rationales.
+6. Verify mathematical accuracy independently before providing the final answer.`;
 
   const examTypeFormatted = String(input.examType || 'board_practice').replace('_', ' ').toUpperCase();
-  const promptText = `
-Subject: ${input.subject}
+  
+  const promptText = `Subject: ${input.subject}
 Class Level: Class ${input.classLevel}
 Board: ${input.board}
 Exam Mode: ${examTypeFormatted}
 Target Chapters: ${input.chapters?.join(', ') || 'All Chapters'}
 Number of Questions: ${targetCount}
 Duration: ${input.durationMinutes || 30} minutes
-Difficulty: ${input.difficulty}
-`;
+Blueprint Difficulty: ${difficultyDistribution}`;
 
   try {
     const response = await generateContentWithRetry({
@@ -55,6 +60,15 @@ Difficulty: ${input.difficulty}
             durationMinutes: { type: Type.INTEGER },
             totalMarks: { type: Type.INTEGER },
             instructions: { type: Type.ARRAY, items: { type: Type.STRING } },
+            blueprintMetadata: {
+              type: Type.OBJECT,
+              properties: {
+                easyCount: { type: Type.INTEGER },
+                mediumCount: { type: Type.INTEGER },
+                hardCount: { type: Type.INTEGER },
+                chapterCoverage: { type: Type.ARRAY, items: { type: Type.STRING } }
+              }
+            },
             questions: {
               type: Type.ARRAY,
               items: {
@@ -63,6 +77,7 @@ Difficulty: ${input.difficulty}
                   id: { type: Type.STRING },
                   questionNumber: { type: Type.INTEGER },
                   questionType: { type: Type.STRING },
+                  difficultyLevel: { type: Type.STRING },
                   marks: { type: Type.INTEGER },
                   question: { type: Type.STRING },
                   options: { type: Type.ARRAY, items: { type: Type.STRING } },
@@ -92,10 +107,10 @@ Difficulty: ${input.difficulty}
           questionNumber: idx + 1,
           id: q.id || `exam-q-${idx + 1}`,
           isVerified: isValid,
+          difficultyLevel: q.difficultyLevel || 'medium', // Blueprint reinforcement
         };
       });
     }
-
     return parsed;
   } catch (error: any) {
     console.error('Error in generateExamPaper:', error);
@@ -105,6 +120,7 @@ Difficulty: ${input.difficulty}
         id: 'exam-q-1',
         questionNumber: 1,
         questionType: 'multiple_choice',
+        difficultyLevel: 'medium',
         marks: 1,
         question: 'An electric heater rated 1500 W operates for 2 hours daily. What is the electrical energy consumed in 30 days?',
         options: ['45 kWh', '90 kWh', '30 kWh', '180 kWh'],
@@ -112,40 +128,16 @@ Difficulty: ${input.difficulty}
         explanation: 'Energy per day = Power × Time = 1.5 kW × 2 h = 3 kWh. Total energy in 30 days = 3 kWh × 30 = 90 kWh (units).',
         concept: 'Commercial Electrical Energy Consumption',
         chapter: input.chapters?.[0] || 'Electricity',
-      },
-      {
-        id: 'exam-q-2',
-        questionNumber: 2,
-        questionType: 'multiple_choice',
-        marks: 1,
-        question: 'Where should an object be placed in front of a convex lens to get a real image of the same size as the object?',
-        options: ['At principal focus F', 'At twice the focal length 2F', 'At infinity', 'Between optical center and focus'],
-        correctAnswer: 'At twice the focal length 2F',
-        explanation: 'When an object is placed at 2F₁ of a convex lens, an inverted real image of the exact same size is formed at 2F₂ on the other side with magnification m = -1.',
-        concept: 'Convex Lens Image Formation',
-        chapter: input.chapters?.[0] || 'Light',
-      },
-      {
-        id: 'exam-q-3',
-        questionNumber: 3,
-        questionType: 'multiple_choice',
-        marks: 1,
-        question: 'What is the nature of the roots of the quadratic equation 2x² - 4x + 3 = 0?',
-        options: ['Two distinct real roots', 'Two equal real roots', 'No real roots', 'One real and one imaginary'],
-        correctAnswer: 'No real roots',
-        explanation: 'Discriminant D = b² - 4ac = (-4)² - 4(2)(3) = 16 - 24 = -8 < 0. Since D < 0, the equation has no real roots.',
-        concept: 'Nature of Roots & Discriminant',
-        chapter: input.chapters?.[0] || 'Quadratic Equations',
-      },
+      }
     ];
 
-    // If requested more, replicate/generate additional mock questions up to targetCount
     while (fallbackQuestions.length < targetCount) {
       const idx = fallbackQuestions.length + 1;
       fallbackQuestions.push({
         id: `exam-q-${idx}`,
         questionNumber: idx,
         questionType: 'multiple_choice',
+        difficultyLevel: 'easy',
         marks: 1,
         question: `Sample practice question ${idx} for ${input.subject} (Class ${input.classLevel}). Select the most appropriate option.`,
         options: ['Option A (Correct Principle)', 'Option B (Distractor 1)', 'Option C (Distractor 2)', 'Option D (Distractor 3)'],
@@ -166,8 +158,13 @@ Difficulty: ${input.difficulty}
         'Read each question carefully before selecting an answer.',
         'Negative marking is applicable as per test configuration.',
       ],
+      blueprintMetadata: {
+        easyCount: Math.floor(targetCount * 0.4),
+        mediumCount: Math.floor(targetCount * 0.4),
+        hardCount: Math.floor(targetCount * 0.2),
+        chapterCoverage: input.chapters || []
+      },
       questions: fallbackQuestions,
     };
   }
 }
-

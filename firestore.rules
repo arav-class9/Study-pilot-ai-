@@ -4,76 +4,104 @@ service cloud.firestore {
     function isAuthenticated() {
       return request.auth != null;
     }
+    
+    function hasRole(role) {
+      return get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == role;
+    }
+    function isTeacher() { return hasRole('teacher'); }
+    function isParent() { return hasRole('parent'); }
+    function isAdmin() { return hasRole('admin'); }
+    function isAuthorizedForStudent(studentId) {
+      return isOwner(studentId) || isTeacher() || isParent() || isAdmin();
+    }
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow write: if isOwner(userId);
+      allow read: if isAuthorizedForStudent(userId);
     }
     
     match /profiles/{userId} {
-      allow read, write: if isOwner(userId);
+      allow write: if isOwner(userId);
+      allow read: if isAuthorizedForStudent(userId);
     }
 
     match /subscriptions/{userId} {
-      allow read, write: if isOwner(userId);
+      allow write: if isOwner(userId);
+      allow read: if isAuthorizedForStudent(userId);
     }
     
     match /usageLimits/{userId} {
-      allow read, write: if isOwner(userId);
+      allow write: if isOwner(userId);
+      allow read: if isAuthorizedForStudent(userId);
     }
 
     match /quizAttempts/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     match /examAttempts/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     match /mistakes/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     match /weaknesses/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     match /studyPlans/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     match /studySessions/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     match /revisionItems/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     match /notes/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     match /aiConversations/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     match /aiMessages/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     match /bookmarks/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     match /achievements/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     match /notifications/{docId} {
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
     }
     

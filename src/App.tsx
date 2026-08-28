@@ -12,19 +12,19 @@ import { FocusAnalyticsModal } from './components/pomodoro/FocusAnalyticsModal';
 import { FloatingFocusWidget } from './components/pomodoro/FloatingFocusWidget';
 
 // Pages
-import { HomePage } from './pages/HomePage';
-import { AITutorPage } from './pages/AITutorPage';
-import { LearnPage } from './pages/LearnPage';
-import { PracticeQuizPage } from './pages/PracticeQuizPage';
-import { WeaknessRadarPage } from './pages/WeaknessRadarPage';
-import { StudyPlanPage } from './pages/StudyPlanPage';
-import { ProgressPage } from './pages/ProgressPage';
-import { ProfilePage } from './pages/ProfilePage';
-import { AdminPage } from './pages/AdminPage';
-import { MistakesPage } from './pages/MistakesPage';
-import { ExamPage } from './pages/ExamPage';
-import { ParentDashboardPage } from './pages/ParentDashboardPage';
-import { TeacherDashboardPage } from './pages/TeacherDashboardPage';
+const HomePage = React.lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
+const AITutorPage = React.lazy(() => import('./pages/AITutorPage').then(module => ({ default: module.AITutorPage })));
+const LearnPage = React.lazy(() => import('./pages/LearnPage').then(module => ({ default: module.LearnPage })));
+const PracticeQuizPage = React.lazy(() => import('./pages/PracticeQuizPage').then(module => ({ default: module.PracticeQuizPage })));
+const WeaknessRadarPage = React.lazy(() => import('./pages/WeaknessRadarPage').then(module => ({ default: module.WeaknessRadarPage })));
+const StudyPlanPage = React.lazy(() => import('./pages/StudyPlanPage').then(module => ({ default: module.StudyPlanPage })));
+const ProgressPage = React.lazy(() => import('./pages/ProgressPage').then(module => ({ default: module.ProgressPage })));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
+const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
+const MistakesPage = React.lazy(() => import('./pages/MistakesPage').then(module => ({ default: module.MistakesPage })));
+const ExamPage = React.lazy(() => import('./pages/ExamPage').then(module => ({ default: module.ExamPage })));
+const ParentDashboardPage = React.lazy(() => import('./pages/ParentDashboardPage').then(module => ({ default: module.ParentDashboardPage })));
+const TeacherDashboardPage = React.lazy(() => import('./pages/TeacherDashboardPage').then(module => ({ default: module.TeacherDashboardPage })));
 import { AuthPage } from './pages/AuthPage';
 
 const AppContent: React.FC = () => {
@@ -70,7 +70,10 @@ const AppContent: React.FC = () => {
   }
 
   const renderContent = () => {
-    switch (activeTab) {
+    return (
+      <React.Suspense fallback={<div className="flex h-[80vh] items-center justify-center text-slate-500 font-bold animate-pulse">Loading ${activeTab} view...</div>}>
+        {(() => {
+          switch (activeTab) {
       case 'home':
         return <HomePage />;
       case 'tutor':
@@ -102,6 +105,9 @@ const AppContent: React.FC = () => {
       default:
         return <HomePage />;
     }
+        })()}
+      </React.Suspense>
+    );
   };
 
   const primaryTabs = ['home', 'learn', 'practice', 'exam'];

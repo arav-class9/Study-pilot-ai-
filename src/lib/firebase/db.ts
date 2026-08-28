@@ -1,7 +1,7 @@
 import { db } from './config';
 import { 
   collection, doc, getDoc, getDocs, setDoc, updateDoc, 
-  query, where, orderBy, deleteDoc, serverTimestamp, writeBatch 
+  query, where, orderBy, deleteDoc, serverTimestamp, writeBatch, limit 
 } from 'firebase/firestore';
 
 export class DatabaseService {
@@ -105,7 +105,7 @@ export class DatabaseService {
     return ref.id;
   }
   static async getQuizAttempts(userId: string) {
-    const q = query(collection(db, 'quizAttempts'), where('userId', '==', userId), orderBy('timestamp', 'desc'));
+    const q = query(collection(db, 'quizAttempts'), where('userId', '==', userId), orderBy('timestamp', 'desc'), limit(100));
     try {
       const snap = await getDocs(q);
       return snap.docs.map(d => d.data());
@@ -188,7 +188,7 @@ export class DatabaseService {
     return id;
   }
   static async getExamAttempts(userId: string) {
-    const q = query(collection(db, 'examAttempts'), where('userId', '==', userId));
+    const q = query(collection(db, 'examAttempts'), where('userId', '==', userId), orderBy('timestamp', 'desc'), limit(50));
     try {
       const snap = await getDocs(q);
       return snap.docs.map(d => d.data());
