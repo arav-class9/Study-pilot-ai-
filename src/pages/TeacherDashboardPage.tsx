@@ -96,7 +96,7 @@ export const TeacherDashboardPage: React.FC = () => {
   return (
     <div id="teacher-dashboard-page" className="space-y-6 pb-20 md:pb-8">
       {/* Top Banner */}
-      <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
+      <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-2 bg-indigo-500/20 border border-indigo-400/30 px-3 py-1 rounded-full text-xs font-semibold text-indigo-300">
@@ -113,7 +113,7 @@ export const TeacherDashboardPage: React.FC = () => {
 
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-lg cursor-pointer transition-all self-start md:self-auto"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-sm cursor-pointer transition-all self-start md:self-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Create New Cohort</span>

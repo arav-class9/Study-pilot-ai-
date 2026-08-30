@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from 'motion/react';
 
 export const UpgradeModal: React.FC = () => {
   const { isUpgradeModalOpen, setIsUpgradeModalOpen, user, usageToday, upgradeSubscription } = useApp();
-
+  const touchStartY = React.useRef<number>(0);
   if (!isUpgradeModalOpen) return null;
+
+
 
   const tiers: {
     id: SubscriptionTier;
@@ -87,7 +89,7 @@ export const UpgradeModal: React.FC = () => {
     },
   ];
 
-  const touchStartY = React.useRef<number>(0);
+
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
   };

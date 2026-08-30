@@ -3,6 +3,7 @@ import { DatabaseService } from '../lib/firebase/db';
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import {
+  CustomTimetable,
   UserProfile,
   TopicProgress,
   QuizAttempt,
@@ -37,6 +38,9 @@ interface AppContextType {
   notesList: StudyNote[];
   notes: StudyNote[];
   dailyPlan: DailyStudyPlan;
+  customTimetable: CustomTimetable | null;
+  setCustomTimetable: (timetable: CustomTimetable | null) => void;
+  saveCustomTimetable: (timetable: CustomTimetable) => void;
   achievements: Achievement[];
   usageToday: DailyUsage;
   isUpgradeModalOpen: boolean;
@@ -542,6 +546,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [customTimetable, setCustomTimetable] = useState<CustomTimetable | null>(() => {
+    const saved = localStorage.getItem('studypilot_custom_timetable');
+    if (saved) return JSON.parse(saved);
+    return null;
+  });
+
+  const saveCustomTimetable = (timetable: CustomTimetable) => {
+    setCustomTimetable(timetable);
+    localStorage.setItem('studypilot_custom_timetable', JSON.stringify(timetable));
+  };
+
   const [dailyPlan, setDailyPlan] = useState<DailyStudyPlan>(() => {
     const savedUser = localStorage.getItem('studypilot_user');
     if (savedUser) {
@@ -834,7 +849,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
 
-    setUser((prev) => ({
+    setUser((prev: UserProfile) => ({
       ...prev,
       completedQuizzes: (prev.completedQuizzes || 0) + 1,
     }));
@@ -872,8 +887,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const toggleTaskCompletion = (taskId: string) => {
-    setDailyPlan((prev) => {
-      const updatedTasks = prev.tasks.map((t) => {
+    setDailyPlan((prev: DailyStudyPlan) => {
+      const updatedTasks = prev.tasks.map((t: StudyTask) => {
         if (t.id === taskId) {
           const nextCompleted = !t.completed;
           if (nextCompleted) {
@@ -888,7 +903,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return t;
       });
 
-      const completedCount = updatedTasks.filter((t) => t.completed).length;
+      const completedCount = updatedTasks.filter((t: StudyTask) => t.completed).length;
       return {
         ...prev,
         tasks: updatedTasks,
@@ -1028,6 +1043,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notesList,
         notes: notesList,
         dailyPlan,
+        customTimetable,
+        setCustomTimetable,
+        saveCustomTimetable,
         achievements,
         usageToday,
         isUpgradeModalOpen,

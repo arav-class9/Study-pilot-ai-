@@ -132,7 +132,7 @@ export const WeaknessRadarPage: React.FC = () => {
   return (
     <div id="weakness-radar-page" className="space-y-6 pb-20 md:pb-8 max-w-6xl mx-auto">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-sm relative overflow-hidden">
         <div className="max-w-xl space-y-2 relative z-10">
           <div className="inline-flex items-center gap-1.5 bg-rose-500/20 text-rose-300 border border-rose-400/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
             <Target className="w-3.5 h-3.5" />
@@ -416,7 +416,7 @@ export const WeaknessRadarPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl p-8 border border-slate-200 shadow-lg text-center space-y-6 max-w-xl mx-auto"
+          className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm text-center space-y-6 max-w-xl mx-auto"
         >
           <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
             <Award className="w-8 h-8" />

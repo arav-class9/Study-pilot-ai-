@@ -37,7 +37,7 @@ export const Navbar: React.FC = () => {
     <>
       <header
         id="main-navbar"
-        className="sticky top-0 z-40 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 py-2.5 transition-all"
+        className="sticky top-0 z-40 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-sm border-none px-3 sm:px-6 py-3 transition-colors"
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           {/* Left: Brand Logo & Hamburger Menu */}
@@ -139,10 +139,10 @@ export const Navbar: React.FC = () => {
             <button
               id="navbar-notifications-btn"
               onClick={() => setIsNotificationsOpen(true)}
-              className="relative p-2 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="relative p-2 rounded-full text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title="Notifications"
             >
-              <Bell className="w-4 h-4" />
+              <Bell className="w-5 h-5" />
               {unreadNotifsCount > 0 && (
                 <span className="absolute top-0 right-0 w-4 h-4 bg-rose-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center -mt-0.5 -mr-0.5">
                   {unreadNotifsCount}
@@ -154,10 +154,10 @@ export const Navbar: React.FC = () => {
             <button
               id="navbar-dark-mode-toggle"
               onClick={toggleDarkMode}
-              className="p-2 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-2.5 rounded-full text-slate-600 dark:text-slate-300 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors cursor-pointer shadow-sm"
               title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
-              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
+              {isDarkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
             </button>
 
             {/* Subscription Tier Button */}
@@ -185,11 +185,7 @@ export const Navbar: React.FC = () => {
             <button
               id="navbar-profile-btn"
               onClick={() => setActiveTab('profile')}
-              className={`flex items-center gap-2 p-1 rounded-full border transition-all cursor-pointer ${
-                activeTab === 'profile'
-                  ? 'border-indigo-600 ring-2 ring-indigo-200 dark:ring-indigo-900'
-                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
-              }`}
+              className={`flex items-center gap-2 p-1 rounded-full transition-all cursor-pointer ${activeTab === 'profile' ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-900' : 'hover:ring-2 hover:ring-slate-300 hover:ring-offset-1 dark:hover:ring-slate-700'}`}
               title="Open Profile"
             >
               {user.photoURL ? (

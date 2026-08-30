@@ -105,7 +105,7 @@ export const StudyPlanPage: React.FC = () => {
 
       {/* Motivational Quote Banner */}
       {dailyPlan.motivationQuote && (
-        <div className="bg-gradient-to-r from-indigo-50 to-sky-50 border border-indigo-100 p-4 rounded-2xl flex items-center gap-3 text-xs sm:text-sm text-indigo-950 font-medium italic">
+        <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-center gap-3 text-xs sm:text-sm text-indigo-950 font-medium italic">
           <span className="text-xl">✨</span>
           <span>"{dailyPlan.motivationQuote}"</span>
         </div>

@@ -101,7 +101,7 @@ export const MistakesPage: React.FC = () => {
   return (
     <div id="mistakes-notebook-page" className="space-y-6 pb-20 md:pb-8">
       {/* Top Banner */}
-      <div className="bg-gradient-to-br from-rose-950 via-slate-900 to-indigo-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-sm relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-2 bg-rose-500/20 border border-rose-400/30 px-3 py-1 rounded-full text-xs font-semibold text-rose-300">
@@ -121,7 +121,7 @@ export const MistakesPage: React.FC = () => {
               id="start-mistake-challenge-btn"
               onClick={handleStartChallenge}
               disabled={unresolvedMistakes.length === 0}
-              className="flex items-center gap-2 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 disabled:opacity-50 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-lg cursor-pointer transition-all"
+              className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-sm cursor-pointer transition-all"
             >
               <Play className="w-4 h-4 fill-white" />
               <span>Mistake Challenge Drill ({unresolvedMistakes.length})</span>
@@ -171,7 +171,7 @@ export const MistakesPage: React.FC = () => {
 
       {/* Active Challenge Drill Section (if open) */}
       {activeChallengeMistake && (
-        <div className="bg-indigo-900 text-white rounded-3xl p-6 shadow-xl border border-indigo-700 space-y-4 animate-in fade-in">
+        <div className="bg-indigo-900 text-white rounded-3xl p-6 shadow-sm border border-indigo-700 space-y-4 animate-in fade-in">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="bg-rose-500 text-white font-bold text-xs px-2.5 py-1 rounded-lg">

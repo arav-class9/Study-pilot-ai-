@@ -699,3 +699,29 @@ export interface FocusSessionRecord {
   totalTasks: number;
   notes?: string;
 }
+
+export type TimetableSessionStatus = 'pending' | 'completed' | 'partial' | 'skipped';
+export type TimetablePriority = 'high' | 'normal' | 'low';
+
+export interface TimetableSession {
+  id: string;
+  type: 'study' | 'break' | 'revision';
+  subjectId?: string;
+  subjectName?: string;
+  chapterName?: string;
+  topicName?: string;
+  startTime: string; // HH:mm format
+  endTime: string; // HH:mm format
+  durationMinutes: number;
+  priority?: TimetablePriority;
+  status: TimetableSessionStatus;
+}
+
+export interface CustomTimetable {
+  id: string;
+  date: string; // YYYY-MM-DD
+  startTime: string;
+  endTime: string;
+  sessions: TimetableSession[];
+  createdAt: string;
+}

@@ -44,7 +44,7 @@ export const AuthPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <div className="flex justify-center">
-          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
+          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-sm shadow-indigo-200">
             <BookOpen className="w-8 h-8 text-white" />
           </div>
         </div>
@@ -55,7 +55,7 @@ export const AuthPage: React.FC = () => {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl shadow-slate-200/50 sm:rounded-2xl sm:px-10 border border-slate-100">
+        <div className="bg-white py-8 px-4 shadow-sm shadow-slate-200/50 sm:rounded-2xl sm:px-10 border border-slate-100">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm flex items-center gap-2">

@@ -221,7 +221,7 @@ export const LearnPage: React.FC = () => {
       {activeSubTab === 'explore' && (
         <div className="space-y-6">
           {/* Header Banner */}
-          <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
+          <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-sm">
             <div className="max-w-2xl space-y-2">
               <div className="inline-flex items-center gap-2 bg-indigo-500/20 border border-indigo-400/30 px-3 py-1 rounded-full text-xs font-semibold text-indigo-300">
                 <BookOpen className="w-3.5 h-3.5" />
@@ -531,7 +531,7 @@ export const LearnPage: React.FC = () => {
             <button
               onClick={handleGenerate}
               disabled={isGenerating || !genChapter.trim()}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-extrabold text-sm py-4 rounded-2xl shadow-lg cursor-pointer flex items-center justify-center gap-2 transition-all mt-4"
+              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-extrabold text-sm py-4 rounded-2xl shadow-sm cursor-pointer flex items-center justify-center gap-2 transition-all mt-4"
             >
               {isGenerating ? (
                 <>

@@ -32,7 +32,7 @@ export const ParentDashboardPage: React.FC = () => {
   return (
     <div id="parent-dashboard-page" className="space-y-6 pb-20 md:pb-8">
       {/* Top Hero Card */}
-      <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-sky-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
+      <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-2 bg-sky-500/20 border border-sky-400/30 px-3 py-1 rounded-full text-xs font-semibold text-sky-300">
@@ -145,7 +145,7 @@ export const ParentDashboardPage: React.FC = () => {
             <h3 className="font-bold text-slate-900 text-base">Upcoming Exam Milestone</h3>
           </div>
 
-          <div className="bg-gradient-to-r from-indigo-50 to-sky-50 border border-indigo-100 rounded-2xl p-5 space-y-2">
+          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase text-indigo-900">
                 Class {user.classLevel} {user.board} Board / Term Exams

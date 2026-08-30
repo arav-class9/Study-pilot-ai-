@@ -28,14 +28,14 @@ export const BottomNav: React.FC = () => {
               key={item.id}
               id={`bottom-nav-${item.id}`}
               onClick={() => setActiveTab(item.id)}
-              className={`flex flex-col items-center py-1 px-3 rounded-2xl cursor-pointer transition-all ${
-                isActive
-                  ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 font-bold'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
+              className={`flex flex-col items-center min-w-[64px] py-2 cursor-pointer transition-colors ${
+                isActive ? 'text-indigo-700 dark:text-indigo-300 font-bold' : 'text-slate-600 dark:text-slate-400 font-medium hover:text-slate-900'
               }`}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'}`} />
-              <span className="text-[10px] mt-1">{item.label}</span>
+              <div className={`px-5 py-1 rounded-full transition-colors ${isActive ? 'bg-indigo-100 dark:bg-indigo-900/60' : 'bg-transparent'}`}>
+                <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+              </div>
+              <span className="text-[11px] mt-1">{item.label}</span>
             </button>
           );
         })}

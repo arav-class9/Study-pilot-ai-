@@ -323,7 +323,7 @@ export const PracticeQuizPage: React.FC = () => {
       {quizState === 'idle' && (
         <div className="space-y-6">
           {/* Header Banner */}
-          <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+          <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-sm relative overflow-hidden">
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-2 max-w-2xl">
                 <div className="inline-flex items-center gap-2 bg-indigo-500/20 border border-indigo-400/30 px-3 py-1 rounded-full text-xs font-semibold text-indigo-300">
@@ -630,7 +630,7 @@ export const PracticeQuizPage: React.FC = () => {
                 id="start-quiz-now-btn"
                 onClick={handleStartQuiz}
                 disabled={!activeChapterObj}
-                className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 disabled:opacity-50 text-white font-extrabold text-sm py-4 rounded-2xl shadow-lg cursor-pointer flex items-center justify-center gap-2 transition-all"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-extrabold text-sm py-4 rounded-2xl shadow-sm cursor-pointer flex items-center justify-center gap-2 transition-all"
               >
                 <Zap className="w-4 h-4 fill-white" />
                 <span>Launch Chapter Quiz ({questionCount} Qs)</span>
@@ -664,7 +664,7 @@ export const PracticeQuizPage: React.FC = () => {
 
       {/* 2C. FAILED / ERROR STATE */}
       {quizState === 'failed' && (
-        <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-rose-200 shadow-xl space-y-5 max-w-lg mx-auto my-12">
+        <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-rose-200 shadow-sm space-y-5 max-w-lg mx-auto my-12">
           <div className="w-16 h-16 rounded-3xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
             <AlertTriangle className="w-8 h-8" />
           </div>
@@ -861,7 +861,7 @@ export const PracticeQuizPage: React.FC = () => {
       {quizState === 'completed' && (
         <div className="space-y-6">
           {/* Summary Banner */}
-          <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl text-center space-y-4">
+          <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-sm text-center space-y-4">
             <div className="w-16 h-16 rounded-full bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center mx-auto text-yellow-300">
               <Trophy className="w-8 h-8" />
             </div>
@@ -913,7 +913,7 @@ export const PracticeQuizPage: React.FC = () => {
                   className={`px-5 py-2.5 rounded-xl font-bold text-xs inline-flex items-center gap-2 transition-all cursor-pointer ${
                     mistakesSaved
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
-                      : 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg'
+                      : 'bg-rose-600 hover:bg-rose-500 text-white shadow-sm'
                   }`}
                 >
                   <AlertTriangle className="w-4 h-4" />
