@@ -22,6 +22,7 @@ import {
   Radar,
   Compass,
   File,
+  Clock,
 } from 'lucide-react';
 import { PomodoroTimer } from '../pomodoro/PomodoroTimer';
 
@@ -39,6 +40,7 @@ export const getSidebarFeatures = (unresolvedMistakesCount: number, userRole: st
   const items: SidebarFeatureItem[] = [
     { id: 'home', label: 'Dashboard', icon: Home },
     { id: 'learn', label: 'Learn & Lessons', icon: BookOpen },
+    { id: 'timetable', label: 'Study Timetable', icon: Clock, badge: 'New', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' },
     { id: 'flashcards', label: 'Flashcards', icon: Repeat },
     { id: 'quizzes', label: 'Interactive Quizzes', icon: HelpCircle },
     { id: 'practice', label: 'Practice Quiz', icon: CheckCircle2 },

@@ -19,6 +19,7 @@ const LearnPage = React.lazy(() => import('./pages/LearnPage').then(module => ({
 const PracticeQuizPage = React.lazy(() => import('./pages/PracticeQuizPage').then(module => ({ default: module.PracticeQuizPage })));
 const WeaknessRadarPage = React.lazy(() => import('./pages/WeaknessRadarPage').then(module => ({ default: module.WeaknessRadarPage })));
 const StudyPlanPage = React.lazy(() => import('./pages/StudyPlanPage').then(module => ({ default: module.StudyPlanPage })));
+const TimetableStudyPage = React.lazy(() => import('./pages/TimetableStudyPage').then(module => ({ default: module.TimetableStudyPage })));
 const ProgressPage = React.lazy(() => import('./pages/ProgressPage').then(module => ({ default: module.ProgressPage })));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
 const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
@@ -89,6 +90,8 @@ const AppContent: React.FC = () => {
         return <WeaknessRadarPage />;
       case 'plan':
         return <StudyPlanPage />;
+      case 'timetable':
+        return <TimetableStudyPage />;
       case 'progress':
         return <ProgressPage />;
       case 'mistakes':

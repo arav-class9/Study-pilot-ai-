@@ -17,6 +17,7 @@ import {
   ChevronDown,
   GraduationCap,
   Target,
+  Clock,
 } from 'lucide-react';
 
 export const NavigationMenu: React.FC = () => {
@@ -41,6 +42,7 @@ export const NavigationMenu: React.FC = () => {
       items: [
         { id: 'home', label: 'Dashboard', icon: Compass, desc: 'Overview & daily streak' },
         { id: 'learn', label: 'Learn & Lessons', icon: BookOpen, desc: 'Interactive AI chapters' },
+        { id: 'timetable', label: 'Study Timetable', icon: Clock, desc: 'Daily custom study blocks' },
         { id: 'roadmap', label: 'Study Plan', icon: Calendar, desc: 'AI personalized milestone roadmap' },
       ],
     },

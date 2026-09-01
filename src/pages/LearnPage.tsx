@@ -31,6 +31,7 @@ import {
   Compass,
 } from 'lucide-react';
 import { VoiceTutorPlayer } from '../components/voice/VoiceTutorPlayer';
+import { SubjectDiscussionChat } from '../components/common/SubjectDiscussionChat';
 
 export const LearnPage: React.FC = () => {
   const {
@@ -443,6 +444,14 @@ export const LearnPage: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Peer-to-Peer Subject Discussion Chat */}
+          <div className="pt-4">
+            <SubjectDiscussionChat
+              subjectId={selectedSubject}
+              subjectName={availableSubjects.find((s) => s.id === selectedSubject)?.name || selectedSubject}
+            />
           </div>
         </div>
       )}

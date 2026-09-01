@@ -25,6 +25,7 @@ import { SUBJECTS_META } from '../data/curriculum';
 import { RevisionSessionModal } from '../components/repetition/RevisionSessionModal';
 import { HandwrittenSolutionModal } from '../components/ai/HandwrittenSolutionModal';
 import { TimetableDashboard } from '../components/timetable/TimetableDashboard';
+import { StreakTrackerWidget } from '../components/common/StreakTrackerWidget';
 
 const PersonalizedGreeting: React.FC = () => {
   const { user: authUser } = useAuth();
@@ -182,6 +183,9 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Daily Streak Tracker & Reinforcement Widget */}
+      <StreakTrackerWidget />
 
       {/* Personalized Dashboard Top Row: Today's Goal & Exam Countdown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
