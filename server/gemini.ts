@@ -34,8 +34,8 @@ export interface GenerateContentRetryOptions {
  */
 export async function generateContentWithRetry(options: GenerateContentRetryOptions): Promise<{ text: string }> {
   const ai = getGeminiClient();
-  const primaryModel = options.primaryModel || 'gemini-3.6-flash';
-  const fallbackModel = options.fallbackModel || 'gemini-3.6-flash';
+  const primaryModel = options.primaryModel || 'gemini-3.7-flash';
+  const fallbackModel = options.fallbackModel || 'gemini-3.7-flash';
   const maxRetries = options.maxRetries ?? 2;
 
   const modelsToTry = [primaryModel, fallbackModel];

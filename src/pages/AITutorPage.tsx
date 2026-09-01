@@ -19,11 +19,14 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
+  Mic,
+  MicOff,
+  Shield,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export const AITutorPage: React.FC = () => {
-  const { user, saveNote, checkAndConsumeUsage, addXP } = useApp();
+  const { user, saveNote, checkAndConsumeUsage, addXP, isDeepWork, toggleDeepWork } = useApp();
 
   const [questionText, setQuestionText] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>('science');
@@ -34,11 +37,63 @@ export const AITutorPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [solution, setSolution] = useState<DoubtSolution | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [revealedPracticeAnswer, setRevealedPracticeAnswer] = useState(false);
   const [copied, setCopied] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  const handleVoiceInputToggle = () => {
+    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognitionAPI) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognitionAPI();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        setQuestionText((prev) => (prev ? prev + ' ' + transcript : transcript));
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err);
+      setIsListening(false);
+    }
+  };
 
   const suggestedQuestions = [
     { text: 'A constant force of 20 N acts on an object of mass 4 kg. Find the acceleration produced and velocity after 5 seconds.', subject: 'science' },
@@ -157,8 +212,22 @@ export const AITutorPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-2">
+        {/* Filters & Deep Work Toggle */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleDeepWork}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs ${
+              isDeepWork
+                ? 'bg-amber-500 text-slate-950 animate-pulse ring-2 ring-amber-300'
+                : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
+            }`}
+            title="Toggle Deep Work Mode (Hides other UI & blocks notifications)"
+          >
+            <Shield className={`w-4 h-4 ${isDeepWork ? 'text-slate-950' : 'text-indigo-600'}`} />
+            <span>{isDeepWork ? 'Deep Work Active 🧘' : 'Deep Work Mode'}</span>
+          </button>
+
           <select
             value={selectedSubject}
             onChange={(e) => setSelectedSubject(e.target.value)}
@@ -181,6 +250,27 @@ export const AITutorPage: React.FC = () => {
           </select>
         </div>
       </div>
+
+      {/* Deep Work Active Banner */}
+      {isDeepWork && (
+        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-slate-950 px-5 py-4 rounded-3xl flex items-center justify-between shadow-xl animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-slate-950 text-amber-400 flex items-center justify-center font-bold text-lg shadow-md">
+              🧘
+            </div>
+            <div>
+              <h4 className="font-black text-xs uppercase tracking-wider">Deep Work Session Engaged</h4>
+              <p className="text-xs font-medium opacity-90">Distractions hidden • Notifications blocked • Maximum cognitive focus active</p>
+            </div>
+          </div>
+          <button
+            onClick={toggleDeepWork}
+            className="bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-2xl shadow-md transition-colors cursor-pointer shrink-0"
+          >
+            Exit Deep Work
+          </button>
+        </div>
+      )}
 
       {/* Input Box Card */}
       <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
@@ -224,6 +314,20 @@ export const AITutorPage: React.FC = () => {
               <Camera className="w-4 h-4 text-slate-600" />
               <span>Scan / Upload Image</span>
             </button>
+
+            <button
+              type="button"
+              onClick={handleVoiceInputToggle}
+              className={`flex items-center gap-1.5 px-3.5 py-2 font-bold text-xs rounded-xl transition-all cursor-pointer ${
+                isListening
+                  ? 'bg-rose-600 text-white animate-pulse shadow-md shadow-rose-200'
+                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
+              }`}
+              title="Ask Verbally (Speech to Text)"
+            >
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-indigo-600" />}
+              <span>{isListening ? 'Listening... (Speak Now)' : 'Ask Verbally (Mic)'}</span>
+            </button>
           </div>
 
           <button
@@ -248,7 +352,7 @@ export const AITutorPage: React.FC = () => {
         </div>
 
         {/* Suggested Prompts */}
-        {!solution && !isLoading && (
+        {!solution && !isLoading && !isDeepWork && (
           <div className="pt-3 border-t border-slate-100 space-y-2">
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Try these sample questions:</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

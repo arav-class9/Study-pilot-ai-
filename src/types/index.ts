@@ -679,6 +679,19 @@ export type AmbientSoundType =
   | 'binaural_40hz'
   | 'campfire';
 
+export interface StudyGroupMember {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  streak: number;
+  totalXP: number;
+  quizzesTaken: number;
+  avgAccuracy: number;
+  sharedPlanTitle?: string;
+  joinedAt: string;
+}
+
 export interface FocusTask {
   id: string;
   text: string;

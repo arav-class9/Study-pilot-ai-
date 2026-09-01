@@ -66,7 +66,7 @@ export async function runAIEvaluationBenchmark(): Promise<EvaluationBenchmarkRep
   const test3Start = Date.now();
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: 'gemini-3.7-flash',
       contents: 'Give the chemical formula for photosynthesis.',
       config: {
         responseMimeType: 'application/json',

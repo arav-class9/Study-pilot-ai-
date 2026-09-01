@@ -23,6 +23,7 @@ import {
   LanguageCode,
   Chapter,
   MistakeCategory,
+  StudyGroupMember,
 } from '../types';
 import { INITIAL_ACHIEVEMENTS, INITIAL_TOPIC_PROGRESS } from '../data/curriculum';
 import { generateInitialRevisionQueue, calculateNextInterval, computeForgettingRisk, getMasteryCategory } from '../services/spacedRepetition';
@@ -62,6 +63,8 @@ interface AppContextType {
   isProfileLoading: boolean;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  isDeepWork: boolean;
+  toggleDeepWork: () => void;
 
   // Actions
   completeOnboarding: (data: Partial<UserProfile>) => void;
@@ -90,6 +93,9 @@ interface AppContextType {
   saveExamAttempt: (attempt: ExamAttempt) => void;
   markNotificationRead: (id: string) => void;
   addNotification: (notification: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => void;
+  studyGroupMembers: StudyGroupMember[];
+  inviteStudyPartner: (email: string, name?: string) => void;
+  removeStudyPartner: (id: string) => void;
 }
 
 const DEFAULT_USER: UserProfile = {
@@ -201,6 +207,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return next;
     });
   };
+
+  const [isDeepWork, setIsDeepWork] = useState<boolean>(false);
+  const toggleDeepWork = () => setIsDeepWork((prev) => !prev);
 
   // 1. User state
   const [user, setUser] = useState<UserProfile>(() => {
@@ -551,6 +560,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (saved) return JSON.parse(saved);
     return null;
   });
+
+  const [studyGroupMembers, setStudyGroupMembers] = useState<StudyGroupMember[]>(() => {
+    const saved = localStorage.getItem('studypilot_study_group');
+    if (saved) {
+      try { return JSON.parse(saved); } catch {}
+    }
+    return [
+      {
+        id: 'partner-1',
+        name: 'Ananya Sharma',
+        email: 'ananya@studypilot.ai',
+        streak: 14,
+        totalXP: 3450,
+        quizzesTaken: 22,
+        avgAccuracy: 88,
+        sharedPlanTitle: 'CBSE Physics & Math Intensive',
+        joinedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+      },
+      {
+        id: 'partner-2',
+        name: 'Rahul Verma',
+        email: 'rahul@studypilot.ai',
+        streak: 9,
+        totalXP: 2800,
+        quizzesTaken: 18,
+        avgAccuracy: 82,
+        sharedPlanTitle: 'Chemistry & Biology Mastery',
+        joinedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+      },
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('studypilot_study_group', JSON.stringify(studyGroupMembers));
+  }, [studyGroupMembers]);
+
+  const inviteStudyPartner = (email: string, name?: string) => {
+    const newMember: StudyGroupMember = {
+      id: `partner-${Date.now()}`,
+      name: name || email.split('@')[0],
+      email,
+      streak: Math.floor(Math.random() * 10) + 3,
+      totalXP: Math.floor(Math.random() * 2000) + 1200,
+      quizzesTaken: Math.floor(Math.random() * 15) + 5,
+      avgAccuracy: Math.floor(Math.random() * 15) + 80,
+      sharedPlanTitle: 'CBSE Comprehensive Study Plan',
+      joinedAt: new Date().toISOString(),
+    };
+    setStudyGroupMembers((prev) => [newMember, ...prev]);
+  };
+
+  const removeStudyPartner = (id: string) => {
+    setStudyGroupMembers((prev) => prev.filter((m) => m.id !== id));
+  };
 
   const saveCustomTimetable = (timetable: CustomTimetable) => {
     setCustomTimetable(timetable);
@@ -1065,6 +1128,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isProfileLoading,
         isDarkMode,
         toggleDarkMode,
+        isDeepWork,
+        toggleDeepWork,
         completeOnboarding,
         updateProfile,
         recordQuizAttempt,
@@ -1085,6 +1150,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         saveExamAttempt,
         markNotificationRead,
         addNotification,
+        studyGroupMembers,
+        inviteStudyPartner,
+        removeStudyPartner,
       }}
     >
       {children}

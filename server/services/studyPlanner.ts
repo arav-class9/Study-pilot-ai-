@@ -34,8 +34,8 @@ Generate today's optimal study timetable.
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.6-flash',
-      fallbackModel: 'gemini-3.6-flash',
+      primaryModel: 'gemini-3.7-flash',
+      fallbackModel: 'gemini-3.7-flash',
       contents: promptText,
       config: {
         systemInstruction,
