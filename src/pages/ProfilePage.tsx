@@ -185,6 +185,23 @@ export const ProfilePage: React.FC = () => {
       </form>
 
       {/* Account Switcher / Sign in */}
+      <div className="bg-indigo-50/60 rounded-3xl p-6 border border-indigo-100 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h3 className="font-extrabold text-indigo-950 text-sm sm:text-base">Guided Navigation Tour</h3>
+          <p className="text-xs text-indigo-700 mt-0.5">
+            Revisit the step-by-step walkthrough of StudyPilot AI features.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent('open-study-tour'))}
+          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+        >
+          <span>Take Guided Tour</span>
+        </button>
+      </div>
+
+      {/* Account Switcher / Sign in */}
       <div className="bg-slate-50 rounded-3xl p-6 border border-slate-200 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">Google Account Connection</h3>

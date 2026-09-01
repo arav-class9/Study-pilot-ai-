@@ -6,6 +6,7 @@ import { Navbar } from './components/layout/Navbar';
 import { SidebarMenu as Sidebar } from './components/layout/SidebarMenu';
 import { BottomNav } from './components/layout/BottomNav';
 import { OnboardingModal } from './components/onboarding/OnboardingModal';
+import { WalkthroughModal } from './components/onboarding/WalkthroughModal';
 import { UpgradeModal } from './components/common/UpgradeModal';
 import { ZenFocusModal } from './components/pomodoro/ZenFocusModal';
 import { FocusAnalyticsModal } from './components/pomodoro/FocusAnalyticsModal';
@@ -148,6 +149,7 @@ const AppContent: React.FC = () => {
       </div>
       <BottomNav />
       <OnboardingModal />
+      <WalkthroughModal />
       <UpgradeModal />
       <ZenFocusModal />
       <FocusAnalyticsModal />
