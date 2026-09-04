@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { generateAIStudyPlan } from '../services/aiClient';
+import { StudyCalendarWidget } from '../components/timetable/StudyCalendarWidget';
 import {
   CalendarDays,
   Sparkles,
@@ -220,6 +221,9 @@ export const StudyPlanPage: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Local Calendar & Time-Blocking Sync Widget */}
+      <StudyCalendarWidget dailyPlan={dailyPlan} />
     </div>
   );
 };

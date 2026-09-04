@@ -381,3 +381,87 @@ export async function searchCurriculumApi(params: { query: string; classLevel?: 
   }
 }
 
+export async function chatWithNotesApi(params: {
+  question: string;
+  notesContent: string;
+  chapterName: string;
+  subject: string;
+  classLevel?: string;
+}): Promise<{ answer: string; relatedKeyConcept: string; followUpSuggestions: string[] }> {
+  const response = await fetch('/api/ai/notes-chat', {
+    method: 'POST',
+    headers: await getAuthHeaders(),
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to chat with notes');
+  }
+
+  const result = await response.json();
+  return result.data;
+}
+
+export async function generateChapterMindmapApi(params: {
+  chapterName: string;
+  subject: string;
+  classLevel?: string;
+}): Promise<{ centralTopic: string; subject: string; summary: string; nodes: any[] }> {
+  const response = await fetch('/api/ai/mindmap', {
+    method: 'POST',
+    headers: await getAuthHeaders(),
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to generate mindmap');
+  }
+
+  const result = await response.json();
+  return result.data;
+}
+
+export async function conductVivaVoiceTurnApi(params: {
+  chapterName: string;
+  subject: string;
+  studentAnswer: string;
+  questionNumber: number;
+}): Promise<{ evalScore: number; feedback: string; modelAnswer: string; nextQuestion: string; isComplete: boolean }> {
+  const response = await fetch('/api/ai/viva-voice', {
+    method: 'POST',
+    headers: await getAuthHeaders(),
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to process viva voice turn');
+  }
+
+  const result = await response.json();
+  return result.data;
+}
+
+export async function evaluateFeynmanApi(params: {
+  topic: string;
+  subject: string;
+  studentExplanation: string;
+}): Promise<{ clarityScore: number; jargonCheck: string; missingGaps: string[]; simplifiedAnalogy: string; feedback: string }> {
+  const response = await fetch('/api/ai/feynman-explain', {
+    method: 'POST',
+    headers: await getAuthHeaders(),
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to evaluate Feynman explanation');
+  }
+
+  const result = await response.json();
+  return result.data;
+}
+
+

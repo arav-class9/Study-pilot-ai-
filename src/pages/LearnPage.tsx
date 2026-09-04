@@ -29,9 +29,15 @@ import {
   ChevronDown,
   Layers,
   Compass,
+  Mic,
+  Lightbulb,
 } from 'lucide-react';
 import { VoiceTutorPlayer } from '../components/voice/VoiceTutorPlayer';
 import { SubjectDiscussionChat } from '../components/common/SubjectDiscussionChat';
+import { NotesChatWidget } from '../components/ai/NotesChatWidget';
+import { ConceptMindmapModal } from '../components/ai/ConceptMindmapModal';
+import { VivaVoiceSimulatorModal } from '../components/ai/VivaVoiceSimulatorModal';
+import { FeynmanExplainerModal } from '../components/ai/FeynmanExplainerModal';
 
 export const LearnPage: React.FC = () => {
   const {
@@ -56,6 +62,9 @@ export const LearnPage: React.FC = () => {
   // Voice player toggle state
   const [showVoicePlayer, setShowVoicePlayer] = useState(false);
   const [voiceChapterTarget, setVoiceChapterTarget] = useState<string>('');
+  const [showMindmapModal, setShowMindmapModal] = useState(false);
+  const [showVivaModal, setShowVivaModal] = useState(false);
+  const [showFeynmanModal, setShowFeynmanModal] = useState(false);
 
   // Generator State
   const [genSubject, setGenSubject] = useState<SubjectId>('science');
@@ -573,6 +582,27 @@ export const LearnPage: React.FC = () => {
 
                 <div className="flex items-center gap-2">
                   <button
+                    onClick={() => setShowMindmapModal(true)}
+                    className="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <Brain className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>AI Mindmap</span>
+                  </button>
+                  <button
+                    onClick={() => setShowVivaModal(true)}
+                    className="px-3 py-2 rounded-xl bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <Mic className="w-3.5 h-3.5 text-violet-600 animate-pulse" />
+                    <span>Oral Viva Voce</span>
+                  </button>
+                  <button
+                    onClick={() => setShowFeynmanModal(true)}
+                    className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                    <span>Feynman Studio</span>
+                  </button>
+                  <button
                     onClick={() => handleCopyNote(activeNoteViewer)}
                     className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                   >
@@ -665,6 +695,38 @@ export const LearnPage: React.FC = () => {
           onClose={() => setShowVoicePlayer(false)}
         />
       )}
+
+      {/* Floating Chat with your Notes Widget */}
+      <NotesChatWidget notesList={notesList} activeNote={activeNoteViewer} />
+
+      {/* AI Concept Mindmap Modal */}
+      {activeNoteViewer && (
+        <ConceptMindmapModal
+          isOpen={showMindmapModal}
+          onClose={() => setShowMindmapModal(false)}
+          chapterName={activeNoteViewer.chapterName}
+          subject={activeNoteViewer.subjectId}
+          classLevel={classLevel}
+        />
+      )}
+
+      {/* AI Oral Viva Voce Simulator Modal */}
+      {activeNoteViewer && (
+        <VivaVoiceSimulatorModal
+          isOpen={showVivaModal}
+          onClose={() => setShowVivaModal(false)}
+          chapterName={activeNoteViewer.chapterName}
+          subject={activeNoteViewer.subjectId}
+        />
+      )}
+
+      {/* AI Feynman Technique Studio Modal */}
+      <FeynmanExplainerModal
+        isOpen={showFeynmanModal}
+        onClose={() => setShowFeynmanModal(false)}
+        defaultTopic={activeNoteViewer?.chapterName || 'Photosynthesis'}
+        defaultSubject={activeNoteViewer?.subjectId || 'science'}
+      />
     </div>
   );
 };

@@ -17,7 +17,8 @@ interface SelectedTopic {
 export const TimetableGeneratorModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-}> = ({ isOpen, onClose }) => {
+  mode?: 'manual' | 'ai';
+}> = ({ isOpen, onClose, mode = 'manual' }) => {
   const { user, saveCustomTimetable } = useApp();
   
   // Selection
@@ -46,6 +47,41 @@ export const TimetableGeneratorModal: React.FC<{
   const subjects = getCurriculumSubjects(user.classLevel, user.board);
   const chapters = currSubject ? getCurriculumChapters(user.classLevel, user.board, currSubject as SubjectId) : [];
   const topics = currChapter ? chapters.find(c => c.id === currChapter)?.topics || [] : [];
+
+  useEffect(() => {
+    if (isOpen && mode === 'ai') {
+      // Auto select high yield topics from available subjects
+      const autoTopics: SelectedTopic[] = [];
+      subjects.slice(0, 3).forEach((sub) => {
+        const subChapters = getCurriculumChapters(user.classLevel, user.board, sub.id as SubjectId);
+        if (subChapters.length > 0) {
+          const chap = subChapters[0];
+          if (chap.topics.length > 0) {
+            autoTopics.push({
+              id: Math.random().toString(36).substring(7),
+              subjectId: sub.id as SubjectId,
+              subjectName: sub.name,
+              chapterName: chap.name,
+              topicName: chap.topics[0].name,
+              priority: 'high',
+            });
+          }
+          if (subChapters.length > 1 && chap.topics.length > 1) {
+            const chap2 = subChapters[1];
+            autoTopics.push({
+              id: Math.random().toString(36).substring(7),
+              subjectId: sub.id as SubjectId,
+              subjectName: sub.name,
+              chapterName: chap2.name,
+              topicName: chap2.topics[0]?.name || 'Core Concepts',
+              priority: 'normal',
+            });
+          }
+        }
+      });
+      setSelectedTopics(autoTopics);
+    }
+  }, [isOpen, mode]);
 
   useEffect(() => {
     // Calculate total available time

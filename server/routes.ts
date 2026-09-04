@@ -11,9 +11,31 @@ import { checkHandwrittenSolution } from './services/handwrittenChecker.js';
 import { generateStudyRecommendation } from './services/recommendationEngine.js';
 import { runAIEvaluationBenchmark } from './services/aiEvaluation.js';
 import { searchCurriculumAndNotes } from './services/searchService.js';
+import { chatWithNotes } from './services/notesChat.js';
+import { generateChapterMindmap } from './services/mindmapService.js';
+import { conductVivaVoiceTurn } from './services/vivaVoiceService.js';
+import { evaluateFeynmanExplanation } from './services/feynmanService.js';
 
 export const apiRouter = Router();
 apiRouter.use(requireAuth);
+
+// Notes Chat (Chat with your Notes)
+apiRouter.post('/notes-chat', async (req, res) => {
+  try {
+    const { question, notesContent, chapterName, subject, classLevel } = req.body;
+    const result = await chatWithNotes({
+      question,
+      notesContent,
+      chapterName: chapterName || 'Chapter Notes',
+      subject: subject || 'Science',
+      classLevel,
+    });
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /notes-chat error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to chat with notes' });
+  }
+});
 
 // 1. Solve Doubt (Text or Image Multimodal + Verification)
 apiRouter.post('/doubt', async (req, res) => {
@@ -214,3 +236,53 @@ apiRouter.all('/search', async (req, res) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to perform search' });
   }
 });
+
+// 12. AI Chapter Mindmap Generator
+apiRouter.post('/mindmap', async (req, res) => {
+  try {
+    const { chapterName, subject, classLevel } = req.body;
+    const result = await generateChapterMindmap({
+      chapterName: chapterName || 'Sample Chapter',
+      subject: subject || 'Science',
+      classLevel,
+    });
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /mindmap error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to generate mindmap' });
+  }
+});
+
+// 13. AI Oral Viva Voce Simulator Turn
+apiRouter.post('/viva-voice', async (req, res) => {
+  try {
+    const { chapterName, subject, studentAnswer, questionNumber } = req.body;
+    const result = await conductVivaVoiceTurn({
+      chapterName: chapterName || 'Sample Chapter',
+      subject: subject || 'Science',
+      studentAnswer: studentAnswer || 'No answer provided',
+      questionNumber: Number(questionNumber) || 1,
+    });
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /viva-voice error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to process viva voice turn' });
+  }
+});
+
+// 14. AI Feynman Technique Explainer
+apiRouter.post('/feynman-explain', async (req, res) => {
+  try {
+    const { topic, subject, studentExplanation } = req.body;
+    const result = await evaluateFeynmanExplanation({
+      topic: topic || 'General Concept',
+      subject: subject || 'Science',
+      studentExplanation: studentExplanation || '',
+    });
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /feynman-explain error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to evaluate Feynman explanation' });
+  }
+});
+

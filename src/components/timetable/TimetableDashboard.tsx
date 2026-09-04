@@ -7,6 +7,7 @@ import { TimetableGeneratorModal } from './TimetableGeneratorModal';
 export const TimetableDashboard: React.FC = () => {
   const { customTimetable, setCustomTimetable, saveCustomTimetable } = useApp();
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+  const [generatorMode, setGeneratorMode] = useState<'manual' | 'ai'>('manual');
 
   const deleteTimetable = () => {
     if (confirm('Are you sure you want to delete this timetable?')) {
@@ -42,24 +43,25 @@ export const TimetableDashboard: React.FC = () => {
           </div>
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">What do you want to study today?</h2>
-            <p className="text-slate-300 text-sm">Create a smart, realistic daily study schedule tailored to your available time.</p>
+            <p className="text-slate-300 text-sm">Choose how you want to build your study schedule for maximum board exam success.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-2">
             <button
-              onClick={() => setIsGeneratorOpen(true)}
-              className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-2xl shadow-sm transition-colors flex items-center justify-center gap-2"
+              onClick={() => { setGeneratorMode('manual'); setIsGeneratorOpen(true); }}
+              className="h-14 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-2xl shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               <Clock className="w-5 h-5" />
-              CREATE MY TIMETABLE
+              MAKE OWN TIMETABLE
             </button>
             <button
-              className="h-14 px-6 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-sm rounded-2xl transition-colors flex items-center justify-center gap-2"
+              onClick={() => { setGeneratorMode('ai'); setIsGeneratorOpen(true); }}
+              className="h-14 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-sm rounded-2xl shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
-              ✨ AI RECOMMEND A PLAN
+              ✨ AI GENERATOR TIMETABLE
             </button>
           </div>
         </div>
-        <TimetableGeneratorModal isOpen={isGeneratorOpen} onClose={() => setIsGeneratorOpen(false)} />
+        <TimetableGeneratorModal isOpen={isGeneratorOpen} onClose={() => setIsGeneratorOpen(false)} mode={generatorMode} />
       </div>
     );
   }
@@ -76,15 +78,19 @@ export const TimetableDashboard: React.FC = () => {
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Today's Timetable</h2>
           <p className="text-sm font-medium text-slate-500">{customTimetable.startTime} - {customTimetable.endTime}</p>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button onClick={() => setIsGeneratorOpen(true)} className="flex-1 sm:flex-none h-11 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl transition-colors border border-indigo-200">
-            Regenerate
+        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+          <button onClick={() => { setGeneratorMode('manual'); setIsGeneratorOpen(true); }} className="h-11 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl transition-colors border border-indigo-200 cursor-pointer">
+            Make Own Timetable
           </button>
-          <button onClick={deleteTimetable} className="h-11 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition-colors border border-rose-200">
+          <button onClick={() => { setGeneratorMode('ai'); setIsGeneratorOpen(true); }} className="h-11 px-4 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded-xl transition-colors border border-purple-200 cursor-pointer">
+            AI Generator Timetable
+          </button>
+          <button onClick={deleteTimetable} className="h-11 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition-colors border border-rose-200 cursor-pointer">
             Clear
           </button>
         </div>
       </div>
+      <TimetableGeneratorModal isOpen={isGeneratorOpen} onClose={() => setIsGeneratorOpen(false)} mode={generatorMode} />
 
       {pendingSession && pendingSession.type === 'study' && (
         <div className="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-sm text-white flex flex-col sm:flex-row items-center justify-between gap-6">
