@@ -27,6 +27,7 @@ const MistakesPage = React.lazy(() => import('./pages/MistakesPage').then(module
 const ExamPage = React.lazy(() => import('./pages/ExamPage').then(module => ({ default: module.ExamPage })));
 const ParentDashboardPage = React.lazy(() => import('./pages/ParentDashboardPage').then(module => ({ default: module.ParentDashboardPage })));
 const TeacherDashboardPage = React.lazy(() => import('./pages/TeacherDashboardPage').then(module => ({ default: module.TeacherDashboardPage })));
+const NCERTBooksPage = React.lazy(() => import('./pages/NCERTBooksPage').then(module => ({ default: module.NCERTBooksPage })));
 import { AuthPage } from './pages/AuthPage';
 
 const AppContent: React.FC = () => {
@@ -83,6 +84,9 @@ const AppContent: React.FC = () => {
       case 'learn':
       case 'notes':
         return <LearnPage />;
+      case 'ncert':
+      case 'books':
+        return <NCERTBooksPage />;
       case 'practice':
         return <PracticeQuizPage />;
       case 'radar':

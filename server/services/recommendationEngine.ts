@@ -31,8 +31,8 @@ Target Available Study Time: ${input.availableMinutes || 45} mins
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.7-flash',
-      fallbackModel: 'gemini-3.7-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: promptText,
       config: {
         systemInstruction,

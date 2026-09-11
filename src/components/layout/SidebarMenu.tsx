@@ -23,6 +23,7 @@ import {
   Compass,
   File,
   Clock,
+  BookMarked,
 } from 'lucide-react';
 import { PomodoroTimer } from '../pomodoro/PomodoroTimer';
 
@@ -39,6 +40,7 @@ export interface SidebarFeatureItem {
 export const getSidebarFeatures = (unresolvedMistakesCount: number, userRole: string): SidebarFeatureItem[] => {
   const items: SidebarFeatureItem[] = [
     { id: 'home', label: 'Dashboard', icon: Home },
+    { id: 'ncert', label: 'NCERT Books & Quizzes', icon: BookMarked, badge: 'NCERT', badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300', highlight: true },
     { id: 'learn', label: 'Learn & Lessons', icon: BookOpen },
     { id: 'timetable', label: 'Study Timetable', icon: Clock, badge: 'New', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' },
     { id: 'flashcards', label: 'Flashcards', icon: Repeat },

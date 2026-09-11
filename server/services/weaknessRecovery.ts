@@ -10,30 +10,32 @@ export interface GenerateRecoveryPlanInput {
 }
 
 export async function generateWeaknessRecoveryPlan(input: GenerateRecoveryPlanInput) {
-  const systemInstruction = `
-You are the AI Weakness Doctor and Recovery Engine for StudyPilot AI.
-When a student has a weak topic (e.g. accuracy below 65%), generate a structured, targeted 20-minute Recovery Plan designed to turn that weakness into a strength in a single high-intensity study sprint.
+  const accuracy = Math.max(0, Math.min(100, Number(input.accuracy) || 45));
+  const topicName = input.topicName || 'Core Concept';
+  const subjectName = input.subjectName || 'Science';
+  const classLevel = input.classLevel || '10';
+
+  const systemInstruction = `You are the AI Weakness Doctor and Recovery Engine for StudyPilot AI.
+When a student has a weak topic (e.g. accuracy below 65%), generate a structured, targeted 20-minute Recovery Plan designed to turn that weakness into a strength in a single focused study sprint.
+
 The 20-minute sprint must contain exactly 4 structured phases:
 1. Phase 1: Concept Revision (7 mins) - Crystal clear intuition, eliminating core confusion, critical definitions.
 2. Phase 2: Worked Example Walkthrough (5 mins) - A high-yield board/exam problem solved step-by-step with why-it-works notes.
 3. Phase 3: Practice Drills (6 mins) - 3 targeted practice questions with clues/hints and full solutions.
-4. Phase 4: Mini Checkpoint Test (2 mins) - 2 rapid diagnostic questions to verify mastery before concluding.
-`;
+4. Phase 4: Mini Checkpoint Test (2 mins) - 2 rapid diagnostic questions with 4 unique options each to verify mastery before concluding.`;
 
-  const promptText = `
-Topic to Recover: ${input.topicName}
-Subject: ${input.subjectName}
-Class Level: Class ${input.classLevel}
-Current Accuracy: ${input.accuracy}%
+  const promptText = `Topic to Recover: ${topicName}
+Subject: ${subjectName}
+Class Level: Class ${classLevel}
+Current Accuracy: ${accuracy}%
 Known student stumbling points: ${input.recentMistakes?.join(', ') || 'Formulas and conceptual application'}
 
-Generate a crisp, motivating 20-Minute Recovery Plan.
-`;
+Generate a crisp, motivating 20-Minute Recovery Plan based strictly on NCERT curriculum standards.`;
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.7-flash',
-      fallbackModel: 'gemini-3.7-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: promptText,
       config: {
         systemInstruction,
@@ -86,11 +88,11 @@ Generate a crisp, motivating 20-Minute Recovery Plan.
   } catch (error: any) {
     console.error('Error in generateWeaknessRecoveryPlan:', error);
     return {
-      topicName: input.topicName,
-      subjectName: input.subjectName,
-      currentAccuracy: input.accuracy,
-      masteryScore: Math.round(input.accuracy * 0.95),
-      diagnosis: `Analysis shows you are comfortable with the basic definition of ${input.topicName}, but getting tripped up on multi-step numerical calculations and sign conventions. Let's fix this in 20 minutes!`,
+      topicName,
+      subjectName,
+      currentAccuracy: accuracy,
+      masteryScore: Math.round(accuracy * 0.95),
+      diagnosis: `Diagnostic analysis indicates you have grasped the fundamental definition of ${topicName}, but need reinforcement on formula substitutions and sign conventions. Let's conquer this in 20 minutes!`,
       durationMinutes: 20,
       steps: [
         {
@@ -98,36 +100,31 @@ Generate a crisp, motivating 20-Minute Recovery Plan.
           title: 'Revise Core Concept & Intuition',
           durationMinutes: 7,
           type: 'concept',
-          content: `### Understanding the Foundation\n\n1. **Core Law**: Work done is only non-zero when there is a force acting AND displacement occurs in the direction of that force ($W = F \\cdot s \\cdot \\cos\\theta$).\n2. **Energy Invariance**: Total Mechanical Energy is conserved ($KE_1 + PE_1 = KE_2 + PE_2$).\n3. **Quick Trick**: Whenever an object moves at constant speed horizontally, work done against gravity is ZERO because $\\theta = 90^\\circ$.`,
+          content: `### Core NCERT Foundations for ${topicName}\n\n1. **Theoretical Basis**: Understand the physical or chemical phenomenon directly from first principles.\n2. **Conservation & Laws**: Verify that mass, energy, or electrical charge invariants are properly applied.\n3. **Examination Tip**: Pay close attention to standard units and variable symbols before substituting numbers.`,
         },
         {
           stepIndex: 2,
-          title: 'Study Master Worked Example',
+          title: 'Study Step-by-Step Worked Example',
           durationMinutes: 5,
           type: 'worked_example',
-          content: `**Problem**: A boy of mass 50 kg runs up a staircase of 45 steps in 9 seconds. If the height of each step is 15 cm, find his power output ($g = 10\\text{ m/s}^2$).\n\n**Step 1**: Find total vertical height $h = 45 \\times 15\\text{ cm} = 675\\text{ cm} = 6.75\\text{ m}$.\n**Step 2**: Work done = Increase in Potential Energy = $mgh = 50 \\times 10 \\times 6.75 = 3375\\text{ Joules}$.\n**Step 3**: Power $P = \\frac{W}{t} = \\frac{3375}{9} = 375\\text{ Watts}$.\n\n*Key takeaway*: Always convert centimeters to meters before multiplying with $g$!`,
+          content: `**Example Problem**: High-yield standard NCERT problem illustrating the foundational method.\n\n- **Step 1**: Write down all given quantities with proper SI units.\n- **Step 2**: State the governing NCERT equation.\n- **Step 3**: Substitute values carefully and calculate.\n- **Takeaway**: Verify the answer using dimensional consistency.`,
         },
         {
           stepIndex: 3,
           title: 'Solve 3 High-Yield Drill Questions',
           durationMinutes: 6,
           type: 'practice_drill',
-          content: 'Solve these 3 quick numerical drills to solidify the calculation pattern.',
+          content: 'Solve these 3 quick targeted drills to lock in the method.',
           practiceItems: [
             {
-              question: 'Find the kinetic energy of an object of mass 15 kg moving with a uniform velocity of 4 m/s.',
-              hint: 'Apply formula KE = (1/2)m v²',
-              solution: 'KE = (1/2) × 15 × (4)² = (1/2) × 15 × 16 = 120 Joules.',
+              question: `Identify the primary governing equation applied in ${topicName}.`,
+              hint: 'Refer to standard NCERT definition and formula.',
+              solution: 'Apply the standard textbook formula with correct signs.',
             },
             {
-              question: 'What is the work to be done to increase the velocity of a car from 30 km/h to 60 km/h if the mass of the car is 1500 kg?',
-              hint: 'Convert velocities to m/s: 30 km/h = 25/3 m/s, 60 km/h = 50/3 m/s. Work = (1/2)m(v₂² - v₁²).',
-              solution: 'Work = (1/2) × 1500 × [(50/3)² - (25/3)²] = 750 × (2500 - 625)/9 = 156,250 Joules.',
-            },
-            {
-              question: 'An electric heater is rated 1500 W. How much energy does it use in 10 hours in commercial units?',
-              hint: 'Energy = Power (in kW) × Time (in hours). 1500 W = 1.5 kW.',
-              solution: 'Energy = 1.5 kW × 10 hours = 15 kWh (units).',
+              question: `What common mistake occurs when converting units in ${topicName}?`,
+              hint: 'Check millimeters, centimeters, and standard SI units.',
+              solution: 'Always convert dimensions to standard SI units (meters, seconds, kilograms) before calculating.',
             },
           ],
         },
@@ -136,14 +133,19 @@ Generate a crisp, motivating 20-Minute Recovery Plan.
           title: '2-Minute Checkpoint Test',
           durationMinutes: 2,
           type: 'mini_test',
-          content: 'Rapidly test your understanding with this final checkpoint.',
+          content: 'Verify your immediate understanding with this rapid checkpoint question.',
           practiceItems: [
             {
-              question: 'If the velocity of a moving object is doubled, what happens to its kinetic energy?',
-              options: ['Remains the same', 'Doubles (2x)', 'Quadruples (4x)', 'Halves (0.5x)'],
-              correctAnswer: 'Quadruples (4x)',
-              hint: 'KE is directly proportional to v².',
-              solution: 'Since KE = (1/2)mv², when v becomes 2v, KE becomes (1/2)m(2v)² = 4 × [(1/2)mv²], which is 4 times the initial energy.',
+              question: `Which statement regarding ${topicName} is true according to NCERT?`,
+              options: [
+                'Fundamental conservation principles are strictly obeyed.',
+                'Units can be neglected during intermediate algebraic calculations.',
+                'The relationship only holds under non-standard hypothetical conditions.',
+                'Formulas do not depend on the choice of physical coordinate systems.',
+              ],
+              correctAnswer: 'Fundamental conservation principles are strictly obeyed.',
+              hint: 'Consider the universal physical laws discussed in NCERT.',
+              solution: 'NCERT emphasizes that conservation laws provide the theoretical foundation for all physical and chemical processes.',
             },
           ],
         },

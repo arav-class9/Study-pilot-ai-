@@ -324,12 +324,51 @@ export const HomePage: React.FC = () => {
         </div>
       )}
 
+      {/* NCERT Study Pilot Showcase Card */}
+      <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 rounded-3xl p-6 text-white shadow-md relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 border border-indigo-700/50">
+        <div className="space-y-2 max-w-xl z-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-xs font-bold text-amber-300">
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>NEW • NCERT SCHOOL BOOKS &amp; PAGE QUIZZER</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight">
+            Read Authentic NCERT Textbooks &amp; Quiz Any Page
+          </h2>
+          <p className="text-xs sm:text-sm text-indigo-100 leading-relaxed">
+            Organized by Class, Subject, Chapter, and Page. Read in reader view or upload your own physical textbook page photo to instantly generate targeted interactive MCQs with detailed explanations.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 z-10 w-full md:w-auto">
+          <button
+            id="home-open-ncert-btn"
+            onClick={() => setActiveTab('ncert')}
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-white text-indigo-900 hover:bg-indigo-50 font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+          >
+            <BookOpen className="w-4 h-4 text-indigo-600" />
+            <span>Open NCERT Books</span>
+            <ArrowRight className="w-4 h-4 text-indigo-600" />
+          </button>
+        </div>
+      </div>
+
       {/* Quick Action Hub */}
       <div>
         <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3 px-1">
           Study Tools & Accelerators
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <button
+            id="quick-action-ncert-books"
+            onClick={() => setActiveTab('ncert')}
+            className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 hover:border-amber-500 hover:shadow-md transition-all text-left group cursor-pointer"
+          >
+            <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+              <BookOpen className="w-5 h-5" />
+            </div>
+            <p className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">NCERT Books</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Read &amp; page quiz</p>
+          </button>
           <button
             id="quick-action-ask-ai"
             onClick={() => setActiveTab('tutor')}

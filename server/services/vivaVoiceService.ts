@@ -34,8 +34,8 @@ Evaluate the student's answer and formulate the next response in JSON.`;
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.7-flash',
-      fallbackModel: 'gemini-3.7-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: promptText,
       config: {
         systemInstruction,

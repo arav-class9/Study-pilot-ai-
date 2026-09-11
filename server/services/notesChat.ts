@@ -26,8 +26,8 @@ Please answer the question based on the study notes provided. Return a JSON resp
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.7-flash',
-      fallbackModel: 'gemini-3.7-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: promptText,
       config: {
         systemInstruction,

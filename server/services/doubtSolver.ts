@@ -1,6 +1,6 @@
 import { generateContentWithRetry } from '../gemini.js';
 import { Type } from '@google/genai';
-import { verifyNumericalSolution, verifyMCQQuestion } from './verification.js';
+import { verifyNumericalSolution } from './verification.js';
 import { executeWithSafetyLayer } from './safety/aiQualityLayer.js';
 
 export interface DoubtInput {
@@ -13,33 +13,53 @@ export interface DoubtInput {
 }
 
 export async function solveDoubt(input: DoubtInput) {
-  const systemInstruction = `You are StudyPilot AI, an elite, patient, and pedagogical AI Academic Coach specializing in CBSE/NCERT, ICSE, IGCSE, and K-12 STEM & Humanities (Classes 6 to 12).
+  const hasText = Boolean(input.questionText && input.questionText.trim().length > 0);
+  const hasImage = Boolean(input.imageBase64 && input.imageBase64.trim().length > 0);
+
+  if (!hasText && !hasImage) {
+    throw new Error('Please provide either a question description or an image of the academic problem.');
+  }
+
+  const systemInstruction = `You are StudyPilot AI, a patient, elite, and pedagogical AI Academic Coach specializing in CBSE/NCERT, ICSE, and K-12 STEM & Humanities (Classes 6 to 12).
 When solving academic questions for students:
 1. Identify the core underlying academic concept clearly.
-2. Explain the intuition before jumping into algebra/mechanics/equations.
+2. Explain the conceptual intuition before showing algebraic manipulations or calculations.
 3. Solve step-by-step. For every step, explain *why* that step is taken.
-4. If it is a numerical/scientific problem, explicitly breakdown: Given parameters, Standard Formula, Value Substitution, Stepwise Calculation, Final Answer with standard SI units.
-5. If it is a multiple choice question (MCQ), state the correct option clearly and explain why other options are distractor traps.
-6. If the uploaded image or text is blurry, truncated, or unreadable, set "unclearImageWarning": true and provide the exact message in conceptExplanation: "I can't read part of the question clearly. Please upload a clearer image."
-7. Highlight 1 or 2 common student mistakes/misconceptions for this topic.
-8. Provide 1 similar practice drill with a helpful hint and the final answer to reinforce learning.
-9. Ground the explanation strictly in rigorous curriculum standards.`;
+4. If it is a numerical or scientific calculation, explicitly provide:
+   - Given parameters
+   - Standard NCERT formula
+   - Value substitution
+   - Stepwise calculation
+   - Final Answer with standard SI units
+5. If it is an MCQ, state the correct option clearly and explain why other options are distractor traps.
+6. If the uploaded image or text is blurry, truncated, or unreadable, set "unclearImageWarning": true and set conceptExplanation to: "I can't read part of the question clearly. Please upload a clearer image."
+7. Highlight 1 or 2 common student misconceptions for this topic.
+8. Provide 1 similar practice drill with a hint and final answer to reinforce learning.
+9. Ground the explanation strictly in authentic NCERT curriculum standards.`;
 
-  const promptText = `Subject: ${input.subject || 'General Academic'}
+  const promptText = `Subject: ${input.subject || 'Academic Studies'}
 Target Class: Class ${input.classLevel || '10'}
-Chapter Reference: ${input.chapter || 'Curriculum'}
+Chapter Reference: ${input.chapter || 'Prescribed NCERT Curriculum'}
 Student Question / Problem:
-${input.questionText || (input.imageBase64 ? 'Please analyze and solve the question in the attached image.' : 'Explain fundamental academic concepts')}
+${input.questionText || (hasImage ? 'Please analyze and solve the textbook problem shown in the attached image.' : 'Explain foundational principles.')}
 
-Provide a structured, step-by-step educational solution for the student in valid JSON format.`;
+Provide a structured, step-by-step educational solution for the student in valid JSON format adhering to the schema.`;
 
   const generator = async (validatedInput: DoubtInput) => {
     const contents: any = [];
     if (validatedInput.imageBase64) {
-      const cleanBase64 = validatedInput.imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+      let cleanBase64 = validatedInput.imageBase64;
+      let mime = validatedInput.imageMimeType || 'image/jpeg';
+      if (cleanBase64.startsWith('data:')) {
+        const match = cleanBase64.match(/^data:([^;]+);base64,(.+)$/);
+        if (match) {
+          mime = match[1];
+          cleanBase64 = match[2];
+        }
+      }
       contents.push({
         inlineData: {
-          mimeType: validatedInput.imageMimeType || 'image/jpeg',
+          mimeType: mime,
           data: cleanBase64,
         },
       });
@@ -49,8 +69,8 @@ Provide a structured, step-by-step educational solution for the student in valid
     });
 
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.7-flash',
-      fallbackModel: 'gemini-3.7-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: { parts: contents },
       config: {
         systemInstruction,
@@ -120,10 +140,12 @@ Provide a structured, step-by-step educational solution for the student in valid
     if (parsed.unclearImageWarning) {
       parsed.conceptExplanation = "I can't read part of the question clearly. Please upload a clearer image.";
     }
-    
+
     parsed.source = {
       sourceType: validatedInput.imageBase64 ? 'user_uploaded' : 'curriculum',
-      sourceTitle: validatedInput.chapter ? `Curriculum • ${validatedInput.chapter}` : `Curriculum • Class ${validatedInput.classLevel || '10'}`,
+      sourceTitle: validatedInput.chapter
+        ? `NCERT • ${validatedInput.chapter}`
+        : `NCERT • Class ${validatedInput.classLevel || '10'}`,
     };
     return parsed;
   };
@@ -142,41 +164,12 @@ Provide a structured, step-by-step educational solution for the student in valid
     const finalData = safetyResult.data;
     finalData.verificationStatus = safetyResult.status;
     finalData.verificationConfidence = safetyResult.metadata.confidenceScore;
-    finalData.verificationMessage = safetyResult.status === 'verified' ? 'Verified by AI Verification Engine' : 'Needs review by student.';
+    finalData.verificationMessage =
+      safetyResult.status === 'verified'
+        ? 'Verified by StudyPilot AI Curriculum Engine'
+        : 'Solution formulated; please review steps carefully.';
     return finalData;
   } else {
-    // Fallback if AI Safety Layer rejects or fails entirely
-    console.error('Safety Layer Fallback triggered for solveDoubt');
-    return {
-      question: input.questionText || 'Uploaded Academic Question',
-      detectedSubject: input.subject || 'Science',
-      detectedTopic: 'Core Principles',
-      concept: "System Error or Unsafe Request",
-      conceptExplanation: "The request could not be processed due to a timeout, safety violation, or system error. Please try again with a clearer question.",
-      isNumerical: false,
-      unclearImageWarning: !!input.imageBase64,
-      stepByStep: [
-        {
-          stepNumber: 1,
-          title: 'Error Encountered',
-          explanation: safetyResult.error || 'The AI verification system blocked this request or failed.',
-          whyItWorks: 'Safety First',
-        }
-      ],
-      finalAnswer: 'Unable to resolve question.',
-      commonMistakes: [],
-      similarPracticeQuestion: {
-        question: 'Try asking a standard syllabus question.',
-        hint: 'N/A',
-        answer: 'N/A',
-      },
-      verificationStatus: safetyResult.status || 'verification_failed',
-      verificationConfidence: 0,
-      verificationMessage: safetyResult.error || 'Request failed.',
-      source: {
-        sourceType: 'system',
-        sourceTitle: 'System Guardrail',
-      },
-    };
+    throw new Error(safetyResult.error || 'Failed to generate a verified doubt solution. Please try again with a clearer question.');
   }
 }

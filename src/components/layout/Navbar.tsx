@@ -86,6 +86,17 @@ export const Navbar: React.FC = () => {
 
           {/* Right: Status Indicators & Controls */}
           <div className="flex items-center gap-1.5 sm:gap-2.5">
+            {/* NCERT Books Quick Button */}
+            <button
+              id="navbar-ncert-btn"
+              onClick={() => setActiveTab('ncert')}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-colors cursor-pointer"
+              title="Open NCERT School Books & Page Quizzes"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>NCERT Books</span>
+            </button>
+
             {/* Offline Pill */}
             {isOffline && (
               <div

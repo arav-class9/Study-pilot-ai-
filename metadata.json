@@ -1,6 +1,6 @@
 {
   "name": "StudyPilot AI",
-  "description": "AI-powered study coach for students featuring step-by-step doubt solver, weakness radar, adaptive quizzes, notes generator, and personalized study planner.",
+  "description": "AI-powered study coach featuring official NCERT school books organized by class, subject, chapter, and page, textbook page reader and photo uploader, instant page-by-page interactive quizzes, revision mode, and chapter analytics.",
   "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

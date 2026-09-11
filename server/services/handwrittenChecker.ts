@@ -32,8 +32,8 @@ Problem statement (if provided): ${input.problemStatement || 'Evaluate handwritt
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.7-flash',
-      fallbackModel: 'gemini-3.7-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: [
         {
           inlineData: {

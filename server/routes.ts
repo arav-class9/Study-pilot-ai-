@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { requireAuth } from './middleware.js';
 import { solveDoubt } from './services/doubtSolver.js';
 import { generateQuiz } from './services/quizGenerator.js';
@@ -15,20 +15,32 @@ import { chatWithNotes } from './services/notesChat.js';
 import { generateChapterMindmap } from './services/mindmapService.js';
 import { conductVivaVoiceTurn } from './services/vivaVoiceService.js';
 import { evaluateFeynmanExplanation } from './services/feynmanService.js';
+import { generateNCERTPageQuiz, NCERTPageQuizValidationError } from './services/ncertPageQuizService.js';
+import { fetchOrGenerateNCERTPageContent } from './services/ncertPageContentService.js';
+import { processUploadedBookPage, NCERTOcrValidationError } from './services/ncertPageOcrService.js';
+import { processNCERTSelectionAction } from './services/ncertSelectionActions.js';
+import { generateFullBookTest } from './services/ncertFullBookTestService.js';
 
 export const apiRouter = Router();
 apiRouter.use(requireAuth);
 
 // Notes Chat (Chat with your Notes)
-apiRouter.post('/notes-chat', async (req, res) => {
+apiRouter.post('/notes-chat', async (req: Request, res: Response) => {
   try {
     const { question, notesContent, chapterName, subject, classLevel } = req.body;
+    if (!question || typeof question !== 'string' || question.trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Question is required.' });
+    }
+    if (!notesContent || typeof notesContent !== 'string' || notesContent.trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Notes content is required to ask questions.' });
+    }
+
     const result = await chatWithNotes({
-      question,
-      notesContent,
+      question: question.trim(),
+      notesContent: notesContent.trim(),
       chapterName: chapterName || 'Chapter Notes',
       subject: subject || 'Science',
-      classLevel,
+      classLevel: classLevel || '10',
     });
     res.json({ success: true, data: result });
   } catch (error: any) {
@@ -38,15 +50,25 @@ apiRouter.post('/notes-chat', async (req, res) => {
 });
 
 // 1. Solve Doubt (Text or Image Multimodal + Verification)
-apiRouter.post('/doubt', async (req, res) => {
+apiRouter.post('/doubt', async (req: Request, res: Response) => {
   try {
     const { questionText, imageBase64, imageMimeType, subject, classLevel, chapter } = req.body;
+    const hasText = Boolean(questionText && String(questionText).trim().length > 0);
+    const hasImage = Boolean(imageBase64 && String(imageBase64).trim().length > 0);
+
+    if (!hasText && !hasImage) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide either a question description or an image of the academic problem.',
+      });
+    }
+
     const result = await solveDoubt({
-      questionText,
-      imageBase64,
-      imageMimeType,
-      subject,
-      classLevel,
+      questionText: hasText ? String(questionText).trim() : undefined,
+      imageBase64: hasImage ? String(imageBase64).trim() : undefined,
+      imageMimeType: imageMimeType || 'image/jpeg',
+      subject: subject || 'Science',
+      classLevel: String(classLevel || '10'),
       chapter,
     });
     res.json({ success: true, data: result });
@@ -57,17 +79,22 @@ apiRouter.post('/doubt', async (req, res) => {
 });
 
 // 2. Adaptive Quiz Generator
-apiRouter.post('/quiz', async (req, res) => {
+apiRouter.post('/quiz', async (req: Request, res: Response) => {
   try {
     const { subject, classLevel, chapter, topic, difficulty, count, weakConcepts } = req.body;
+    const safeCount = Math.max(3, Math.min(20, Number(count) || 5));
+    const safeDifficulty = ['easy', 'medium', 'hard', 'challenge'].includes(difficulty)
+      ? difficulty
+      : 'medium';
+
     const result = await generateQuiz({
       subject: subject || 'Science',
-      classLevel: classLevel || '9',
+      classLevel: String(classLevel || '10'),
       chapter,
       topic,
-      difficulty: difficulty || 'medium',
-      count: Number(count) || 5,
-      weakConcepts,
+      difficulty: safeDifficulty,
+      count: safeCount,
+      weakConcepts: Array.isArray(weakConcepts) ? weakConcepts : undefined,
     });
     res.json({ success: true, data: result });
   } catch (error: any) {
@@ -77,15 +104,23 @@ apiRouter.post('/quiz', async (req, res) => {
 });
 
 // 3. Master Notes Generator
-apiRouter.post('/notes', async (req, res) => {
+apiRouter.post('/notes', async (req: Request, res: Response) => {
   try {
     const { subject, classLevel, chapter, topic, detailLevel } = req.body;
+    if (!chapter || String(chapter).trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Chapter name is required to generate notes.' });
+    }
+
+    const safeDetailLevel = ['short', 'medium', 'detailed', 'exam_revision'].includes(detailLevel)
+      ? detailLevel
+      : 'medium';
+
     const result = await generateNotes({
       subject: subject || 'Science',
-      classLevel: classLevel || '9',
-      chapter: chapter || 'Overview',
+      classLevel: String(classLevel || '10'),
+      chapter: String(chapter).trim(),
       topic,
-      detailLevel: detailLevel || 'medium',
+      detailLevel: safeDetailLevel,
     });
     res.json({ success: true, data: result });
   } catch (error: any) {
@@ -95,15 +130,19 @@ apiRouter.post('/notes', async (req, res) => {
 });
 
 // 4. AI Weakness Radar & 20-min Recovery Plan
-apiRouter.post('/weakness-plan', async (req, res) => {
+apiRouter.post('/weakness-plan', async (req: Request, res: Response) => {
   try {
     const { topicName, subjectName, classLevel, accuracy, recentMistakes } = req.body;
+    if (!topicName || String(topicName).trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Topic name is required for weakness recovery.' });
+    }
+
     const result = await generateWeaknessRecoveryPlan({
-      topicName: topicName || 'Work and Energy',
+      topicName: String(topicName).trim(),
       subjectName: subjectName || 'Science',
-      classLevel: classLevel || '9',
+      classLevel: String(classLevel || '10'),
       accuracy: Number(accuracy) || 45,
-      recentMistakes,
+      recentMistakes: Array.isArray(recentMistakes) ? recentMistakes : undefined,
     });
     res.json({ success: true, data: result });
   } catch (error: any) {
@@ -113,14 +152,16 @@ apiRouter.post('/weakness-plan', async (req, res) => {
 });
 
 // 5. AI Study Planner Timetable
-apiRouter.post('/study-plan', async (req, res) => {
+apiRouter.post('/study-plan', async (req: Request, res: Response) => {
   try {
     const { classLevel, dailyStudyMinutes, subjects, weakTopics, examDate, preferredTimeOfDay } = req.body;
+    const safeMinutes = Math.max(30, Math.min(600, Number(dailyStudyMinutes) || 120));
+
     const result = await generateStudyPlan({
-      classLevel: classLevel || '9',
-      dailyStudyMinutes: Number(dailyStudyMinutes) || 120,
-      subjects: subjects || ['Mathematics', 'Science'],
-      weakTopics,
+      classLevel: String(classLevel || '10'),
+      dailyStudyMinutes: safeMinutes,
+      subjects: Array.isArray(subjects) && subjects.length > 0 ? subjects : ['Mathematics', 'Science'],
+      weakTopics: Array.isArray(weakTopics) ? weakTopics : undefined,
       examDate,
       preferredTimeOfDay,
     });
@@ -132,15 +173,22 @@ apiRouter.post('/study-plan', async (req, res) => {
 });
 
 // 6. Mistake Analysis & Classification
-apiRouter.post('/mistake-analysis', async (req, res) => {
+apiRouter.post('/mistake-analysis', async (req: Request, res: Response) => {
   try {
     const { questionText, studentAnswer, correctAnswer, subject, classLevel, chapter } = req.body;
+    if (!questionText || !studentAnswer || !correctAnswer) {
+      return res.status(400).json({
+        success: false,
+        error: 'Question text, student answer, and correct answer are all required.',
+      });
+    }
+
     const result = await analyzeMistake({
-      questionText,
-      studentAnswer,
-      correctAnswer,
-      subject,
-      classLevel,
+      questionText: String(questionText).trim(),
+      studentAnswer: String(studentAnswer).trim(),
+      correctAnswer: String(correctAnswer).trim(),
+      subject: subject || 'Science',
+      classLevel: String(classLevel || '10'),
       chapter,
     });
     res.json({ success: true, data: result });
@@ -151,17 +199,20 @@ apiRouter.post('/mistake-analysis', async (req, res) => {
 });
 
 // 7. Full Mock Test & Exam Paper Generator
-apiRouter.post('/exam', async (req, res) => {
+apiRouter.post('/exam', async (req: Request, res: Response) => {
   try {
     const { subject, classLevel, board, examType, chapters, durationMinutes, questionCount, difficulty } = req.body;
+    const safeCount = Math.max(3, Math.min(50, Number(questionCount) || 10));
+    const safeDuration = Math.max(10, Math.min(180, Number(durationMinutes) || 30));
+
     const result = await generateExamPaper({
       subject: subject || 'Science',
-      classLevel: classLevel || '9',
+      classLevel: String(classLevel || '10'),
       board: board || 'CBSE',
       examType: examType || 'board_practice',
-      chapters: chapters || ['Electricity', 'Light'],
-      durationMinutes: Number(durationMinutes) || 30,
-      questionCount: Number(questionCount) || 10,
+      chapters: Array.isArray(chapters) && chapters.length > 0 ? chapters : ['Core Curriculum'],
+      durationMinutes: safeDuration,
+      questionCount: safeCount,
       difficulty: difficulty || 'medium',
     });
     res.json({ success: true, data: result });
@@ -172,15 +223,15 @@ apiRouter.post('/exam', async (req, res) => {
 });
 
 // 8. Handwritten Solution Checker
-apiRouter.post('/handwriting', async (req, res) => {
+apiRouter.post('/handwriting', async (req: Request, res: Response) => {
   try {
     const { imageBase64, mimeType, problemStatement, subject, classLevel } = req.body;
-    if (!imageBase64) {
-      return res.status(400).json({ success: false, error: 'Image is required' });
+    if (!imageBase64 || typeof imageBase64 !== 'string' || imageBase64.trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Handwritten solution image is required' });
     }
     const result = await checkHandwrittenSolution({
-      imageBase64,
-      mimeType,
+      imageBase64: imageBase64.trim(),
+      mimeType: mimeType || 'image/jpeg',
       problemStatement,
       subject,
       classLevel,
@@ -193,15 +244,15 @@ apiRouter.post('/handwriting', async (req, res) => {
 });
 
 // 9. Personalized Recommendation Engine
-apiRouter.post('/recommendation', async (req, res) => {
+apiRouter.post('/recommendation', async (req: Request, res: Response) => {
   try {
     const { weakTopics, dueRevisionCount, daysToExam, availableMinutes, classLevel, board } = req.body;
     const result = await generateStudyRecommendation({
-      weakTopics,
+      weakTopics: Array.isArray(weakTopics) ? weakTopics : [],
       dueRevisionCount: Number(dueRevisionCount) || 0,
       daysToExam: Number(daysToExam) || 30,
       availableMinutes: Number(availableMinutes) || 45,
-      classLevel: classLevel || '9',
+      classLevel: String(classLevel || '10'),
       board: board || 'CBSE',
     });
     res.json({ success: true, data: result });
@@ -212,7 +263,7 @@ apiRouter.post('/recommendation', async (req, res) => {
 });
 
 // 10. AI Quality Evaluation Benchmark Telemetry
-apiRouter.get('/benchmark', async (req, res) => {
+apiRouter.get('/benchmark', async (req: Request, res: Response) => {
   try {
     const result = await runAIEvaluationBenchmark();
     res.json({ success: true, data: result });
@@ -223,9 +274,9 @@ apiRouter.get('/benchmark', async (req, res) => {
 });
 
 // 11. Global Search Endpoint (Curriculum, Notes, Questions)
-apiRouter.all('/search', async (req, res) => {
+apiRouter.all('/search', async (req: Request, res: Response) => {
   try {
-    const query = (req.method === 'POST' ? req.body.query : req.query.q) as string || '';
+    const query = ((req.method === 'POST' ? req.body.query : req.query.q) as string) || '';
     const classLevel = (req.method === 'POST' ? req.body.classLevel : req.query.classLevel) as string;
     const notes = req.method === 'POST' ? req.body.notes : undefined;
 
@@ -238,13 +289,16 @@ apiRouter.all('/search', async (req, res) => {
 });
 
 // 12. AI Chapter Mindmap Generator
-apiRouter.post('/mindmap', async (req, res) => {
+apiRouter.post('/mindmap', async (req: Request, res: Response) => {
   try {
     const { chapterName, subject, classLevel } = req.body;
+    if (!chapterName || String(chapterName).trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Chapter name is required to generate a mindmap.' });
+    }
     const result = await generateChapterMindmap({
-      chapterName: chapterName || 'Sample Chapter',
+      chapterName: String(chapterName).trim(),
       subject: subject || 'Science',
-      classLevel,
+      classLevel: classLevel || '10',
     });
     res.json({ success: true, data: result });
   } catch (error: any) {
@@ -254,11 +308,11 @@ apiRouter.post('/mindmap', async (req, res) => {
 });
 
 // 13. AI Oral Viva Voce Simulator Turn
-apiRouter.post('/viva-voice', async (req, res) => {
+apiRouter.post('/viva-voice', async (req: Request, res: Response) => {
   try {
     const { chapterName, subject, studentAnswer, questionNumber } = req.body;
     const result = await conductVivaVoiceTurn({
-      chapterName: chapterName || 'Sample Chapter',
+      chapterName: chapterName || 'NCERT Chapter',
       subject: subject || 'Science',
       studentAnswer: studentAnswer || 'No answer provided',
       questionNumber: Number(questionNumber) || 1,
@@ -271,18 +325,186 @@ apiRouter.post('/viva-voice', async (req, res) => {
 });
 
 // 14. AI Feynman Technique Explainer
-apiRouter.post('/feynman-explain', async (req, res) => {
+apiRouter.post('/feynman-explain', async (req: Request, res: Response) => {
   try {
     const { topic, subject, studentExplanation } = req.body;
+    if (!topic || !studentExplanation) {
+      return res.status(400).json({
+        success: false,
+        error: 'Topic and your student explanation are both required for Feynman evaluation.',
+      });
+    }
     const result = await evaluateFeynmanExplanation({
-      topic: topic || 'General Concept',
+      topic: String(topic).trim(),
       subject: subject || 'Science',
-      studentExplanation: studentExplanation || '',
+      studentExplanation: String(studentExplanation).trim(),
     });
     res.json({ success: true, data: result });
   } catch (error: any) {
     console.error('API /feynman-explain error:', error);
     res.status(500).json({ success: false, error: error.message || 'Failed to evaluate Feynman explanation' });
+  }
+});
+
+// 15. NCERT Page Quiz Generator (generates interactive MCQs strictly from page text)
+apiRouter.post('/ncert-page-quiz', async (req: Request, res: Response) => {
+  try {
+    const { pageContent, pageNumber, chapterName, subject, classLevel, difficulty, count } = req.body;
+    if (!pageContent || typeof pageContent !== 'string' || pageContent.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'pageContent is required to generate quiz from textbook page.',
+      });
+    }
+
+    const cleanContent = pageContent.trim();
+    if (cleanContent.length < 60) {
+      return res.status(400).json({
+        success: false,
+        error: 'The provided page content is too short (minimum 60 characters). Please provide complete textbook excerpt or section.',
+      });
+    }
+
+    const questions = await generateNCERTPageQuiz({
+      pageContent: cleanContent,
+      pageNumber: Number(pageNumber) || 1,
+      chapterName: chapterName || 'NCERT Chapter',
+      subject: subject || 'Science',
+      classLevel: String(classLevel || '10'),
+      difficulty: difficulty || 'medium',
+      count: Number(count) || 5,
+    });
+    res.json({ success: true, data: questions });
+  } catch (error: any) {
+    console.error('API /ncert-page-quiz error:', error);
+    const statusCode = error instanceof NCERTPageQuizValidationError ? error.statusCode : 500;
+    res.status(statusCode).json({
+      success: false,
+      error: error.message || 'Failed to generate NCERT page quiz from the provided content.',
+    });
+  }
+});
+
+// 16. NCERT Page Content Fetcher/Generator
+apiRouter.post('/ncert-page-content', async (req: Request, res: Response) => {
+  try {
+    const { classLevel, subject, chapterName, pageNumber } = req.body;
+    if (!chapterName) {
+      return res.status(400).json({ success: false, error: 'chapterName is required.' });
+    }
+
+    const content = await fetchOrGenerateNCERTPageContent({
+      classLevel: String(classLevel || '10'),
+      subject: subject || 'Science',
+      chapterName: String(chapterName).trim(),
+      pageNumber: Number(pageNumber) || 1,
+    });
+    res.json({ success: true, data: content });
+  } catch (error: any) {
+    console.error('API /ncert-page-content error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to fetch NCERT page content' });
+  }
+});
+
+// 17. NCERT Uploaded Book Page OCR & Analyzer
+apiRouter.post('/ncert-page-ocr', async (req: Request, res: Response) => {
+  try {
+    const { image, text, classLevel, subject, chapterHint } = req.body;
+    const hasImage = Boolean(image && String(image).trim().length > 0);
+    const hasText = Boolean(text && String(text).trim().length > 0);
+
+    if (!hasImage && !hasText) {
+      return res.status(400).json({
+        success: false,
+        error: 'Either an image photo or text excerpt must be provided.',
+      });
+    }
+
+    const result = await processUploadedBookPage({
+      image: hasImage ? String(image).trim() : undefined,
+      text: hasText ? String(text).trim() : undefined,
+      classLevel,
+      subject,
+      chapterHint,
+    });
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /ncert-page-ocr error:', error);
+    const statusCode = error instanceof NCERTOcrValidationError ? error.statusCode : 500;
+    res.status(statusCode).json({
+      success: false,
+      error: error.message || 'Failed to process uploaded NCERT textbook page.',
+    });
+  }
+});
+
+// 18. NCERT Text Selection Actions (Notes, Explanations, Strict Quizzes from Selected Excerpt)
+apiRouter.post('/ncert-selection-actions', async (req: Request, res: Response) => {
+  try {
+    const { actionType, selectedText, pageNumber, chapterName, subject, classLevel } = req.body;
+
+    if (!selectedText || typeof selectedText !== 'string' || selectedText.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'selectedText is required to perform action.',
+      });
+    }
+
+    if (!['notes', 'explain', 'quiz'].includes(actionType)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid actionType. Supported values: "notes", "explain", "quiz".',
+      });
+    }
+
+    const result = await processNCERTSelectionAction({
+      actionType,
+      selectedText: selectedText.trim(),
+      pageNumber: Number(pageNumber) || 1,
+      chapterName: chapterName || 'NCERT Chapter',
+      subject: subject || 'Science',
+      classLevel: String(classLevel || '10'),
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /ncert-selection-actions error:', error);
+    const statusCode = error instanceof NCERTPageQuizValidationError ? error.statusCode : 500;
+    res.status(statusCode).json({
+      success: false,
+      error: error.message || 'Failed to process selected textbook content.',
+    });
+  }
+});
+
+// 19. NCERT Full Book & Multi-Chapter Comprehensive Mock Test
+apiRouter.post('/ncert-fullbook-test', async (req: Request, res: Response) => {
+  try {
+    const { bookTitle, classLevel, subject, pages, questionCount } = req.body;
+
+    if (!pages || !Array.isArray(pages) || pages.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'pages array with textbook excerpts is required to generate test.',
+      });
+    }
+
+    const result = await generateFullBookTest({
+      bookTitle: bookTitle || 'NCERT Textbook',
+      classLevel: String(classLevel || '10'),
+      subject: subject || 'Science',
+      pages,
+      questionCount: Number(questionCount) || 10,
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /ncert-fullbook-test error:', error);
+    const statusCode = error instanceof NCERTPageQuizValidationError ? error.statusCode : 500;
+    res.status(statusCode).json({
+      success: false,
+      error: error.message || 'Failed to generate comprehensive NCERT test.',
+    });
   }
 });
 
