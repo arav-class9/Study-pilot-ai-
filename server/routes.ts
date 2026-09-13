@@ -349,38 +349,92 @@ apiRouter.post('/feynman-explain', async (req: Request, res: Response) => {
 // 15. NCERT Page Quiz Generator (generates interactive MCQs strictly from page text)
 apiRouter.post('/ncert-page-quiz', async (req: Request, res: Response) => {
   try {
-    const { pageContent, pageNumber, chapterName, subject, classLevel, difficulty, count } = req.body;
-    if (!pageContent || typeof pageContent !== 'string' || pageContent.trim().length === 0) {
+    const {
+      bookId,
+      chapterId,
+      chapterName,
+      subject,
+      classLevel,
+      pageNumber,
+      questionCount,
+      count,
+      mode,
+      difficulty,
+      pageContent,
+    } = req.body;
+
+    // 1. Boundary validation on pageNumber
+    if (pageNumber === undefined || pageNumber === null || pageNumber === '') {
       return res.status(400).json({
         success: false,
-        error: 'pageContent is required to generate quiz from textbook page.',
+        code: 'INVALID_REQUEST',
+        message: 'pageNumber is required and must be a positive integer.',
       });
     }
 
-    const cleanContent = pageContent.trim();
-    if (cleanContent.length < 60) {
+    const parsedPageNumber = Number(pageNumber);
+    if (!Number.isInteger(parsedPageNumber) || parsedPageNumber <= 0 || isNaN(parsedPageNumber)) {
       return res.status(400).json({
         success: false,
-        error: 'The provided page content is too short (minimum 60 characters). Please provide complete textbook excerpt or section.',
+        code: 'INVALID_REQUEST',
+        message: 'pageNumber must be a positive integer greater than zero.',
       });
     }
+
+    // 2. Normalize question count
+    const rawCount = questionCount !== undefined ? questionCount : count;
+    let targetCount = 5;
+    if (rawCount !== undefined && rawCount !== null) {
+      const parsedCount = Number(rawCount);
+      if (isNaN(parsedCount) || !Number.isInteger(parsedCount) || parsedCount <= 0) {
+        return res.status(400).json({
+          success: false,
+          code: 'INVALID_REQUEST',
+          message: 'questionCount must be a positive integer.',
+        });
+      }
+      targetCount = parsedCount;
+    }
+
+    // 3. Normalize mode and difficulty
+    const normalizedMode = mode === 'adaptive' || difficulty === 'adaptive' ? 'adaptive' : 'standard';
+    const normalizedDifficulty = difficulty || (normalizedMode === 'adaptive' ? 'adaptive' : 'medium');
+
+    console.log(`[NCERT QUIZ] request payload: page=${parsedPageNumber}, count=${targetCount}, mode=${normalizedMode}, chapter=${chapterName || chapterId || 'unspecified'}`);
 
     const questions = await generateNCERTPageQuiz({
-      pageContent: cleanContent,
-      pageNumber: Number(pageNumber) || 1,
-      chapterName: chapterName || 'NCERT Chapter',
-      subject: subject || 'Science',
+      bookId: bookId ? String(bookId).trim() : undefined,
+      chapterId: chapterId ? String(chapterId).trim() : undefined,
+      chapterName: chapterName ? String(chapterName).trim() : 'NCERT Chapter',
+      subject: subject ? String(subject).trim() : 'Science',
       classLevel: String(classLevel || '10'),
-      difficulty: difficulty || 'medium',
-      count: Number(count) || 5,
+      pageNumber: parsedPageNumber,
+      questionCount: targetCount,
+      count: targetCount,
+      mode: normalizedMode,
+      difficulty: normalizedDifficulty,
+      pageContent: typeof pageContent === 'string' && pageContent.trim().length > 0 ? pageContent.trim() : undefined,
     });
+
     res.json({ success: true, data: questions });
   } catch (error: any) {
-    console.error('API /ncert-page-quiz error:', error);
-    const statusCode = error instanceof NCERTPageQuizValidationError ? error.statusCode : 500;
+    console.error('[NCERT QUIZ] API /ncert-page-quiz error:', error);
+    const code = error.code || (error instanceof NCERTPageQuizValidationError ? error.code : 'INTERNAL_ERROR');
+    let statusCode = error.statusCode;
+    if (!statusCode) {
+      if (code === 'PAGE_CONTENT_NOT_FOUND') statusCode = 404;
+      else if (code === 'EMPTY_PAGE_CONTENT') statusCode = 422;
+      else if (code === 'INVALID_REQUEST') statusCode = 400;
+      else if (error instanceof NCERTPageQuizValidationError) statusCode = error.statusCode;
+      else statusCode = 500;
+    }
+    const message = error.message || 'Failed to generate NCERT page quiz from the provided content.';
+
     res.status(statusCode).json({
       success: false,
-      error: error.message || 'Failed to generate NCERT page quiz from the provided content.',
+      code,
+      message,
+      error: message,
     });
   }
 });

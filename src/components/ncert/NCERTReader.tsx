@@ -99,6 +99,7 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setPageData(null); // CRITICAL: Clear previous page data to prevent race conditions
     setJumpPageInput(String(currentPage));
     setToolbarPos(null);
     setSelectedText('');
@@ -154,7 +155,7 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
       pageNumber: currentPage,
     })
       .then((data) => {
-        if (isMounted) {
+        if (isMounted && data && data.pageNumber === currentPage) {
           setPageData(data);
           setLoading(false);
           NCERTService.markPageAsRead(userId, chapter.id, currentPage);
@@ -475,8 +476,8 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
             <button
               id="ncert-instant-quiz-btn"
               onClick={() => pageData && onLaunchQuiz(pageData, currentPage)}
-              disabled={loading || !pageData}
-              className="px-3 sm:px-3.5 py-1.5 text-xs font-bold text-white bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 rounded-lg shadow-xs hover:shadow-md flex items-center space-x-1.5 transition-all disabled:opacity-50 cursor-pointer"
+              disabled={loading || !pageData || pageData.pageNumber !== currentPage}
+              className="px-3 sm:px-3.5 py-1.5 text-xs font-bold text-white bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 rounded-lg shadow-xs hover:shadow-md flex items-center space-x-1.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
               <span>Quiz Page {currentPage}</span>
@@ -805,8 +806,9 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
 
                 <button
                   id="ncert-launch-quiz-bottom-btn"
-                  onClick={() => onLaunchQuiz(pageData, currentPage)}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-indigo-500/25 flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                  onClick={() => pageData && pageData.pageNumber === currentPage && onLaunchQuiz(pageData, currentPage)}
+                  disabled={loading || !pageData || pageData.pageNumber !== currentPage}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-indigo-500/25 flex items-center justify-center space-x-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4 text-amber-300" />
                   <span>Start Page {currentPage} Quiz</span>

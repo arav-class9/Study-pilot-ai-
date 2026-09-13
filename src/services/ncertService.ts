@@ -10,6 +10,8 @@ import {
   NCERTSelectionActionResult,
   NCERTUploadedBook,
   NCERTFullBookTest,
+  GeneratePageQuizRequest,
+  ApiError,
 } from '../types/ncert';
 import { CLASS_10_SCIENCE_CH1_PAGES, CLASS_10_MATH_CH4_PAGES, getNCERTChapterById } from '../data/ncertBooksData';
 import { extractPDFPages, PDFExtractionProgress } from '../utils/pdfExtractor';
@@ -121,29 +123,81 @@ export class NCERTService {
   /**
    * Generate interactive quiz strictly from page content
    */
-  static async generateQuizForPage(params: {
-    pageContent: string;
-    pageNumber: number;
-    chapterName: string;
-    subject: string;
-    classLevel: string;
-    difficulty?: 'easy' | 'medium' | 'hard' | 'adaptive';
-    count?: number;
-  }): Promise<NCERTQuizQuestion[]> {
+  static async generateQuizForPage(params: GeneratePageQuizRequest): Promise<NCERTQuizQuestion[]> {
+    const pageNum = Number(params.pageNumber);
+    const targetCount = Number(params.questionCount || params.count || 5);
+    const mode = params.mode || (params.difficulty === 'adaptive' ? 'adaptive' : 'standard');
+
+    console.log(`[NCERT QUIZ] selected page: ${pageNum}`);
+    console.log('[NCERT QUIZ] request payload:', {
+      ...params,
+      pageNumber: pageNum,
+      questionCount: targetCount,
+      mode,
+      contentLength: params.pageContent?.length || 0,
+    });
+
+    // Check session cache first (Requirement 14)
+    const cacheKey = `ncert-page-quiz-${params.chapterId || params.bookId || 'ch'}-page-${pageNum}-count-${targetCount}-${mode}`;
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length === targetCount) {
+          console.log(`[NCERT QUIZ] Loaded ${parsed.length} questions from session cache for key: ${cacheKey}`);
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('[NCERT QUIZ] Cache read error:', e);
+    }
+
     const headers = await getAuthHeaders();
+    console.log(`[NCERT QUIZ] AI generation started: sending request to /api/ai/ncert-page-quiz`);
+
     const res = await fetch('/api/ai/ncert-page-quiz', {
       method: 'POST',
       headers,
-      body: JSON.stringify(params),
+      body: JSON.stringify({
+        ...params,
+        pageNumber: pageNum,
+        questionCount: targetCount,
+        count: targetCount,
+        mode,
+      }),
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Failed to generate page quiz');
+      console.error('[NCERT QUIZ] API returned error:', res.status, err);
+      const customError: any = new Error(
+        err.message || err.error || 'Failed to generate page quiz'
+      );
+      customError.code = err.code || 'INTERNAL_ERROR';
+      customError.status = res.status;
+      throw customError;
     }
 
     const json = await res.json();
-    return json.data;
+    const questions: NCERTQuizQuestion[] = json.data || [];
+    console.log(`[NCERT QUIZ] response validation: received ${questions.length} questions`);
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+      const customError: any = new Error('The quiz could not be generated. Please try again.');
+      customError.code = 'AI_RESPONSE_INVALID';
+      throw customError;
+    }
+
+    console.log(`[NCERT QUIZ] quiz ready: successfully prepared ${questions.length} questions for Page ${pageNum}`);
+
+    // Cache successfully generated questions
+    try {
+      sessionStorage.setItem(cacheKey, JSON.stringify(questions));
+    } catch (e) {
+      // ignore storage quota errors
+    }
+
+    return questions;
   }
 
   /**

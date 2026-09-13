@@ -75,11 +75,51 @@ export interface NCERTQuizQuestion {
   question: string;
   options: string[];
   correctAnswerIndex: number;
+  correctAnswer?: string;
   explanation: string;
   ncertPageReference: string; // e.g. "Page 4 • Section 1.2"
   difficulty: NCERTDifficulty;
   conceptTag: string;
   quoteFromPage?: string;
+}
+
+export type ApiErrorCode =
+  | 'INVALID_REQUEST'
+  | 'PAGE_NOT_FOUND'
+  | 'PAGE_CONTENT_NOT_FOUND'
+  | 'EMPTY_PAGE_CONTENT'
+  | 'AI_GENERATION_FAILED'
+  | 'AI_RESPONSE_INVALID'
+  | 'QUIZ_VALIDATION_FAILED'
+  | 'INTERNAL_ERROR';
+
+export interface ApiError {
+  success: false;
+  code: ApiErrorCode;
+  message: string;
+  details?: any;
+}
+
+export interface GeneratePageQuizRequest {
+  bookId?: string;
+  chapterId?: string;
+  chapterName?: string;
+  subject?: string;
+  classLevel?: string | number;
+  pageNumber: number | string;
+  questionCount?: number;
+  count?: number;
+  mode?: 'adaptive' | 'standard';
+  difficulty?: 'easy' | 'medium' | 'hard' | 'adaptive';
+  pageContent?: string;
+}
+
+export interface GeneratePageQuizResponse {
+  success: boolean;
+  data?: NCERTQuizQuestion[];
+  code?: ApiErrorCode;
+  message?: string;
+  error?: string;
 }
 
 export interface NCERTQuizResult {

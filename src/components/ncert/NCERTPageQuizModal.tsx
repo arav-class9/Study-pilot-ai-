@@ -74,22 +74,50 @@ export const NCERTPageQuizModal: React.FC<NCERTPageQuizModalProps> = ({
 
   if (!isOpen) return null;
 
+  const getFriendlyQuizErrorMessage = (err: any): string => {
+    const code = err?.code;
+    switch (code) {
+      case 'PAGE_CONTENT_NOT_FOUND':
+        return 'The selected NCERT page could not be loaded. Please ensure the page exists and try again.';
+      case 'EMPTY_PAGE_CONTENT':
+        return 'The selected NCERT page does not contain sufficient textbook content to generate a quiz.';
+      case 'INVALID_REQUEST':
+        return 'Invalid page number or question parameters. Please select a valid textbook page.';
+      case 'AI_RESPONSE_INVALID':
+        return 'The quiz could not be generated. Please try again.';
+      case 'QUIZ_VALIDATION_FAILED':
+        return 'The generated quiz questions failed validation checks. Please try generating again.';
+      case 'AI_GENERATION_FAILED':
+        return 'The AI tutor encountered an issue generating questions. Please try again in a moment.';
+      default:
+        return err?.message || 'Unable to generate quiz for this page. Please try again.';
+    }
+  };
+
   const startQuiz = async () => {
+    if (quizState === 'loading') return;
+
+    const numPage = Number(pageNumber);
+    if (!Number.isInteger(numPage) || numPage <= 0) {
+      setErrorMsg('Invalid NCERT page number selected.');
+      return;
+    }
+
     setQuizState('loading');
     setErrorMsg(null);
 
     // Concatenate full page content for prompt
     const fullPageText = [
-      `Section: ${pageContent.sectionTitle}`,
-      pageContent.heading ? `Heading: ${pageContent.heading}` : '',
+      pageContent?.sectionTitle ? `Section: ${pageContent.sectionTitle}` : '',
+      pageContent?.heading ? `Heading: ${pageContent.heading}` : '',
       'Paragraphs:',
-      ...pageContent.paragraphs,
-      pageContent.formulas?.length ? `Formulas & Equations: ${pageContent.formulas.join('; ')}` : '',
-      pageContent.ncertHighlights?.length ? `NCERT Highlights: ${pageContent.ncertHighlights.join('; ')}` : '',
-      pageContent.activities?.length
+      ...(pageContent?.paragraphs || []),
+      pageContent?.formulas?.length ? `Formulas & Equations: ${pageContent.formulas.join('; ')}` : '',
+      pageContent?.ncertHighlights?.length ? `NCERT Highlights: ${pageContent.ncertHighlights.join('; ')}` : '',
+      pageContent?.activities?.length
         ? `Activities: ${pageContent.activities.map((a) => `${a.activityNumber} ${a.title} - Conclusion: ${a.conclusion}`).join('; ')}`
         : '',
-      pageContent.inTextQuestions?.length
+      pageContent?.inTextQuestions?.length
         ? `In-Text Questions: ${pageContent.inTextQuestions.map((q) => q.question).join('; ')}`
         : '',
     ]
@@ -98,13 +126,17 @@ export const NCERTPageQuizModal: React.FC<NCERTPageQuizModalProps> = ({
 
     try {
       const generated = await NCERTService.generateQuizForPage({
-        pageContent: fullPageText,
-        pageNumber,
+        bookId: chapter.bookTitle || chapter.id,
+        chapterId: chapter.id,
         chapterName: chapter.title,
         subject: chapter.subjectId,
         classLevel: chapter.classLevel,
-        difficulty,
+        pageNumber: numPage,
+        questionCount,
         count: questionCount,
+        mode: difficulty === 'adaptive' ? 'adaptive' : 'standard',
+        difficulty,
+        pageContent: fullPageText,
       });
 
       if (generated && generated.length > 0) {
@@ -120,8 +152,8 @@ export const NCERTPageQuizModal: React.FC<NCERTPageQuizModalProps> = ({
         throw new Error('No questions returned');
       }
     } catch (err: any) {
-      console.error('Quiz generation failed:', err);
-      setErrorMsg(err.message || 'Unable to generate quiz for this page. Please try again.');
+      console.error('[NCERT QUIZ] Generation error:', err?.code, err?.message, err);
+      setErrorMsg(getFriendlyQuizErrorMessage(err));
       setQuizState('setup');
     }
   };
@@ -358,7 +390,8 @@ export const NCERTPageQuizModal: React.FC<NCERTPageQuizModalProps> = ({
             <button
               id="start-page-quiz-now-btn"
               onClick={startQuiz}
-              className="w-full py-3 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer"
+              disabled={!Number.isInteger(Number(pageNumber)) || Number(pageNumber) <= 0 || !pageContent}
+              className="w-full py-3 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 shadow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-amber-300" />
               <span>Generate &amp; Start Quiz</span>
