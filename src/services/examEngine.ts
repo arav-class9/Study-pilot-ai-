@@ -96,19 +96,40 @@ export function scoreExamAttempt(params: {
     let isCorrect = false;
     let studentAnswerStr = '';
 
+    // Robust resolution of correct answer index and text
+    let resolvedCorrectIndex = -1;
+    if (typeof q.correctAnswerIndex === 'number' && q.correctAnswerIndex >= 0 && q.correctAnswerIndex < q.options.length) {
+      resolvedCorrectIndex = q.correctAnswerIndex;
+    } else if (q.correctAnswer !== undefined) {
+      const letterMap: Record<string, number> = { a: 0, b: 1, c: 2, d: 3 };
+      const trimmed = String(q.correctAnswer).trim().toLowerCase();
+      if (letterMap[trimmed] !== undefined && letterMap[trimmed] < q.options.length) {
+        resolvedCorrectIndex = letterMap[trimmed];
+      } else {
+        resolvedCorrectIndex = q.options.findIndex(
+          (opt: string) => opt.trim().toLowerCase() === trimmed
+        );
+      }
+    }
+    if (resolvedCorrectIndex < 0) resolvedCorrectIndex = 0;
+
+    const correctOptText = q.options[resolvedCorrectIndex] || q.correctAnswer || '';
+
     if (isUnanswered) {
       unanswered++;
       studentAnswerStr = 'Unanswered';
     } else {
-      // check match
-      const correctIdx = q.correctAnswerIndex ?? 0;
-      const correctOptText = q.options[correctIdx] || q.correctAnswer || '';
-      
       if (typeof userAns === 'number') {
-        isCorrect = userAns === correctIdx;
+        isCorrect = userAns === resolvedCorrectIndex;
         studentAnswerStr = q.options[userAns] || String(userAns);
       } else {
-        isCorrect = String(userAns).trim().toLowerCase() === String(correctOptText).trim().toLowerCase();
+        const userTrimmed = String(userAns).trim().toLowerCase();
+        isCorrect =
+          userTrimmed === String(correctOptText).trim().toLowerCase() ||
+          (userTrimmed === 'a' && resolvedCorrectIndex === 0) ||
+          (userTrimmed === 'b' && resolvedCorrectIndex === 1) ||
+          (userTrimmed === 'c' && resolvedCorrectIndex === 2) ||
+          (userTrimmed === 'd' && resolvedCorrectIndex === 3);
         studentAnswerStr = String(userAns);
       }
 
@@ -127,7 +148,7 @@ export function scoreExamAttempt(params: {
       questionText: q.question,
       options: q.options,
       userAnswer: studentAnswerStr,
-      correctAnswer: q.options[q.correctAnswerIndex ?? 0] || q.correctAnswer || '',
+      correctAnswer: q.options[resolvedCorrectIndex] || q.correctAnswer || '',
       isCorrect,
       explanation: q.explanation || 'Review chapter concepts.',
       concept: q.concept || q.chapter || 'General',

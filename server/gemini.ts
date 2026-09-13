@@ -34,11 +34,18 @@ export interface GenerateContentRetryOptions {
  */
 export async function generateContentWithRetry(options: GenerateContentRetryOptions): Promise<{ text: string }> {
   const ai = getGeminiClient();
-  const primaryModel = options.primaryModel || 'gemini-3.8-flash';
+  const primaryModel = options.primaryModel || 'gemini-3.1-flash-lite';
   const fallbackModel = options.fallbackModel || 'gemini-3.8-flash';
   const maxRetries = options.maxRetries ?? 2;
 
-  const modelsToTry = [primaryModel, fallbackModel];
+  // Build unique sequence of models to try
+  const modelsToTry = Array.from(
+    new Set([
+      primaryModel,
+      fallbackModel,
+      'gemini-3.1-flash-lite',
+    ])
+  );
 
   let lastError: any = null;
 
@@ -57,18 +64,30 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
         lastError = error;
         const errorMessage = error?.message || String(error);
         const errorCode = error?.status || error?.code || error?.error?.code;
+        
+        const isQuotaExhausted =
+          errorCode === 429 ||
+          errorCode === 'RESOURCE_EXHAUSTED' ||
+          errorMessage.includes('429') ||
+          errorMessage.includes('RESOURCE_EXHAUSTED') ||
+          errorMessage.includes('quota') ||
+          errorMessage.includes('rate limit');
+
         const isTransient =
           errorCode === 503 ||
-          errorCode === 429 ||
           errorCode === 'UNAVAILABLE' ||
-          errorCode === 'RESOURCE_EXHAUSTED' ||
           errorMessage.includes('high demand') ||
           errorMessage.includes('UNAVAILABLE') ||
           errorMessage.includes('503') ||
-          errorMessage.includes('429') ||
           errorMessage.includes('overloaded');
 
-        console.warn(`[Gemini API] Attempt ${attempt + 1}/${maxRetries + 1} failed for model ${model}:`, errorMessage);
+        console.warn(`[Gemini API] Attempt ${attempt + 1}/${maxRetries + 1} for model ${model}:`, errorMessage);
+
+        if (isQuotaExhausted) {
+          // Immediately try next model without waiting in vain for rate-limit window
+          console.warn(`[Gemini API] Switching immediately from ${model} due to quota limit.`);
+          break;
+        }
 
         if (isTransient && attempt < maxRetries) {
           // Exponential backoff with jitter

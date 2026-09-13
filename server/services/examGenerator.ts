@@ -178,7 +178,7 @@ Generate ${targetCount} high-yield MCQs adhering strictly to the JSON schema.`;
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-3.1-flash-lite',
       fallbackModel: 'gemini-3.8-flash',
       contents: promptText,
       config: {
@@ -226,7 +226,7 @@ Generate ${targetCount} high-yield MCQs adhering strictly to the JSON schema.`;
     const parsed = JSON.parse(text);
 
     if (parsed.questions && Array.isArray(parsed.questions)) {
-      const validQuestions: ExamQuestion[] = [];
+      const validQuestions: any[] = [];
       parsed.questions.forEach((q: any, idx: number) => {
         // Enforce 4 unique options
         if (
@@ -237,12 +237,16 @@ Generate ${targetCount} high-yield MCQs adhering strictly to the JSON schema.`;
           q.correctAnswer
         ) {
           const verified = verifyMCQQuestion(q);
+          const cIdx = q.options.findIndex(
+            (opt: string) => opt.trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase()
+          );
           validQuestions.push({
             ...q,
             id: q.id || `exam-q-${idx + 1}`,
             questionNumber: validQuestions.length + 1,
             marks: q.marks || 1,
             difficultyLevel: q.difficultyLevel || 'medium',
+            correctAnswerIndex: cIdx >= 0 ? cIdx : 0,
             isVerified: verified,
           });
         }
@@ -276,12 +280,18 @@ Generate ${targetCount} high-yield MCQs adhering strictly to the JSON schema.`;
   }
 
   // Authentic fallback without ANY placeholder text
-  const fallbackList = AUTHENTIC_BOARD_QUESTIONS.slice(0, targetCount).map((item, idx) => ({
-    ...item,
-    id: `exam-q-ncert-${idx + 1}`,
-    questionNumber: idx + 1,
-    isVerified: true,
-  }));
+  const fallbackList = AUTHENTIC_BOARD_QUESTIONS.slice(0, targetCount).map((item, idx) => {
+    const cIdx = item.options.findIndex(
+      (opt: string) => opt.trim().toLowerCase() === String(item.correctAnswer).trim().toLowerCase()
+    );
+    return {
+      ...item,
+      id: `exam-q-ncert-${idx + 1}`,
+      questionNumber: idx + 1,
+      correctAnswerIndex: cIdx >= 0 ? cIdx : 0,
+      isVerified: true,
+    };
+  });
 
   return {
     examTitle: `${input.board || 'CBSE'} Class ${input.classLevel} ${input.subject} Authentic Board Practice Exam`,
