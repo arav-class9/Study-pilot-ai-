@@ -16,6 +16,8 @@ import { NCERTSelectionResultModal } from './NCERTSelectionResultModal';
 import { NCERTSearchModal } from './NCERTSearchModal';
 import { NCERTFullBookTestModal } from './NCERTFullBookTestModal';
 import { NCERTWeakTopicsDashboard } from './NCERTWeakTopicsDashboard';
+import { NCERTFormulaSheetModal } from './NCERTFormulaSheetModal';
+import { NCERTFlashcardsModal } from './NCERTFlashcardsModal';
 import {
   ChevronLeft,
   ChevronRight,
@@ -39,6 +41,10 @@ import {
   TrendingDown,
   Highlighter,
   AlertTriangle,
+  Calculator,
+  Play,
+  Pause,
+  Square,
 } from 'lucide-react';
 
 interface NCERTReaderProps {
@@ -82,10 +88,16 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
   const [selectionLoading, setSelectionLoading] = useState<boolean>(false);
   const [highlights, setHighlights] = useState<NCERTHighlight[]>([]);
 
-  // Modals for Search, Full-Book Test, and Weak Topics
+  // Modals for Search, Full-Book Test, Weak Topics, Formula Sheet, and Flashcards
   const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false);
   const [testModalOpen, setTestModalOpen] = useState<boolean>(false);
   const [weakTopicsModalOpen, setWeakTopicsModalOpen] = useState<boolean>(false);
+  const [formulaModalOpen, setFormulaModalOpen] = useState<boolean>(false);
+  const [flashcardsModalOpen, setFlashcardsModalOpen] = useState<boolean>(false);
+
+  // Audio Speech Controls
+  const [speechRate, setSpeechRate] = useState<number>(1.0);
+  const [isSpeechPaused, setIsSpeechPaused] = useState<boolean>(false);
 
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -242,27 +254,67 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
     window.getSelection()?.removeAllRanges();
   };
 
-  // Voice Read-Aloud
+  // Voice Read-Aloud with playback controls
+  const startSpeech = (rate = speechRate) => {
+    if (!('speechSynthesis' in window) || !pageData) return;
+    window.speechSynthesis.cancel();
+
+    const textToRead = [
+      pageData.sectionTitle,
+      pageData.heading,
+      ...pageData.paragraphs,
+    ].filter(Boolean).join('. ');
+
+    const utterance = new SpeechSynthesisUtterance(textToRead);
+    utterance.rate = rate;
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setIsSpeechPaused(false);
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setIsSpeechPaused(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+    setIsSpeechPaused(false);
+  };
+
   const toggleSpeech = () => {
     if (!('speechSynthesis' in window) || !pageData) return;
-
     if (isSpeaking) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
+      setIsSpeechPaused(false);
     } else {
-      const textToRead = [
-        pageData.sectionTitle,
-        pageData.heading,
-        ...pageData.paragraphs,
-      ].filter(Boolean).join('. ');
+      startSpeech(speechRate);
+    }
+  };
 
-      const utterance = new SpeechSynthesisUtterance(textToRead);
-      utterance.rate = 0.95;
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+  const togglePauseResumeSpeech = () => {
+    if (!('speechSynthesis' in window)) return;
+    if (isSpeechPaused) {
+      window.speechSynthesis.resume();
+      setIsSpeechPaused(false);
+    } else {
+      window.speechSynthesis.pause();
+      setIsSpeechPaused(true);
+    }
+  };
 
-      window.speechSynthesis.speak(utterance);
-      setIsSpeaking(true);
+  const stopSpeech = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
+    setIsSpeechPaused(false);
+  };
+
+  const handleRateChange = (newRate: number) => {
+    setSpeechRate(newRate);
+    if (isSpeaking && !isSpeechPaused) {
+      startSpeech(newRate);
     }
   };
 
@@ -457,6 +509,28 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
             >
               <TrendingDown className="w-3.5 h-3.5 text-amber-600" />
               <span className="hidden md:inline">Weak Topics</span>
+            </button>
+
+            {/* Flashcards */}
+            <button
+              id="ncert-flashcards-btn"
+              onClick={() => setFlashcardsModalOpen(true)}
+              className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800 rounded-lg flex items-center space-x-1.5 transition-colors cursor-pointer"
+              title="Drill Active Recall Flashcards for this Page"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <span className="hidden md:inline">Flashcards</span>
+            </button>
+
+            {/* Formulas & Equations */}
+            <button
+              id="ncert-formula-sheet-btn"
+              onClick={() => setFormulaModalOpen(true)}
+              className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center space-x-1.5 transition-colors cursor-pointer"
+              title="Formulas, Chemical Equations & Definitions Cheat Sheet"
+            >
+              <Calculator className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden md:inline">Formulas</span>
             </button>
 
             {/* Full-Book or Chapter Assessment */}
@@ -850,6 +924,89 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
           </div>
         </div>
       </main>
+
+      {/* Persistent Floating Audio Player Bar */}
+      {isSpeaking && (
+        <div
+          id="ncert-audio-player-bar"
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 dark:bg-slate-850/95 text-white backdrop-blur-md px-4 py-2.5 rounded-full shadow-2xl border border-slate-700/80 flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-200"
+        >
+          <div className="flex items-center gap-2 pr-2 border-r border-slate-700">
+            <span className="relative flex h-2.5 w-2.5">
+              <span
+                className={`animate-ping absolute inline-flex h-full w-full rounded-full ${
+                  isSpeechPaused ? 'bg-amber-400' : 'bg-emerald-400'
+                } opacity-75`}
+              ></span>
+              <span
+                className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                  isSpeechPaused ? 'bg-amber-500' : 'bg-emerald-500'
+                }`}
+              ></span>
+            </span>
+            <span className="text-xs font-bold tracking-tight">
+              {isSpeechPaused ? 'Audio Paused' : `Reading Page ${currentPage}`}
+            </span>
+          </div>
+
+          {/* Play/Pause */}
+          <button
+            onClick={togglePauseResumeSpeech}
+            className="w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition-colors cursor-pointer"
+            title={isSpeechPaused ? 'Resume reading' : 'Pause reading'}
+          >
+            {isSpeechPaused ? (
+              <Play className="w-4 h-4 ml-0.5 fill-current" />
+            ) : (
+              <Pause className="w-4 h-4 fill-current" />
+            )}
+          </button>
+
+          {/* Stop */}
+          <button
+            onClick={stopSpeech}
+            className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            title="Stop audio"
+          >
+            <Square className="w-3.5 h-3.5 fill-current" />
+          </button>
+
+          {/* Speed Selector */}
+          <div className="flex items-center gap-1 pl-1 border-l border-slate-700 text-[11px] font-bold">
+            {[0.75, 1.0, 1.25, 1.5].map((rate) => (
+              <button
+                key={rate}
+                onClick={() => handleRateChange(rate)}
+                className={`px-1.5 py-0.5 rounded-md transition-colors cursor-pointer ${
+                  speechRate === rate
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {rate}x
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Formula & Reactions Quick Drawer / Modal */}
+      <NCERTFormulaSheetModal
+        isOpen={formulaModalOpen}
+        onClose={() => setFormulaModalOpen(false)}
+        chapter={chapter}
+        currentPageContent={pageData}
+        currentPageNumber={currentPage}
+      />
+
+      {/* Smart Flashcards Drill Modal */}
+      <NCERTFlashcardsModal
+        isOpen={flashcardsModalOpen}
+        onClose={() => setFlashcardsModalOpen(false)}
+        chapter={chapter}
+        pageContent={pageData}
+        pageNumber={currentPage}
+      />
     </div>
   );
 };

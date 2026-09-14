@@ -53,6 +53,16 @@ export const NCERTBooksPage: React.FC = () => {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  // Auto-reset subject if current subject is not valid for new class
+  useEffect(() => {
+    const validSubjects = NCERT_SUBJECTS_CATALOG.filter((s) => s.classes.includes(selectedClass)).map(
+      (s) => s.id
+    );
+    if (selectedSubject !== 'all' && !validSubjects.includes(selectedSubject as any)) {
+      setSelectedSubject('all');
+    }
+  }, [selectedClass, selectedSubject]);
+
   // Reader state
   const [activeChapter, setActiveChapter] = useState<NCERTChapter | null>(null);
   const [activeUploadedBook, setActiveUploadedBook] = useState<NCERTUploadedBook | null>(null);
@@ -454,7 +464,9 @@ export const NCERTBooksPage: React.FC = () => {
               All Subjects
             </button>
 
-            {NCERT_SUBJECTS_CATALOG.map((subj: any) => (
+            {NCERT_SUBJECTS_CATALOG.filter((subj: any) =>
+              subj.classes.includes(selectedClass)
+            ).map((subj: any) => (
               <button
                 key={subj.id}
                 onClick={() => setSelectedSubject(subj.id)}
@@ -501,9 +513,16 @@ export const NCERTBooksPage: React.FC = () => {
                 >
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                        Chapter {chapter.chapterNumber}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                          Chapter {chapter.chapterNumber}
+                        </span>
+                        {chapter.pages && Object.keys(chapter.pages).length > 0 && (
+                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-sm bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                            Full Pages
+                          </span>
+                        )}
+                      </div>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                         {chapter.highYieldWeightage}
                       </span>

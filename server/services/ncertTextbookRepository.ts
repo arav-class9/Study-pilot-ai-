@@ -1,4 +1,10 @@
-import { CLASS_10_SCIENCE_CH1_PAGES, CLASS_10_MATH_CH4_PAGES } from '../../src/data/ncertBooksData.js';
+import {
+  CLASS_10_SCIENCE_CH1_PAGES,
+  CLASS_10_MATH_CH4_PAGES,
+  CLASS_9_SCIENCE_CH1_PAGES,
+  CLASS_10_SCIENCE_CH2_PAGES,
+  CLASS_12_PHYSICS_CH1_PAGES,
+} from '../../src/data/ncertBooksData.js';
 import { fetchOrGenerateNCERTPageContent } from './ncertPageContentService.js';
 
 export interface ResolvedNCERTPage {
@@ -133,6 +139,76 @@ export async function getPageContentForBook(params: {
     const raw = CLASS_10_MATH_CH4_PAGES[numPage];
     const fullText = formatNCERTPageContentToText(raw);
     console.log(`[NCERT QUIZ] page lookup: Found authentic Class 10 Math Ch 4 Page ${numPage} (${fullText.length} chars)`);
+    return {
+      pageNumber: raw.pageNumber,
+      sectionTitle: raw.sectionTitle,
+      heading: raw.heading,
+      fullText,
+      paragraphs: raw.paragraphs || [],
+      keyConcepts: raw.keyConcepts || [],
+      formulas: raw.formulas || [],
+      ncertHighlights: raw.ncertHighlights || [],
+      activities: raw.activities || [],
+      inTextQuestions: raw.inTextQuestions || [],
+      vocabulary: raw.vocabulary || [],
+    };
+  }
+
+  const isClass9SciCh1 =
+    chapterId === 'c9-sci-ch1' ||
+    (chapterName && /matter\s+in\s+our\s+surroundings/i.test(chapterName)) ||
+    (String(classLevel) === '9' && /matter/i.test(String(chapterName || '')));
+
+  if (isClass9SciCh1 && CLASS_9_SCIENCE_CH1_PAGES[numPage]) {
+    const raw = CLASS_9_SCIENCE_CH1_PAGES[numPage];
+    const fullText = formatNCERTPageContentToText(raw);
+    console.log(`[NCERT QUIZ] page lookup: Found authentic Class 9 Science Ch 1 Page ${numPage} (${fullText.length} chars)`);
+    return {
+      pageNumber: raw.pageNumber,
+      sectionTitle: raw.sectionTitle,
+      heading: raw.heading,
+      fullText,
+      paragraphs: raw.paragraphs || [],
+      keyConcepts: raw.keyConcepts || [],
+      formulas: raw.formulas || [],
+      ncertHighlights: raw.ncertHighlights || [],
+      activities: raw.activities || [],
+      inTextQuestions: raw.inTextQuestions || [],
+      vocabulary: raw.vocabulary || [],
+    };
+  }
+
+  const isClass10SciCh2 =
+    chapterId === 'c10-sci-ch2' ||
+    (chapterName && /acids.*bases/i.test(chapterName));
+
+  if (isClass10SciCh2 && CLASS_10_SCIENCE_CH2_PAGES[numPage]) {
+    const raw = CLASS_10_SCIENCE_CH2_PAGES[numPage];
+    const fullText = formatNCERTPageContentToText(raw);
+    console.log(`[NCERT QUIZ] page lookup: Found authentic Class 10 Science Ch 2 Page ${numPage} (${fullText.length} chars)`);
+    return {
+      pageNumber: raw.pageNumber,
+      sectionTitle: raw.sectionTitle,
+      heading: raw.heading,
+      fullText,
+      paragraphs: raw.paragraphs || [],
+      keyConcepts: raw.keyConcepts || [],
+      formulas: raw.formulas || [],
+      ncertHighlights: raw.ncertHighlights || [],
+      activities: raw.activities || [],
+      inTextQuestions: raw.inTextQuestions || [],
+      vocabulary: raw.vocabulary || [],
+    };
+  }
+
+  const isClass12PhyCh1 =
+    chapterId === 'c12-phy-ch1' ||
+    (chapterName && /electric\s+charges/i.test(chapterName));
+
+  if (isClass12PhyCh1 && CLASS_12_PHYSICS_CH1_PAGES[numPage]) {
+    const raw = CLASS_12_PHYSICS_CH1_PAGES[numPage];
+    const fullText = formatNCERTPageContentToText(raw);
+    console.log(`[NCERT QUIZ] page lookup: Found authentic Class 12 Physics Ch 1 Page ${numPage} (${fullText.length} chars)`);
     return {
       pageNumber: raw.pageNumber,
       sectionTitle: raw.sectionTitle,
