@@ -517,7 +517,13 @@ export class NCERTService {
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
+      let err: any = {};
+      try {
+        err = await res.json();
+      } catch (parseError) {
+        const text = await res.text().catch(() => 'Unknown Server Error');
+        err = { error: `Server Error ${res.status}: ${text.substring(0, 150)}` };
+      }
       throw new Error(err.error || 'Failed to generate comprehensive NCERT test.');
     }
 
