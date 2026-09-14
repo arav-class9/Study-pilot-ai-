@@ -312,7 +312,7 @@ export async function generateNCERTPageQuiz(input: GeneratePageQuizInput): Promi
   if (!cleanContent || cleanContent.length === 0) {
     throw new NCERTPageQuizValidationError(
       'The selected NCERT page could not be loaded.',
-      404,
+      400,
       'PAGE_CONTENT_NOT_FOUND'
     );
   }
@@ -426,7 +426,7 @@ Generate EXACTLY ${targetCount} high-yield MCQs strictly from Page ${pageNum} ab
 
     throw new NCERTPageQuizValidationError(
       'The quiz could not be generated. Please try again.',
-      500,
+      422,
       'AI_GENERATION_FAILED'
     );
   }

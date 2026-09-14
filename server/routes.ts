@@ -422,7 +422,7 @@ apiRouter.post('/ncert-page-quiz', async (req: Request, res: Response) => {
     const code = error.code || (error instanceof NCERTPageQuizValidationError ? error.code : 'INTERNAL_ERROR');
     let statusCode = error.statusCode;
     if (!statusCode) {
-      if (code === 'PAGE_CONTENT_NOT_FOUND') statusCode = 404;
+      if (code === 'PAGE_CONTENT_NOT_FOUND') statusCode = 400;
       else if (code === 'EMPTY_PAGE_CONTENT') statusCode = 422;
       else if (code === 'INVALID_REQUEST') statusCode = 400;
       else if (error instanceof NCERTPageQuizValidationError) statusCode = error.statusCode;

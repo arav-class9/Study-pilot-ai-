@@ -168,7 +168,13 @@ export class NCERTService {
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
+      let err: any = {};
+      try {
+        err = await res.json();
+      } catch (parseError) {
+        const text = await res.text().catch(() => 'Unknown Server Error');
+        err = { message: `Server Error ${res.status}: ${text.substring(0, 150)}` };
+      }
       console.error('[NCERT QUIZ] API returned error:', res.status, err);
       const customError: any = new Error(
         err.message || err.error || 'Failed to generate page quiz'
