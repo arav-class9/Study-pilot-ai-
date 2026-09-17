@@ -363,6 +363,8 @@ export function processNCERTBook(
       ncertHighlights,
       vocabulary: vocabulary.length > 0 ? vocabulary : undefined,
       pageType,
+      imageDataUrl: p.imageDataUrl,
+      isScanned: p.isScanned,
     };
 
     processedPages[p.pageNumber] = processedPage;

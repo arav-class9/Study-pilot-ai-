@@ -32,6 +32,7 @@ interface NCERTPageQuizModalProps {
   pageNumber: number;
   userId: string;
   onGoToNextPage?: () => void;
+  onViewSourcePage?: (pageNumber: number) => void;
 }
 
 export const NCERTPageQuizModal: React.FC<NCERTPageQuizModalProps> = ({
@@ -42,8 +43,12 @@ export const NCERTPageQuizModal: React.FC<NCERTPageQuizModalProps> = ({
   pageNumber,
   userId,
   onGoToNextPage,
+  onViewSourcePage,
 }) => {
   // Quiz configuration
+  const [scope, setScope] = useState<'page' | 'range' | 'chapter'>('page');
+  const [rangeStart, setRangeStart] = useState<number>(pageNumber);
+  const [rangeEnd, setRangeEnd] = useState<number>(Math.min(pageNumber + 2, chapter.totalPages));
   const [questionCount, setQuestionCount] = useState<number>(5);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard' | 'adaptive'>('adaptive');
   const [quizState, setQuizState] = useState<'setup' | 'loading' | 'active' | 'completed'>('setup');
@@ -332,27 +337,75 @@ export const NCERTPageQuizModal: React.FC<NCERTPageQuizModalProps> = ({
               </div>
             )}
 
+            {/* Quiz Source Scope */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Quiz Coverage Scope
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'page', label: `Page ${pageNumber}`, desc: 'Exact page focus' },
+                  { id: 'range', label: 'Page Range', desc: 'Custom pages' },
+                  { id: 'chapter', label: 'Full Chapter', desc: 'All concepts' },
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setScope(s.id as any)}
+                    className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                      scope === s.id
+                        ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20'
+                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <div className="text-xs font-bold">{s.label}</div>
+                    <div className="text-[10px] text-slate-500 truncate">{s.desc}</div>
+                  </button>
+                ))}
+              </div>
+
+              {scope === 'range' && (
+                <div className="flex items-center space-x-2 pt-2">
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Pages:</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={chapter.totalPages}
+                    value={rangeStart}
+                    onChange={(e) => setRangeStart(Math.max(1, Number(e.target.value)))}
+                    className="w-16 px-2 py-1 border border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-900"
+                  />
+                  <span className="text-xs text-slate-500">to</span>
+                  <input
+                    type="number"
+                    min={rangeStart}
+                    max={chapter.totalPages}
+                    value={rangeEnd}
+                    onChange={(e) => setRangeEnd(Math.max(rangeStart, Math.min(chapter.totalPages, Number(e.target.value))))}
+                    className="w-16 px-2 py-1 border border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-900"
+                  />
+                </div>
+              )}
+            </div>
+
             {/* Questions count choice */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 Number of MCQs
               </label>
-              <div className="grid grid-cols-3 gap-3">
-                {[3, 5, 8].map((num) => (
+              <div className="grid grid-cols-5 gap-2">
+                {[3, 5, 10, 15, 20].map((num) => (
                   <button
                     key={num}
                     type="button"
                     onClick={() => setQuestionCount(num)}
-                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all ${
+                    className={`py-2 px-1 rounded-xl border text-center transition-all cursor-pointer ${
                       questionCount === num
                         ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20'
                         : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    {num} Questions
-                    <span className="block text-[10px] font-normal text-slate-500">
-                      {num === 3 ? 'Quick Check (~2 min)' : num === 5 ? 'Standard Drill (~4 min)' : 'Deep Mastery (~7 min)'}
-                    </span>
+                    <div className="text-xs font-bold">{num} Qs</div>
                   </button>
                 ))}
               </div>
@@ -530,8 +583,24 @@ export const NCERTPageQuizModal: React.FC<NCERTPageQuizModalProps> = ({
                     &ldquo;{currentQ.quoteFromPage}&rdquo;
                   </p>
                 )}
-                <div className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 pt-1">
-                  Reference: {currentQ.ncertPageReference}
+                <div className="flex items-center justify-between pt-1">
+                  <div className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                    Reference: {currentQ.ncertPageReference}
+                  </div>
+                  {onViewSourcePage && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = currentQ.pageNumber || pageNumber;
+                        onClose();
+                        onViewSourcePage(target);
+                      }}
+                      className="inline-flex items-center space-x-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline cursor-pointer"
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>View Source Page ({currentQ.pageNumber || pageNumber})</span>
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -609,6 +678,67 @@ export const NCERTPageQuizModal: React.FC<NCERTPageQuizModalProps> = ({
                 </div>
               );
             })()}
+
+            {/* Question Breakdown with Grounding Citations & View Source Buttons */}
+            <div className="space-y-3 pt-2">
+              <h5 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Detailed Question Review & Grounding Citations
+              </h5>
+              <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                {questions.map((q, idx) => {
+                  const userAns = userAnswers[idx];
+                  const isCorrect = userAns === q.correctAnswerIndex;
+                  return (
+                    <div
+                      key={q.id || idx}
+                      className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40 text-xs space-y-1.5"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="font-bold text-slate-900 dark:text-white">
+                          Q{idx + 1}. {q.question}
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 ${
+                            isCorrect
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                              : 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                          }`}
+                        >
+                          {isCorrect ? '✓ Correct' : '✗ Missed'}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          Correct: {q.options[q.correctAnswerIndex]}
+                        </span>
+                        {!isCorrect && userAns !== undefined && (
+                          <span className="text-rose-600 dark:text-rose-400 ml-2">
+                            (Your choice: {q.options[userAns]})
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-700/60">
+                        <span>Ref: {q.ncertPageReference || `Page ${q.pageNumber || pageNumber}`}</span>
+                        {onViewSourcePage && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const target = q.pageNumber || pageNumber;
+                              onClose();
+                              onViewSourcePage(target);
+                            }}
+                            className="inline-flex items-center space-x-1 font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                          >
+                            <BookOpen className="w-3 h-3" />
+                            <span>Jump to Page {q.pageNumber || pageNumber}</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
             {/* Action Buttons */}
             <div className="space-y-2">

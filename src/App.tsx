@@ -3,14 +3,16 @@ import { AppProvider, useApp } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FocusProvider } from './context/FocusContext';
 import { Navbar } from './components/layout/Navbar';
-import { SidebarMenu as Sidebar } from './components/layout/SidebarMenu';
 import { BottomNav } from './components/layout/BottomNav';
+
+
 import { OnboardingModal } from './components/onboarding/OnboardingModal';
 import { WalkthroughModal } from './components/onboarding/WalkthroughModal';
 import { UpgradeModal } from './components/common/UpgradeModal';
 import { ZenFocusModal } from './components/pomodoro/ZenFocusModal';
 import { FocusAnalyticsModal } from './components/pomodoro/FocusAnalyticsModal';
 import { FloatingFocusWidget } from './components/pomodoro/FloatingFocusWidget';
+import { OfflineIndicator } from './components/common/OfflineIndicator';
 
 // Pages
 const HomePage = React.lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
@@ -149,18 +151,19 @@ const AppContent: React.FC = () => {
     >
       <Navbar />
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
-        <Sidebar />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto max-w-5xl mx-auto w-full">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8 overflow-y-auto max-w-7xl mx-auto w-full">
           {renderContent()}
         </main>
       </div>
       <BottomNav />
+      
       <OnboardingModal />
       <WalkthroughModal />
       <UpgradeModal />
       <ZenFocusModal />
       <FocusAnalyticsModal />
       <FloatingFocusWidget />
+      <OfflineIndicator />
     </div>
   );
 };

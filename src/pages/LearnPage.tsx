@@ -49,15 +49,54 @@ export const LearnPage: React.FC = () => {
     toggleFavoriteNote,
     checkAndConsumeUsage,
     addXP,
+    activeTab,
+    learnSubTab,
+    setLearnSubTab,
+    selectedSubjectId: globalSubject,
+    setSelectedSubjectId: setGlobalSubject,
+    selectedClassLevel: globalClass,
+    setSelectedClassLevel: setGlobalClass,
+    selectedBoard: globalBoard,
+    setSelectedBoard: setGlobalBoard,
+    navigateToTab,
   } = useApp();
 
-  const [activeSubTab, setActiveSubTab] = useState<'explore' | 'generator' | 'my_notes'>('explore');
+  const [activeSubTab, setActiveSubTab] = useState<'explore' | 'generator' | 'my_notes'>(() => {
+    if (activeTab === 'notes') return 'my_notes';
+    if (learnSubTab === 'generator' || learnSubTab === 'my_notes') return learnSubTab;
+    return 'explore';
+  });
+
+  // Keep subTab in sync if navigated with specific subTab
+  React.useEffect(() => {
+    if (learnSubTab === 'generator' || learnSubTab === 'my_notes' || learnSubTab === 'explore') {
+      setActiveSubTab(learnSubTab);
+    } else if (activeTab === 'notes') {
+      setActiveSubTab('my_notes');
+    }
+  }, [learnSubTab, activeTab]);
 
   // Hierarchy Selection State
-  const [board, setBoard] = useState<string>(user.board || 'CBSE');
-  const [classLevel, setClassLevel] = useState<ClassLevel>(user.classLevel || '10');
-  const [selectedSubject, setSelectedSubject] = useState<SubjectId>('science');
+  const [board, setBoard] = useState<string>(globalBoard || user.board || 'CBSE');
+  const [classLevel, setClassLevel] = useState<ClassLevel>((globalClass || user.classLevel || '10') as ClassLevel);
+  const [selectedSubject, setSelectedSubject] = useState<SubjectId>((globalSubject || 'science') as SubjectId);
   const [chapterSearch, setChapterSearch] = useState('');
+
+  // Sync back to global context whenever local filters change
+  const handleBoardChange = (newBoard: string) => {
+    setBoard(newBoard);
+    setGlobalBoard(newBoard);
+  };
+
+  const handleClassChange = (newClass: ClassLevel) => {
+    setClassLevel(newClass);
+    setGlobalClass(newClass);
+  };
+
+  const handleSubjectChange = (newSub: SubjectId) => {
+    setSelectedSubject(newSub);
+    setGlobalSubject(newSub);
+  };
 
   // Voice player toggle state
   const [showVoicePlayer, setShowVoicePlayer] = useState(false);
@@ -264,7 +303,7 @@ export const LearnPage: React.FC = () => {
                 <div className="relative">
                   <select
                     value={board}
-                    onChange={(e) => setBoard(e.target.value)}
+                    onChange={(e) => handleBoardChange(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm font-semibold rounded-2xl px-3.5 py-2.5 appearance-none focus:bg-white focus:border-indigo-500 focus:outline-hidden cursor-pointer"
                   >
                     {SUPPORTED_BOARDS.map((b) => (
@@ -285,7 +324,7 @@ export const LearnPage: React.FC = () => {
                 <div className="relative">
                   <select
                     value={classLevel}
-                    onChange={(e) => setClassLevel(e.target.value as ClassLevel)}
+                    onChange={(e) => handleClassChange(e.target.value as ClassLevel)}
                     className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm font-semibold rounded-2xl px-3.5 py-2.5 appearance-none focus:bg-white focus:border-indigo-500 focus:outline-hidden cursor-pointer"
                   >
                     {ALL_CLASSES.map((c) => (
@@ -306,7 +345,7 @@ export const LearnPage: React.FC = () => {
                 <div className="relative">
                   <select
                     value={selectedSubject}
-                    onChange={(e) => setSelectedSubject(e.target.value as SubjectId)}
+                    onChange={(e) => handleSubjectChange(e.target.value as SubjectId)}
                     className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm font-semibold rounded-2xl px-3.5 py-2.5 appearance-none focus:bg-white focus:border-indigo-500 focus:outline-hidden cursor-pointer"
                   >
                     {availableSubjects.map((s) => (
@@ -426,7 +465,23 @@ export const LearnPage: React.FC = () => {
                         className="flex-1 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>Generate AI Notes</span>
+                        <span>AI Notes</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          navigateToTab('practice', {
+                            subject: ch.subjectId,
+                            classLevel,
+                            board,
+                            chapters: [ch.name],
+                          });
+                        }}
+                        className="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        title="Practice quiz for this chapter"
+                      >
+                        <Zap className="w-3.5 h-3.5" />
+                        <span>Practice Drill</span>
                       </button>
 
                       <button
@@ -434,11 +489,11 @@ export const LearnPage: React.FC = () => {
                           setVoiceChapterTarget(ch.name);
                           setShowVoicePlayer(true);
                         }}
-                        className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                        className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
                         title="Listen with AI Voice Tutor"
                       >
                         <Volume2 className="w-3.5 h-3.5 text-indigo-600" />
-                        <span className="hidden sm:inline">Voice Tutor</span>
+                        <span className="hidden sm:inline">Voice</span>
                       </button>
                     </div>
                   </div>

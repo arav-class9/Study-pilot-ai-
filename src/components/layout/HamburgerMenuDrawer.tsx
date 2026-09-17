@@ -36,7 +36,7 @@ interface MenuSection {
 }
 
 export const HamburgerMenuDrawer: React.FC = () => {
-  const { setActiveTab, activeTab, setIsUpgradeModalOpen, user } = useApp();
+  const { setActiveTab, activeTab, setIsUpgradeModalOpen, user, addNotification } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -93,13 +93,23 @@ export const HamburgerMenuDrawer: React.FC = () => {
           id: 'help',
           label: 'Help & Feedback',
           icon: HelpCircle,
-          action: () => alert('StudyPilot AI Support: Contact support@studypilot.ai for prompt assistance.'),
+          action: () =>
+            addNotification({
+              title: 'StudyPilot AI Support',
+              message: 'Need help? Email support@studypilot.ai or explore in-app tutor assistance anytime.',
+              type: 'info',
+            }),
         },
         {
           id: 'about',
           label: 'About StudyPilot AI',
           icon: Info,
-          action: () => alert('StudyPilot AI v2.5 - Your personalized curriculum & adaptive study companion.'),
+          action: () =>
+            addNotification({
+              title: 'StudyPilot AI v2.5',
+              message: 'Personalized curriculum & adaptive AI study companion for Class 9-12 CBSE & State Boards.',
+              type: 'info',
+            }),
         },
       ],
     },
@@ -140,7 +150,10 @@ export const HamburgerMenuDrawer: React.FC = () => {
 
       {/* Backdrop overlay for mobile drawer */}
       {isOpen && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 md:hidden animate-fadeIn" />
+        <div
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 md:hidden animate-fadeIn cursor-pointer"
+        />
       )}
 
       {/* Drawer / Menu Dropdown Panel */}
@@ -148,7 +161,7 @@ export const HamburgerMenuDrawer: React.FC = () => {
         <div
           onTouchStart={handleDrawerTouchStart}
           onTouchEnd={handleDrawerTouchEnd}
-          className="absolute left-0 top-12 w-[320px] sm:w-[380px] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 z-50 animate-fadeIn text-slate-800 dark:text-slate-100 max-h-[80vh] overflow-y-auto"
+          className="fixed sm:absolute left-2 sm:left-0 top-16 sm:top-12 w-[calc(100vw-1rem)] max-w-[360px] sm:w-[380px] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 sm:p-5 z-50 animate-fadeIn text-slate-800 dark:text-slate-100 max-h-[80vh] overflow-y-auto"
         >
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">

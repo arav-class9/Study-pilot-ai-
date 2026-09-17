@@ -41,6 +41,10 @@ import {
   AlertTriangle,
   ExternalLink,
   Plus,
+  Languages,
+  BookMarked,
+  Feather,
+  ChevronLeft,
 } from 'lucide-react';
 
 export const NCERTBooksPage: React.FC = () => {
@@ -185,12 +189,18 @@ export const NCERTBooksPage: React.FC = () => {
   const getSubjectIcon = (iconName: string) => {
     switch (iconName) {
       case 'Calculator':
-        return <Calculator className="w-4 h-4" />;
+        return <Calculator className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
       case 'Globe':
-        return <Globe className="w-4 h-4" />;
+        return <Globe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />;
+      case 'Languages':
+        return <Languages className="w-5 h-5 text-rose-600 dark:text-rose-400" />;
+      case 'Sparkles':
+        return <Sparkles className="w-5 h-5 text-teal-600 dark:text-teal-400" />;
+      case 'BookOpen':
+        return <BookOpen className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
       case 'Atom':
       default:
-        return <Atom className="w-4 h-4" />;
+        return <Atom className="w-5 h-5 text-sky-600 dark:text-sky-400" />;
     }
   };
 
@@ -223,6 +233,9 @@ export const NCERTBooksPage: React.FC = () => {
               if (readerPageNumber < activeChapter.totalPages) {
                 setReaderPageNumber((p) => p + 1);
               }
+            }}
+            onViewSourcePage={(p: number) => {
+              setReaderPageNumber(p);
             }}
           />
         )}

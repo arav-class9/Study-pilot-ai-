@@ -1,4 +1,6 @@
+const fs = require('fs');
 
+const code = `
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
@@ -16,7 +18,6 @@ import {
 import { GlobalSearchModal } from '../search/GlobalSearchModal';
 import { NotificationDrawer } from '../notifications/NotificationDrawer';
 import { HamburgerMenuDrawer } from './HamburgerMenuDrawer';
-import { PWAInstallButton } from '../common/PWAInstallButton';
 
 export const Navbar: React.FC = () => {
   const { user, activeTab, setActiveTab, notifications } = useApp();
@@ -36,10 +37,10 @@ export const Navbar: React.FC = () => {
   return (
     <>
       <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] px-4 sm:px-6 lg:px-8 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between relative">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           {/* Left: Logo */}
-          <div className="flex-1 flex items-center justify-start gap-2 cursor-pointer" onClick={() => setActiveTab('home')}>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('home')}>
             <div className="text-blue-600">
                <GraduationCap className="w-8 h-8" fill="currentColor" strokeWidth={1}/>
             </div>
@@ -49,7 +50,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Center: Desktop Navigation Links */}
-          <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => {
               const isActive = activeTab === link.id || 
                 (link.id === 'ncert' && activeTab === 'books') || 
@@ -59,11 +60,11 @@ export const Navbar: React.FC = () => {
                 <button
                   key={link.id}
                   onClick={() => setActiveTab(link.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer ${
+                  className={\`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer \${
                     isActive 
                       ? 'bg-blue-50 text-blue-600' 
                       : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                  }`}
+                  }\`}
                 >
                   <link.icon className="w-4 h-4" />
                   <span>{link.label}</span>
@@ -73,8 +74,7 @@ export const Navbar: React.FC = () => {
           </nav>
 
           {/* Right: Actions */}
-          <div className="flex-1 flex items-center justify-end gap-2 sm:gap-4">
-            <PWAInstallButton />
+          <div className="flex items-center gap-2 sm:gap-4">
             <button 
               onClick={() => setIsSearchOpen(true)}
               className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-full transition-colors cursor-pointer"
@@ -126,3 +126,6 @@ export const Navbar: React.FC = () => {
     </>
   );
 };
+`;
+
+fs.writeFileSync('src/components/layout/Navbar.tsx', code, 'utf8');

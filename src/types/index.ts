@@ -443,6 +443,25 @@ export interface ExamAttempt {
 export interface HandwrittenSolutionAnalysis {
   overallResult: 'correct' | 'partially_correct' | 'incorrect' | 'unclear';
   scoreOutOf10?: number;
+  transcribedSteps?: {
+    stepNumber: number;
+    text: string;
+    mathExpression?: string;
+    studentAttemptSnippet?: string;
+  }[];
+  stepAnalysis?: {
+    stepNumber: number;
+    status: 'correct' | 'incorrect' | 'partial';
+    critique: string;
+  }[];
+  markingSchemeBreakdown?: {
+    formulaAndLawMarks: { awarded: number; max: number; remarks: string };
+    substitutionMarks: { awarded: number; max: number; remarks: string };
+    calculationMarks: { awarded: number; max: number; remarks: string };
+    unitsAndPresentationMarks: { awarded: number; max: number; remarks: string };
+    totalAwarded: number;
+    maxTotal: number;
+  };
   correctParts: string[];
   errors: string[];
   missingSteps: string[];
@@ -450,6 +469,7 @@ export interface HandwrittenSolutionAnalysis {
   calculationIssue?: string;
   finalAnswer?: string;
   improvementTip: string;
+  boardPresentationTips?: string[];
   unclearHandwritingWarning?: boolean;
 }
 
@@ -519,7 +539,7 @@ export interface AppNotification {
   id: string;
   title: string;
   message: string;
-  type: 'revision_due' | 'exam_alert' | 'mistake_reminder' | 'streak_alert' | 'study_goal';
+  type: 'revision_due' | 'exam_alert' | 'mistake_reminder' | 'streak_alert' | 'study_goal' | 'info';
   timestamp: string;
   read: boolean;
   actionTab?: string;

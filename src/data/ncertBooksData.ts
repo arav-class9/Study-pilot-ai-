@@ -13,6 +13,10 @@ export {
   CLASS_12_PHYSICS_CH1_PAGES,
 } from './ncertExtendedPages';
 
+export {
+  CLASS_9_MATH_CH2_PAGES,
+} from './ncertPolynomialsData';
+
 // Comprehensive Supported NCERT Subjects & Catalog
 export const NCERT_SUBJECTS_CATALOG: NCERTSubject[] = COMPREHENSIVE_NCERT_CATALOG;
 

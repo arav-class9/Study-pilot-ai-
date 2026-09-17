@@ -1,24 +1,18 @@
 const fs = require('fs');
-let rules = fs.readFileSync('firestore.rules', 'utf8');
+let code = fs.readFileSync('firestore.rules', 'utf8');
 
-const roleChecks = `
-    function hasRole(role) {
-      return get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == role;
-    }
-    function isTeacher() { return hasRole('teacher'); }
-    function isParent() { return hasRole('parent'); }
-    function isAdmin() { return hasRole('admin'); }
-    function isAuthorizedForStudent(studentId) {
-      return isOwner(studentId) || isTeacher() || isParent() || isAdmin();
+if (!code.includes('/subjectDiscussions/')) {
+  const insertion = `
+    match /subjectDiscussions/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId || 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
+      );
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
     }
 `;
-
-rules = rules.replace(
-  'function isOwner(userId) {',
-  roleChecks + '\n    function isOwner(userId) {'
-);
-
-rules = rules.replace(/allow read, update, delete: if isOwner\(resource\.data\.userId\);/g, 'allow update, delete: if isOwner(resource.data.userId);\n      allow read: if isAuthorizedForStudent(resource.data.userId);');
-rules = rules.replace(/allow read, write: if isOwner\(userId\);/g, 'allow write: if isOwner(userId);\n      allow read: if isAuthorizedForStudent(userId);');
-
-fs.writeFileSync('firestore.rules', rules);
+  code = code.replace(/match \/questions\/\{docId\} \{.*?\}/s, match => match + insertion);
+  fs.writeFileSync('firestore.rules', code, 'utf8');
+}

@@ -121,5 +121,44 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
     }
+    match /subjectDiscussions/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId || 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
+      );
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    match /teacherClasses/{classId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated();
+      
+      match /students/{studentId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    match /classAssignments/{assignmentId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /assignmentSubmissions/{subId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /parentStudentLinks/{linkId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /multiplayerRooms/{roomId} {
+      allow read, write: if isAuthenticated();
+      match /players/{playerId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
   }
 }

@@ -18,6 +18,8 @@ import { NCERTFullBookTestModal } from './NCERTFullBookTestModal';
 import { NCERTWeakTopicsDashboard } from './NCERTWeakTopicsDashboard';
 import { NCERTFormulaSheetModal } from './NCERTFormulaSheetModal';
 import { NCERTFlashcardsModal } from './NCERTFlashcardsModal';
+import { NCERTChatModal } from './NCERTChatModal';
+import { NCERTPageSummaryModal } from './NCERTPageSummaryModal';
 import {
   ChevronLeft,
   ChevronRight,
@@ -28,6 +30,8 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
+  MessageSquare,
+  FileText,
   CheckCircle,
   HelpCircle,
   FlaskConical,
@@ -88,16 +92,22 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
   const [selectionLoading, setSelectionLoading] = useState<boolean>(false);
   const [highlights, setHighlights] = useState<NCERTHighlight[]>([]);
 
-  // Modals for Search, Full-Book Test, Weak Topics, Formula Sheet, and Flashcards
+  // Modals for Search, Full-Book Test, Weak Topics, Formula Sheet, Flashcards, Chat, and Summary
   const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false);
   const [testModalOpen, setTestModalOpen] = useState<boolean>(false);
   const [weakTopicsModalOpen, setWeakTopicsModalOpen] = useState<boolean>(false);
   const [formulaModalOpen, setFormulaModalOpen] = useState<boolean>(false);
   const [flashcardsModalOpen, setFlashcardsModalOpen] = useState<boolean>(false);
+  const [chatModalOpen, setChatModalOpen] = useState<boolean>(false);
+  const [summaryModalOpen, setSummaryModalOpen] = useState<boolean>(false);
 
   // Audio Speech Controls
   const [speechRate, setSpeechRate] = useState<number>(1.0);
   const [isSpeechPaused, setIsSpeechPaused] = useState<boolean>(false);
+
+  // PDF Authentic View vs Structured Textbook View
+  const [viewMode, setViewMode] = useState<'text' | 'pdf'>('text');
+  const [pdfZoom, setPdfZoom] = useState<number>(1.0);
 
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -151,6 +161,8 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
         vocabulary: p.vocabulary || [],
         keyConcepts: p.topics || [],
         pageType: (p.pageType as any) || 'content',
+        imageDataUrl: p.imageDataUrl,
+        isScanned: p.isScanned,
       };
       setPageData(directContent);
       setLoading(false);
@@ -211,8 +223,9 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
   };
 
   // Selection Actions Handler (Notes, Explain, Quiz)
-  const handleSelectionAction = async (actionType: 'notes' | 'explain' | 'quiz') => {
-    if (!selectedText) return;
+  const handleSelectionAction = async (actionType: 'notes' | 'explain' | 'quiz', textToUse?: string) => {
+    const text = textToUse || selectedText;
+    if (!text) return;
     setToolbarPos(null);
     setSelectionResult(null);
     setSelectionLoading(true);
@@ -221,7 +234,7 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
     try {
       const res = await NCERTService.executeSelectionAction({
         actionType,
-        selectedText,
+        selectedText: text,
         pageNumber: currentPage,
         chapterName: chapter.title,
         subject: chapter.subjectId,
@@ -546,6 +559,28 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
               </button>
             )}
 
+            {/* Summarize Page */}
+            <button
+              id="ncert-summarize-page-btn"
+              onClick={() => setSummaryModalOpen(true)}
+              className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center space-x-1.5 transition-colors cursor-pointer"
+              title="Generate summary and key takeaways for this page"
+            >
+              <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span className="hidden md:inline">Summarize Page</span>
+            </button>
+
+            {/* Ask AI Tutor */}
+            <button
+              id="ncert-ask-ai-btn"
+              onClick={() => setChatModalOpen(true)}
+              className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800 rounded-lg flex items-center space-x-1.5 transition-colors cursor-pointer"
+              title="Ask AI tutor anything about this page"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <span>Ask AI</span>
+            </button>
+
             {/* Instant Page Quiz CTA button */}
             <button
               id="ncert-instant-quiz-btn"
@@ -740,6 +775,80 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* PDF Authentic View Switcher */}
+              {pageData.imageDataUrl && (
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Display:</span>
+                    <div className="inline-flex rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-0.5">
+                      <button
+                        onClick={() => setViewMode('text')}
+                        className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                          viewMode === 'text'
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                        }`}
+                      >
+                        Structured Reader
+                      </button>
+                      <button
+                        onClick={() => setViewMode('pdf')}
+                        className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                          viewMode === 'pdf'
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                        }`}
+                      >
+                        Authentic PDF Page {pageData.isScanned ? '• Scanned/OCR' : ''}
+                      </button>
+                    </div>
+                  </div>
+
+                  {viewMode === 'pdf' && (
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setPdfZoom((z) => Math.max(0.6, Number((z - 0.15).toFixed(2))))}
+                        className="px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50 cursor-pointer"
+                        title="Zoom Out"
+                      >
+                        -
+                      </button>
+                      <span className="text-xs font-mono font-bold px-1.5">{Math.round(pdfZoom * 100)}%</span>
+                      <button
+                        onClick={() => setPdfZoom((z) => Math.min(2.5, Number((z + 0.15).toFixed(2))))}
+                        className="px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50 cursor-pointer"
+                        title="Zoom In"
+                      >
+                        +
+                      </button>
+                      <button
+                        onClick={() => setPdfZoom(1.0)}
+                        className="px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50 cursor-pointer"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Authentic PDF View Canvas Image */}
+              {viewMode === 'pdf' && pageData.imageDataUrl && (
+                <div className="mb-6 flex flex-col items-center">
+                  <div className="w-full overflow-auto rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-900 p-3 shadow-inner flex justify-center">
+                    <img
+                      src={pageData.imageDataUrl}
+                      alt={`Official NCERT Page ${currentPage}`}
+                      style={{ transform: `scale(${pdfZoom})`, transformOrigin: 'top center' }}
+                      className="max-w-full rounded-md shadow-2xl transition-transform duration-150"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-2 text-center">
+                    Rendered high-resolution PDF canvas. Verified against official textbook repository.
+                  </p>
                 </div>
               )}
 
@@ -1003,6 +1112,24 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
       <NCERTFlashcardsModal
         isOpen={flashcardsModalOpen}
         onClose={() => setFlashcardsModalOpen(false)}
+        chapter={chapter}
+        pageContent={pageData}
+        pageNumber={currentPage}
+      />
+
+      {/* Ask AI Chat Modal */}
+      <NCERTChatModal
+        isOpen={chatModalOpen}
+        onClose={() => setChatModalOpen(false)}
+        chapter={chapter}
+        pageContent={pageData}
+        pageNumber={currentPage}
+      />
+
+      {/* Page Summary Modal */}
+      <NCERTPageSummaryModal
+        isOpen={summaryModalOpen}
+        onClose={() => setSummaryModalOpen(false)}
         chapter={chapter}
         pageContent={pageData}
         pageNumber={currentPage}

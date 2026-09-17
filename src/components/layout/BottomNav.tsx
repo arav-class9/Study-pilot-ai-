@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Home, BookOpen, CheckCircle2, FileCheck2, BookMarked } from 'lucide-react';
+import { Home, BookOpen, CheckCircle2, BookMarked, User } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const { activeTab, setActiveTab } = useApp();
@@ -8,9 +8,9 @@ export const BottomNav: React.FC = () => {
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'ncert', label: 'NCERT', icon: BookMarked },
-    { id: 'learn', label: 'Learn', icon: BookOpen },
-    { id: 'practice', label: 'Practice', icon: CheckCircle2 },
-    { id: 'exam', label: 'Exam', icon: FileCheck2 },
+    { id: 'practice', label: 'Quiz', icon: CheckCircle2 },
+    { id: 'learn', label: 'Library', icon: BookOpen },
+    { id: 'profile', label: 'Profile', icon: User },
   ];
 
   return (

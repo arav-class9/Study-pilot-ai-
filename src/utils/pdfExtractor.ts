@@ -9,6 +9,8 @@ export interface ExtractedPage {
   pageNumber: number;
   text: string;
   lines: string[];
+  imageDataUrl?: string;
+  isScanned?: boolean;
 }
 
 export interface PDFExtractionProgress {
@@ -19,11 +21,13 @@ export interface PDFExtractionProgress {
 }
 
 /**
- * Extracts page-by-page text from a PDF File or ArrayBuffer using pdfjs-dist
+ * Extracts page-by-page text, high-res image renders, and performs OCR fallback
+ * for scanned PDFs using pdfjs-dist and Gemini vision API.
  */
 export async function extractPDFPages(
   fileOrBuffer: File | ArrayBuffer,
-  onProgress?: (progress: PDFExtractionProgress) => void
+  onProgress?: (progress: PDFExtractionProgress) => void,
+  options?: { classLevel?: string; subject?: string }
 ): Promise<ExtractedPage[]> {
   let arrayBuffer: ArrayBuffer;
   if (fileOrBuffer instanceof File) {
@@ -47,7 +51,7 @@ export async function extractPDFPages(
         currentPage: pageNum,
         totalPages,
         percent: Math.round((pageNum / totalPages) * 100),
-        statusText: `Extracting authentic text from Page ${pageNum} of ${totalPages}...`,
+        statusText: `Extracting authentic text & page render from Page ${pageNum} of ${totalPages}...`,
       });
     }
 
@@ -59,7 +63,6 @@ export async function extractPDFPages(
 
     for (const item of textContent.items) {
       if ('str' in item && item.str.trim().length > 0) {
-        // Round y coordinate to group into same line
         const y = Math.round(item.transform[5]);
         const x = item.transform[4];
         if (!lineMap.has(y)) {
@@ -75,7 +78,6 @@ export async function extractPDFPages(
 
     for (const y of sortedY) {
       const lineItems = lineMap.get(y)!;
-      // Sort items in line by x ascending (left to right)
       lineItems.sort((a, b) => a.x - b.x);
       const lineText = lineItems.map((i) => i.text).join(' ').trim();
       if (lineText.length > 0) {
@@ -83,11 +85,66 @@ export async function extractPDFPages(
       }
     }
 
-    const fullPageText = lines.join('\n');
+    let fullPageText = lines.join('\n');
+    let imageDataUrl: string | undefined = undefined;
+
+    // Render page to canvas for high-fidelity visual reader and OCR
+    try {
+      if (typeof document !== 'undefined') {
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          await (page.render as any)({ canvasContext: ctx, viewport, canvas }).promise;
+          imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        }
+      }
+    } catch (renderErr) {
+      console.warn(`Canvas render error for page ${pageNum}:`, renderErr);
+    }
+
+    // Scanned page detection: If text is sparse (< 30 characters) and we have an image, run OCR
+    const isScanned = fullPageText.trim().length < 30;
+    if (isScanned && imageDataUrl) {
+      if (onProgress) {
+        onProgress({
+          currentPage: pageNum,
+          totalPages,
+          percent: Math.round((pageNum / totalPages) * 100),
+          statusText: `Scanned page detected on Page ${pageNum}. Running AI OCR extraction...`,
+        });
+      }
+      try {
+        const ocrRes = await fetch('/api/ai/ncert-page-ocr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image: imageDataUrl,
+            classLevel: options?.classLevel || '10',
+            subject: options?.subject || 'Science',
+          }),
+        });
+        if (ocrRes.ok) {
+          const ocrJson = await ocrRes.json();
+          if (ocrJson.data?.rawExtractedText) {
+            fullPageText = ocrJson.data.rawExtractedText;
+            lines.length = 0;
+            lines.push(...(ocrJson.data.paragraphs || fullPageText.split('\n')));
+          }
+        }
+      } catch (ocrErr) {
+        console.warn(`OCR fallback failed for page ${pageNum}:`, ocrErr);
+      }
+    }
+
     extractedPages.push({
       pageNumber: pageNum,
       text: fullPageText,
       lines,
+      imageDataUrl,
+      isScanned,
     });
   }
 

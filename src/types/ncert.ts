@@ -12,7 +12,8 @@ export type NCERTSubjectId =
   | 'civics'
   | 'economics'
   | 'english'
-  | 'hindi';
+  | 'hindi'
+  | 'sanskrit';
 
 export type NCERTPageType = 'theory' | 'activity' | 'numerical_example' | 'summary' | 'exercise';
 
@@ -43,6 +44,8 @@ export interface NCERTPageContent {
   }[];
   diagramNote?: string;
   pageType: NCERTPageType;
+  imageDataUrl?: string;
+  isScanned?: boolean;
 }
 
 export interface NCERTChapter {
@@ -81,6 +84,7 @@ export interface NCERTQuizQuestion {
   difficulty: NCERTDifficulty;
   conceptTag: string;
   quoteFromPage?: string;
+  pageNumber?: number;
 }
 
 export type ApiErrorCode =
@@ -238,6 +242,8 @@ export interface NCERTProcessedBookPage {
     definition: string;
   }[];
   pageType: NCERTPageType;
+  imageDataUrl?: string;
+  isScanned?: boolean;
 }
 
 export interface NCERTBookSearchIndexEntry {

@@ -57,6 +57,17 @@ interface AppContextType {
   notifications: AppNotification[];
   selectedChapter: Chapter | null;
   setSelectedChapter: (chapter: Chapter | null) => void;
+  selectedSubjectId: SubjectId;
+  setSelectedSubjectId: (s: SubjectId) => void;
+  selectedClassLevel: ClassLevel;
+  setSelectedClassLevel: (c: ClassLevel) => void;
+  selectedBoard: string;
+  setSelectedBoard: (b: string) => void;
+  selectedExamChapters: string[];
+  setSelectedExamChapters: (ch: string[]) => void;
+  learnSubTab: string;
+  setLearnSubTab: (t: string) => void;
+  navigateToTab: (tab: string, options?: { subTab?: string; subject?: SubjectId; classLevel?: ClassLevel; board?: string; chapters?: string[] }) => void;
   language: LanguageCode;
   setLanguage: (lang: LanguageCode) => void;
   isOffline: boolean;
@@ -436,6 +447,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [activeTab, setActiveTab] = useState<string>('home');
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<SubjectId>('science');
+  const [selectedClassLevel, setSelectedClassLevel] = useState<ClassLevel>(user?.classLevel || '10');
+  const [selectedBoard, setSelectedBoard] = useState<string>(user?.board || 'CBSE');
+  const [selectedExamChapters, setSelectedExamChapters] = useState<string[]>([]);
+  const [learnSubTab, setLearnSubTab] = useState<string>('explore');
+
+  // Keep class/board in sync if user changes
+  useEffect(() => {
+    if (user?.classLevel) setSelectedClassLevel(user.classLevel);
+    if (user?.board) setSelectedBoard(user.board);
+  }, [user?.classLevel, user?.board]);
+
+  const navigateToTab = (
+    tab: string,
+    options?: {
+      subTab?: string;
+      subject?: SubjectId;
+      classLevel?: ClassLevel;
+      board?: string;
+      chapters?: string[];
+    }
+  ) => {
+    if (options?.subTab) setLearnSubTab(options.subTab);
+    if (options?.subject) setSelectedSubjectId(options.subject);
+    if (options?.classLevel) setSelectedClassLevel(options.classLevel);
+    if (options?.board) setSelectedBoard(options.board);
+    if (options?.chapters) setSelectedExamChapters(options.chapters);
+    setActiveTab(tab);
+  };
   const [language, setLanguage] = useState<LanguageCode>('en');
   const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
 
@@ -1122,6 +1162,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notifications,
         selectedChapter,
         setSelectedChapter,
+        selectedSubjectId,
+        setSelectedSubjectId,
+        selectedClassLevel,
+        setSelectedClassLevel,
+        selectedBoard,
+        setSelectedBoard,
+        selectedExamChapters,
+        setSelectedExamChapters,
+        learnSubTab,
+        setLearnSubTab,
+        navigateToTab,
         language,
         setLanguage,
         isOffline,

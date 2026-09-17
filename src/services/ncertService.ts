@@ -13,7 +13,7 @@ import {
   GeneratePageQuizRequest,
   ApiError,
 } from '../types/ncert';
-import { CLASS_10_SCIENCE_CH1_PAGES, CLASS_10_MATH_CH4_PAGES, getNCERTChapterById } from '../data/ncertBooksData';
+import { CLASS_10_SCIENCE_CH1_PAGES, CLASS_10_MATH_CH4_PAGES, CLASS_9_MATH_CH2_PAGES, getNCERTChapterById } from '../data/ncertBooksData';
 import { extractPDFPages, PDFExtractionProgress } from '../utils/pdfExtractor';
 import { processNCERTBook } from '../utils/ncertBookProcessor';
 import { NCERTBookStorage } from './ncertBookStorage';
@@ -57,6 +57,13 @@ export class NCERTService {
     }
     if (chapterId === 'c10-math-ch4' && CLASS_10_MATH_CH4_PAGES[pageNumber]) {
       return CLASS_10_MATH_CH4_PAGES[pageNumber];
+    }
+    if (chapterId === 'c9-math-ch2' && CLASS_9_MATH_CH2_PAGES[pageNumber]) {
+      return CLASS_9_MATH_CH2_PAGES[pageNumber];
+    }
+    const chapterObj = getNCERTChapterById(chapterId);
+    if (chapterObj?.pages && chapterObj.pages[pageNumber]) {
+      return chapterObj.pages[pageNumber];
     }
 
     // 2. Check local storage cache
@@ -562,6 +569,45 @@ export class NCERTService {
     await NCERTBookStorage.saveBook(processedBook);
 
     return processedBook;
+  }
+
+  /**
+   * Process individual textbook page photo or excerpt via OCR and pedagogical parser
+   */
+  static async processBookPageOcr(params: {
+    image?: string;
+    text?: string;
+    classLevel?: string;
+    subject?: string;
+    chapterHint?: string;
+  }): Promise<{
+    detectedClass: string;
+    detectedSubject: string;
+    detectedChapter: string;
+    detectedPageNumber: number;
+    sectionTitle: string;
+    transcribedText: string;
+    paragraphs: string[];
+    keyConcepts: string[];
+    formulas: string[];
+    ncertHighlights: string[];
+    inTextQuestions: string[];
+    confidence: number;
+  }> {
+    const headers = await getAuthHeaders();
+    const res = await fetch('/api/ai/ncert-page-ocr', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(params),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to process textbook page.');
+    }
+
+    const json = await res.json();
+    return json.data;
   }
 }
 

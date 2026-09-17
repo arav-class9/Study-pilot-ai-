@@ -22,20 +22,35 @@ import {
   Mic,
   MicOff,
   Shield,
+  Award,
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { HandwrittenSolutionTab } from '../components/tutor/HandwrittenSolutionTab';
+import { TextbookPhotoTab } from '../components/tutor/TextbookPhotoTab';
+import { VivaFeynmanTab } from '../components/tutor/VivaFeynmanTab';
 
 export const AITutorPage: React.FC = () => {
-  const { user, saveNote, checkAndConsumeUsage, addXP, isDeepWork, toggleDeepWork } = useApp();
+  const {
+    user,
+    saveNote,
+    checkAndConsumeUsage,
+    addXP,
+    isDeepWork,
+    toggleDeepWork,
+    selectedSubjectId: globalSubject,
+    selectedClassLevel: globalClass,
+  } = useApp();
 
+  const [activeTutorTab, setActiveTutorTab] = useState<'doubt' | 'handwritten' | 'textbook_photo' | 'viva_feynman'>('doubt');
   const [questionText, setQuestionText] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState<string>('science');
-  const [selectedClass, setSelectedClass] = useState<ClassLevel>(user.classLevel || '10');
+  const [selectedSubject, setSelectedSubject] = useState<string>(globalSubject || 'science');
+  const [selectedClass, setSelectedClass] = useState<ClassLevel>((globalClass || user?.classLevel || '10') as ClassLevel);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageMimeType, setImageMimeType] = useState<string>('image/jpeg');
 
   const [isLoading, setIsLoading] = useState(false);
   const [solution, setSolution] = useState<DoubtSolution | null>(null);
+  const [tutorError, setTutorError] = useState<string | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [revealedPracticeAnswer, setRevealedPracticeAnswer] = useState(false);
@@ -123,6 +138,7 @@ export const AITutorPage: React.FC = () => {
 
     setIsLoading(true);
     setSolution(null);
+    setTutorError(null);
     setRevealedPracticeAnswer(false);
     setSavedSuccess(false);
 
@@ -134,10 +150,12 @@ export const AITutorPage: React.FC = () => {
         subject: selectedSubject,
         classLevel: selectedClass,
       });
+      if (!res) throw new Error('Unable to retrieve solution from AI Tutor.');
       setSolution(res);
       addXP(20, 'Doubt Solved');
     } catch (err: any) {
       console.error('Error solving doubt:', err);
+      setTutorError(err.message || 'Unable to solve doubt right now. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -251,7 +269,82 @@ export const AITutorPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Deep Work Active Banner */}
+      {/* Tutor Mode Navigation Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <button
+          onClick={() => setActiveTutorTab('doubt')}
+          className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center space-x-2 whitespace-nowrap transition-all cursor-pointer ${
+            activeTutorTab === 'doubt'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Bot className="w-4 h-4" />
+          <span>Doubt Solver</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTutorTab('handwritten')}
+          className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center space-x-2 whitespace-nowrap transition-all cursor-pointer ${
+            activeTutorTab === 'handwritten'
+              ? 'bg-purple-600 text-white shadow-md'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Award className="w-4 h-4" />
+          <span>Handwritten Solution Checker</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTutorTab('textbook_photo')}
+          className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center space-x-2 whitespace-nowrap transition-all cursor-pointer ${
+            activeTutorTab === 'textbook_photo'
+              ? 'bg-teal-600 text-white shadow-md'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Camera className="w-4 h-4" />
+          <span>Textbook Photo &rarr; Learning</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTutorTab('viva_feynman')}
+          className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center space-x-2 whitespace-nowrap transition-all cursor-pointer ${
+            activeTutorTab === 'viva_feynman'
+              ? 'bg-cyan-600 text-white shadow-md'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>Viva Voce &amp; Feynman Mode</span>
+        </button>
+      </div>
+
+      {activeTutorTab === 'handwritten' && (
+        <HandwrittenSolutionTab currentClass={selectedClass} currentSubject={selectedSubject} />
+      )}
+
+      {activeTutorTab === 'textbook_photo' && (
+        <TextbookPhotoTab
+          currentClass={selectedClass}
+          currentSubject={selectedSubject}
+          onSendToDoubtSolver={(text, img) => {
+            setActiveTutorTab('doubt');
+            setQuestionText(text);
+            if (img) {
+              setImagePreview(`data:image/jpeg;base64,${img}`);
+            }
+          }}
+        />
+      )}
+
+      {activeTutorTab === 'viva_feynman' && (
+        <VivaFeynmanTab currentClass={selectedClass} currentSubject={selectedSubject} />
+      )}
+
+      {activeTutorTab === 'doubt' && (
+        <>
+          {/* Deep Work Active Banner */}
       {isDeepWork && (
         <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-slate-950 px-5 py-4 rounded-3xl flex items-center justify-between shadow-xl animate-pulse">
           <div className="flex items-center gap-3">
@@ -350,6 +443,22 @@ export const AITutorPage: React.FC = () => {
             )}
           </button>
         </div>
+
+        {tutorError && (
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span className="font-semibold">{tutorError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleSolve}
+              className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs cursor-pointer shrink-0 self-start sm:self-auto"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
 
         {/* Suggested Prompts */}
         {!solution && !isLoading && !isDeepWork && (
@@ -546,6 +655,8 @@ export const AITutorPage: React.FC = () => {
             )}
           </div>
         </motion.div>
+      )}
+      </>
       )}
     </div>
   );

@@ -38,12 +38,22 @@ import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 
 export const PracticeQuizPage: React.FC = () => {
-  const { user, recordQuizAttempt, checkAndConsumeUsage, addXP, addMistake } = useApp();
+  const {
+    user,
+    recordQuizAttempt,
+    checkAndConsumeUsage,
+    addXP,
+    addMistake,
+    selectedSubjectId: globalSubject,
+    selectedClassLevel: globalClass,
+    selectedBoard: globalBoard,
+    selectedExamChapters: globalChapters,
+  } = useApp();
 
   // Curriculum Hierarchy Selection
-  const [selectedBoard, setSelectedBoard] = useState<string>(user.board || 'CBSE');
-  const [selectedClass, setSelectedClass] = useState<ClassLevel>(user.classLevel || '10');
-  const [selectedSubject, setSelectedSubject] = useState<SubjectId>('science');
+  const [selectedBoard, setSelectedBoard] = useState<string>(globalBoard || user.board || 'CBSE');
+  const [selectedClass, setSelectedClass] = useState<ClassLevel>((globalClass || user.classLevel || '10') as ClassLevel);
+  const [selectedSubject, setSelectedSubject] = useState<SubjectId>((globalSubject || 'science') as SubjectId);
   const [selectedChapterId, setSelectedChapterId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -83,16 +93,25 @@ export const PracticeQuizPage: React.FC = () => {
     return getCurriculumChapters(selectedClass, selectedBoard, selectedSubject);
   }, [selectedClass, selectedBoard, selectedSubject]);
 
-  // Default select first chapter if none selected or not matching
+  // Default select first chapter or match global selection
   useEffect(() => {
     if (availableChapters.length > 0) {
+      if (globalChapters && globalChapters.length > 0) {
+        const found = availableChapters.find(
+          (c) => globalChapters.includes(c.name) || globalChapters.includes(c.id)
+        );
+        if (found) {
+          setSelectedChapterId(found.id);
+          return;
+        }
+      }
       if (!selectedChapterId || !availableChapters.some((c) => c.id === selectedChapterId)) {
         setSelectedChapterId(availableChapters[0].id);
       }
     } else {
       setSelectedChapterId('');
     }
-  }, [availableChapters, selectedChapterId]);
+  }, [availableChapters, selectedChapterId, globalChapters]);
 
   // Current selected Chapter object
   const activeChapterObj = useMemo(() => {
@@ -124,29 +143,20 @@ export const PracticeQuizPage: React.FC = () => {
 
   const handleStartQuiz = async () => {
     if (!selectedSubject) {
-      alert('Please select a valid subject first.');
+      setQuizState('failed');
+      setErrorMessage('Please select a valid subject first.');
       return;
     }
     if (!activeChapterObj) {
-      alert('Please select a chapter first.');
+      setQuizState('failed');
+      setErrorMessage('Please select a chapter first.');
       return;
     }
     if (!checkAndConsumeUsage('quizGenerations')) return;
 
-    // Stage 3: Validate Question Availability
-    setQuizState('validating');
-    setErrorMessage('');
-
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    if (!activeChapterObj.name || (activeChapterObj.topics && activeChapterObj.topics.length === 0)) {
-      setQuizState('failed');
-      setErrorMessage('Selected chapter lacks required topics for question generation. Please pick another chapter.');
-      return;
-    }
-
-    // Stage 4: Generate / Fetch
+    // Stage 3: Direct question generation with tolerant fallback
     setQuizState('generating');
+    setErrorMessage('');
     setMistakesSaved(false);
 
     try {

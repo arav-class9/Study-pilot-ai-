@@ -1,9 +1,10 @@
-
+const fs = require('fs');
+const code = `
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Sparkles, Rocket, 
+  Sparkles, 
   Play, 
   Brain, 
   BookOpen, 
@@ -20,18 +21,18 @@ import {
 import robotImage from '../assets/images/cute_robot_reading_1789570270647.jpg';
 
 export const HomePage: React.FC = () => {
-  const { setActiveTab, learningProfile } = useApp();
+  const { setActiveTab } = useApp();
   const { user } = useAuth();
   
   // Calculate dynamic progress based on user's mastery score
-  const progressPercentage = typeof learningProfile?.masteryScore === "number" ? learningProfile.masteryScore : 65;
+  const progressPercentage = user?.masteryScore || 65;
 
   const featureHighlights = [
-    { icon: Brain, title: 'AI Powered', desc: 'Personalized learning\nfor every student', color: 'text-purple-600', bg: 'bg-purple-100' },
-    { icon: BookOpen, title: 'NCERT Integrated', desc: 'All NCERT books &\nchapters', color: 'text-emerald-600', bg: 'bg-emerald-100' },
-    { icon: ClipboardList, title: 'Smart Quizzes', desc: 'Test your knowledge\n& track progress', color: 'text-orange-500', bg: 'bg-orange-100' },
-    { icon: BarChart3, title: 'Track Progress', desc: 'See your growth\nwith detailed reports', color: 'text-blue-500', bg: 'bg-blue-100' },
-    { icon: Star, title: '24/7 Support', desc: 'Help whenever\nyou need it', color: 'text-indigo-600', bg: 'bg-indigo-100' }
+    { icon: Brain, title: 'AI Powered', desc: 'Personalized learning\\nfor every student', color: 'text-purple-600', bg: 'bg-purple-100' },
+    { icon: BookOpen, title: 'NCERT Integrated', desc: 'All NCERT books &\\nchapters', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+    { icon: ClipboardList, title: 'Smart Quizzes', desc: 'Test your knowledge\\n& track progress', color: 'text-orange-500', bg: 'bg-orange-100' },
+    { icon: BarChart3, title: 'Track Progress', desc: 'See your growth\\nwith detailed reports', color: 'text-blue-500', bg: 'bg-blue-100' },
+    { icon: Star, title: '24/7 Support', desc: 'Help whenever\\nyou need it', color: 'text-indigo-600', bg: 'bg-indigo-100' }
   ];
 
   const exploreFeatures = [
@@ -55,7 +56,7 @@ export const HomePage: React.FC = () => {
       id: 'tutor', 
       title: 'AI Doubt Solver', 
       desc: 'Ask anything, get instant explanations.', 
-      icon: Sparkles, Rocket,
+      icon: Sparkles,
       iconColor: 'text-emerald-600',
       iconBg: 'bg-emerald-100'
     },
@@ -115,7 +116,7 @@ export const HomePage: React.FC = () => {
                 onClick={() => setActiveTab('tutor')}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-8 py-3.5 rounded-full flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-transform hover:-translate-y-0.5 cursor-pointer"
               >
-                <Rocket className="w-5 h-5" />
+                <Sparkles className="w-5 h-5" />
                 <span>Start Learning</span>
                 <ArrowRight className="w-4 h-4 ml-1" />
               </button>
@@ -174,7 +175,7 @@ export const HomePage: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {featureHighlights.map((feature, idx) => (
             <div key={idx} className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 group">
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${feature.bg} ${feature.color}`}>
+              <div className={\`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 \${feature.bg} \${feature.color}\`}>
                 <feature.icon className="w-7 h-7" />
               </div>
               <div className="space-y-1">
@@ -209,7 +210,7 @@ export const HomePage: React.FC = () => {
                 onClick={() => setActiveTab(feat.id)}
                 className="bg-white border border-slate-200 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-900/5 rounded-3xl p-6 flex items-start gap-5 text-left group transition-all cursor-pointer"
               >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${feat.iconBg} ${feat.iconColor}`}>
+                <div className={\`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 \${feat.iconBg} \${feat.iconColor}\`}>
                   <feat.icon className="w-7 h-7" strokeWidth={2} />
                 </div>
                 <div className="flex-1 space-y-1.5">
@@ -257,7 +258,7 @@ export const HomePage: React.FC = () => {
                 <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
                   <div 
                     className="bg-emerald-500 h-full rounded-full transition-all duration-1000 ease-out"
-                    style={{ width: `${progressPercentage}%` }}
+                    style={{ width: \`\${progressPercentage}%\` }}
                   />
                 </div>
               </div>
@@ -278,3 +279,6 @@ export const HomePage: React.FC = () => {
     </div>
   );
 };
+`;
+
+fs.writeFileSync('src/pages/HomePage.tsx', code, 'utf8');

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="50%" stop-color="#4338ca" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#eab308" />
+    </linearGradient>
+    <linearGradient id="wingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#c7d2fe" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded rect -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+
+  <!-- Pilot Wings Background Accent -->
+  <path d="M 90 260 C 140 210, 200 240, 256 280 C 312 240, 372 210, 422 260 C 380 300, 310 295, 256 340 C 202 295, 132 300, 90 260 Z" fill="url(#wingGrad)" opacity="0.45" />
+
+  <!-- Open Textbook Pages -->
+  <path d="M 256 320 C 210 280, 130 285, 100 340 L 100 370 C 140 320, 210 320, 256 355 C 302 320, 372 320, 412 370 L 412 340 C 382 285, 302 280, 256 320 Z" fill="#ffffff" />
+  <path d="M 256 355 L 256 420" stroke="#6366f1" stroke-width="4" stroke-linecap="round" />
+
+  <!-- Center Graduation / Pilot Cap -->
+  <!-- Cap Rhombus Top -->
+  <polygon points="256,120 380,180 256,240 132,180" fill="#ffffff" />
+  <polygon points="256,132 364,180 256,228 148,180" fill="#f8fafc" />
+
+  <!-- Cap Skull Skull Base -->
+  <path d="M 180 205 L 180 250 C 180 285, 332 285, 332 250 L 332 205 C 298 225, 214 225, 180 205 Z" fill="#e2e8f0" />
+
+  <!-- Golden Tassel & Star -->
+  <path d="M 256 180 L 350 220 L 350 270" fill="none" stroke="url(#goldGrad)" stroke-width="6" stroke-linecap="round" />
+  <circle cx="350" cy="275" r="8" fill="url(#goldGrad)" />
+  <polygon points="256,150 262,165 278,165 265,175 270,190 256,180 242,190 247,175 234,165 250,165" fill="url(#goldGrad)" />
+</svg>

@@ -53,11 +53,15 @@ export const FloatingFocusWidget: React.FC = () => {
   return (
     <div
       id="floating-pomodoro-pill"
-      className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 animate-slideUp select-none"
+      className="fixed bottom-24 sm:bottom-6 right-3 sm:right-6 z-30 animate-slideUp select-none"
     >
-      <div className="bg-slate-950/90 hover:bg-slate-950 text-white rounded-2xl p-2.5 sm:p-3 border border-indigo-500/30 shadow-2xl backdrop-blur-md flex items-center gap-3 transition-all">
+      <div className="bg-slate-950/95 hover:bg-slate-950 text-white rounded-2xl p-2 sm:p-2.5 border border-indigo-500/40 shadow-2xl backdrop-blur-md flex items-center gap-2 sm:gap-3 transition-all">
         {/* Pulsing indicator & Subject icon */}
-        <div className="flex items-center gap-2">
+        <div
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          title="Click to toggle compact mode"
+        >
           <div
             className={`w-7 h-7 rounded-xl flex items-center justify-center ${
               mode === 'focus'
@@ -72,10 +76,10 @@ export const FloatingFocusWidget: React.FC = () => {
 
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold uppercase text-indigo-300 tracking-wider">
+              <span className="text-[10px] font-bold uppercase text-indigo-300 tracking-wider max-w-[90px] truncate">
                 {selectedSubject}
               </span>
-              <span className="text-base font-mono font-black text-white leading-none">
+              <span className="text-sm sm:text-base font-mono font-black text-white leading-none">
                 {formatTime(timeLeft)}
               </span>
             </div>
@@ -83,7 +87,7 @@ export const FloatingFocusWidget: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="flex items-center gap-1 border-l border-slate-800 pl-2">
+        <div className="flex items-center gap-1 border-l border-slate-800 pl-1.5 sm:pl-2">
           <button
             onClick={toggleTimer}
             className={`p-1.5 rounded-lg font-bold transition-all cursor-pointer ${
@@ -108,7 +112,7 @@ export const FloatingFocusWidget: React.FC = () => {
 
           <button
             onClick={openZen}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+            className="hidden sm:inline-flex p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
             title="Open Fullscreen Zen Focus"
           >
             <Maximize2 className="w-3.5 h-3.5" />
@@ -116,10 +120,18 @@ export const FloatingFocusWidget: React.FC = () => {
 
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-1 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
-            title={isCollapsed ? 'Expand' : 'Collapse'}
+            className="p-1 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            title={isCollapsed ? 'Expand Timer' : 'Collapse Timer'}
           >
             {isCollapsed ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+
+          <button
+            onClick={() => setIsMiniWidgetVisible(false)}
+            className="p-1 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer ml-0.5"
+            title="Dismiss widget"
+          >
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
