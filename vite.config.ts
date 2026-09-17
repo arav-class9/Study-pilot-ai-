@@ -83,15 +83,28 @@ export default defineConfig(() => {
       studyPilotApiPlugin(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+        includeAssets: [
+          'icon.svg',
+          'apple-touch-icon.png',
+          'pwa-192x192.png',
+          'pwa-512x512.png',
+          'pwa-maskable-512x512.png',
+          'favicon.ico',
+          'favicon.png',
+          'favicon-32x32.png',
+          'favicon-64x64.png',
+          'manifest.webmanifest',
+          'manifest.json'
+        ],
         manifest: {
           id: '/',
-          name: 'StudyPilot AI — NCERT School Books & Quizzer',
-          short_name: 'StudyPilot',
+          name: 'StudyPilot AI',
+          short_name: 'StudyPilot AI',
           description: 'AI-powered study coach featuring official NCERT school books, interactive quizzes, handwritten solution grader, and AI tutor.',
-          theme_color: '#4f46e5',
-          background_color: '#ffffff',
+          theme_color: '#2563eb',
+          background_color: '#1e1b4b',
           display: 'standalone',
+          orientation: 'portrait-primary',
           start_url: '/',
           scope: '/',
           icons: [
@@ -99,20 +112,38 @@ export default defineConfig(() => {
               src: '/pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png',
-              purpose: 'any',
+              purpose: 'any'
+            },
+            {
+              src: '/pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'maskable'
             },
             {
               src: '/pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'any',
+              purpose: 'any'
             },
             {
               src: '/pwa-maskable-512x512.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'maskable',
+              purpose: 'maskable'
             },
+            {
+              src: '/pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any maskable'
+            },
+            {
+              src: '/icon.svg',
+              sizes: '512x512',
+              type: 'image/svg+xml',
+              purpose: 'any'
+            }
           ],
         },
         workbox: {
