@@ -1,3 +1,4 @@
+import { toast } from 'react-hot-toast';
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Play, Pause, RotateCcw, Sparkles, Globe2, Gauge } from 'lucide-react';
 import { LanguageCode, SubjectId, ClassLevel } from '../../types';
@@ -68,7 +69,7 @@ export const VoiceTutorPlayer: React.FC<VoiceTutorPlayerProps> = ({
 
   const handlePlay = () => {
     if (!('speechSynthesis' in window)) {
-      alert('Speech synthesis is not supported on this browser.');
+      toast.error('Speech synthesis is not supported on this browser.');
       return;
     }
 

@@ -1,3 +1,4 @@
+import { toast } from 'react-hot-toast';
 import React, { useState, useRef, useEffect } from 'react';
 import { StudyNote } from '../../types';
 import { chatWithNotesApi } from '../../services/aiClient';
@@ -53,7 +54,7 @@ export const NotesChatWidget: React.FC<NotesChatWidgetProps> = ({ notesList, act
     if (!query.trim()) return;
 
     if (!currentNote) {
-      alert('Please generate or select a study note first to chat with.');
+      toast.error('Please generate or select a study note first to chat with.');
       return;
     }
 

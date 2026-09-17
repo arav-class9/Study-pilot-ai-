@@ -1,3 +1,4 @@
+import { toast } from 'react-hot-toast';
 import React, { useState, useRef } from 'react';
 import { NCERTService } from '../../services/ncertService';
 import { generateAINotes, generateAIQuiz } from '../../services/aiClient';
@@ -110,7 +111,7 @@ export const TextbookPhotoTab: React.FC<TextbookPhotoTabProps> = ({
       setGeneratedNotes(notes);
     } catch (err: any) {
       console.error('Failed to generate notes:', err);
-      alert('Could not generate notes: ' + err.message);
+      toast.error('Could not generate notes: ' + err.message);
     } finally {
       setActionLoading(false);
     }
@@ -154,7 +155,7 @@ export const TextbookPhotoTab: React.FC<TextbookPhotoTabProps> = ({
       }
     } catch (err: any) {
       console.error('Failed to generate page quiz:', err);
-      alert('Could not generate quiz: ' + err.message);
+      toast.error('Could not generate quiz: ' + err.message);
     } finally {
       setActionLoading(false);
     }

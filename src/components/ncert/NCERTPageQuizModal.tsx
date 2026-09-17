@@ -1,3 +1,4 @@
+import { toast } from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import {
   NCERTChapter,
@@ -278,7 +279,7 @@ export const NCERTPageQuizModal: React.FC<NCERTPageQuizModalProps> = ({
         });
       }
     });
-    alert('All missed questions added to your NCERT Revision Deck!');
+    toast.success('All missed questions added to your NCERT Revision Deck!');
   };
 
   const formatTime = (secs: number) => {

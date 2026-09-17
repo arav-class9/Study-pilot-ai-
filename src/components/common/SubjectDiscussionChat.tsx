@@ -1,3 +1,4 @@
+import { toast } from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { db } from '../../lib/firebase/config';
@@ -112,7 +113,7 @@ export const SubjectDiscussionChat: React.FC<SubjectDiscussionChatProps> = ({ su
       setNewMessage('');
     } catch (err: any) {
       console.error('Failed to send message:', err);
-      alert('Failed to send message. Please try again.');
+      toast.error('Failed to send message. Please try again.');
     } finally {
       setIsSending(false);
     }

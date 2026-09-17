@@ -14,37 +14,37 @@ export async function generateNotes(input: GenerateNotesInput) {
     throw new Error('Chapter name is required to generate revision notes.');
   }
 
-  const systemInstruction = `You are the Senior Curriculum Architect & Textbook Editorial Chief for StudyPilot AI.
-Your task is to generate highly accurate, syllabus-appropriate, exam-focused, and properly structured revision notes.
+  const systemInstruction = `You are an expert AI Academic Tutor and Curriculum Architect for StudyPilot AI.
+Your task is to generate highly accurate, comprehensive, and properly structured educational notes for ANY topic requested by the user.
 
-CURRICULUM BOUNDARIES:
-- Educational Level: CBSE + NCERT Class ${input.classLevel}.
-- DO NOT randomly mix university or advanced competitive concepts into core NCERT explanations.
-- Scientific accuracy must be impeccable: verify definitions, SI units, formulas, sign conventions, and equations.
+ADAPTABILITY GUIDELINES:
+- Adapt the depth and complexity of the explanation based on the Class Level (\${input.classLevel}) provided.
+- If the topic is a standard academic subject (e.g., NCERT/CBSE), align with the core curriculum.
+- If the topic is out-of-syllabus, general knowledge, advanced science, self-improvement, or a professional skill, adapt your style to provide the most helpful, structured, and deep explanation possible for that specific domain.
 
 SECTIONS TO INCLUDE:
-1. 🎯 Learning Objectives
-2. 📘 NCERT Core Concepts
-3. 📖 Essential Definitions
-4. 📐 Formulae & Equations (with symbol explanation and SI units)
-5. ⚠️ Common Misconceptions / Student Traps
-6. ⭐ Exam High-Yield Points
-7. ⚡ 2-Minute Quick Revision Summary
+1. 🎯 Core Objectives & Overview
+2. 📘 Essential Concepts & Deep Dive
+3. 📖 Key Definitions / Vocabulary
+4. 📐 Formulas, Rules, or Frameworks (depending on the topic)
+5. ⚠️ Common Misconceptions / Pitfalls
+6. ⭐ Pro-Tips & High-Yield Points
+7. ⚡ Quick Summary
 
 Format the output strictly as valid JSON adhering to the schema.`;
 
   const promptText = `Subject: ${input.subject}
 Class Level: Class ${input.classLevel}
-Chapter: ${input.chapter}
-Topic Focus: ${input.topic || 'Complete Chapter Mastery'}
+Topic / Chapter: ${input.chapter}
+Specific Focus: ${input.topic || 'Complete Topic Mastery'}
 Detail Level: ${input.detailLevel}
 
-Generate comprehensive, beautifully structured NCERT academic notes adhering strictly to the JSON schema.`;
+Generate comprehensive, beautifully structured educational notes adhering strictly to the JSON schema.`;
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-3.6-flash',
+      fallbackModel: 'gemini-3.6-flash',
       contents: promptText,
       config: {
         systemInstruction,
@@ -105,31 +105,31 @@ Generate comprehensive, beautifully structured NCERT academic notes adhering str
     return parsed;
   } catch (error: any) {
     console.error('Error generating notes with AI:', error);
-    // Return high-yield NCERT curriculum structured notes
+    // Return high-yield structured notes fallback
     return {
-      title: `${input.chapter} — NCERT Revision Notes`,
+      title: `${input.chapter} — Revision Notes`,
       subject: input.subject,
       chapter: input.chapter,
       detailLevel: input.detailLevel,
-      content: `## ${input.chapter}\n\n### 📘 NCERT Core Concepts\nThis chapter is a foundational component of Class ${input.classLevel} ${input.subject}. Students are expected to master fundamental definitions, experimental observations, and mathematical problem-solving steps.\n\n### ⭐ Key Examination Tips\n- Always state the standard definitions verbatim as formulated in the NCERT textbook.\n- Include standard SI units with all numerical final answers.\n- When writing chemical or mathematical equations, ensure they are balanced and include phase/state notations.`,
+      content: `## ${input.chapter}\n\n### 📘 Core Concepts\nThis topic is a foundational component of ${input.subject}. It is essential to master the fundamental definitions, practical applications, and core principles associated with this area of study.\n\n### ⭐ Key Mastery Tips\n- Always state the standard definitions accurately.\n- Understand the context and application of key theories.\n- Review real-world examples and standard edge-cases.`,
       definitions: [
         {
           term: `${input.chapter} Core Principle`,
-          definition: `The primary theoretical relationship and definitions established in NCERT Class ${input.classLevel} ${input.subject}.`,
+          definition: `The primary theoretical relationship and definitions established for ${input.subject}.`,
         },
       ],
       keyFormulas: [
-        'Standard NCERT relationships and dimensional equations.',
+        'Standard relationships, formulas, or frameworks relevant to the topic.',
       ],
       commonMistakes: [
-        'Omitting physical units or state symbols in examination answers.',
+        'Misapplying core principles in practical scenarios.',
       ],
       examTips: [
-        'Practice solving in-text NCERT examples and exemplar problems before attempting board questions.',
+        'Practice solving foundational examples and standard problems before tackling advanced variations.',
       ],
       quickRevisionPoints: [
         `Understand the fundamental axioms of ${input.chapter}.`,
-        'Verify sign conventions in calculations.',
+        'Verify context and assumptions in applications.',
       ],
     };
   }

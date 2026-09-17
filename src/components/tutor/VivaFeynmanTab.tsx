@@ -1,3 +1,4 @@
+import { toast } from 'react-hot-toast';
 import React, { useState, useRef } from 'react';
 import { ClassLevel } from '../../types';
 import {
@@ -65,7 +66,7 @@ export const VivaFeynmanTab: React.FC<VivaFeynmanTabProps> = ({
   const toggleVoiceInput = (target: 'feynman' | 'viva') => {
     const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) {
-      alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+      toast.error('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
       return;
     }
 
@@ -106,7 +107,7 @@ export const VivaFeynmanTab: React.FC<VivaFeynmanTabProps> = ({
 
   const handleEvaluateFeynman = async () => {
     if (!feynmanConcept.trim() || studentExplanation.trim().length < 30) {
-      alert('Please state the concept and explain it in at least 30 characters.');
+      toast.error('Please state the concept and explain it in at least 30 characters.');
       return;
     }
 
@@ -163,7 +164,7 @@ Analyze:
 
   const handleStartViva = async () => {
     if (!vivaTopic.trim()) {
-      alert('Please enter a topic for the Viva drill (e.g. Chemical Reactions, Optics, Polynomials).');
+      toast.error('Please enter a topic for the Viva drill (e.g. Chemical Reactions, Optics, Polynomials).');
       return;
     }
 

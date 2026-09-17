@@ -34,9 +34,9 @@ export async function executeWithSafetyLayer<T>(
     // Handle timeouts and quotas natively or wrapper around generator
     const generationPromise = generatorFunction(request.input);
     
-    // 15 seconds timeout wrapper
+    // 60 seconds timeout wrapper
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('AI Request Timeout')), 25000);
+      setTimeout(() => reject(new Error('AI Request Timeout')), 60000);
     });
     
     const result = await Promise.race([generationPromise, timeoutPromise]);

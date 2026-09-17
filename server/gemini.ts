@@ -34,16 +34,17 @@ export interface GenerateContentRetryOptions {
  */
 export async function generateContentWithRetry(options: GenerateContentRetryOptions): Promise<{ text: string }> {
   const ai = getGeminiClient();
-  const primaryModel = options.primaryModel || 'gemini-3.1-flash-lite';
-  const fallbackModel = options.fallbackModel || 'gemini-3.8-flash';
-  const maxRetries = options.maxRetries ?? 2;
+  
+  const primaryModel = options.primaryModel || 'gemini-3.6-flash';
+  const fallbackModel = options.fallbackModel || 'gemini-3.6-flash';
+  const maxRetries = options.maxRetries ?? 3; // Let's give it 3 retries.
 
   // Build unique sequence of models to try
   const modelsToTry = Array.from(
     new Set([
       primaryModel,
       fallbackModel,
-      'gemini-3.1-flash-lite',
+      'gemini-3.6-flash'
     ])
   );
 
@@ -83,18 +84,15 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
 
         console.warn(`[Gemini API] Attempt ${attempt + 1}/${maxRetries + 1} for model ${model}:`, errorMessage);
 
-        if (isQuotaExhausted) {
-          // Immediately try next model without waiting in vain for rate-limit window
-          console.warn(`[Gemini API] Switching immediately from ${model} due to quota limit.`);
-          break;
-        }
-
-        if (isTransient && attempt < maxRetries) {
+        // For this issue, if we hit a rate limit, let's just back off and retry since 
+        // gemini-3.6-flash is our only available model in this environment.
+        if (isQuotaExhausted || isTransient) {
           // Exponential backoff with jitter
-          const delayMs = (attempt + 1) * 700 + Math.random() * 300;
+          const delayMs = (attempt + 1) * 2000 + Math.random() * 1000;
+          console.warn(`[Gemini API] Waiting ${delayMs}ms before retrying...`);
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         } else {
-          // If not transient or out of retries for this model, break and try next model
+          // If not transient/quota, break and throw
           break;
         }
       }

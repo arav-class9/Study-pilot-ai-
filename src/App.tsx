@@ -32,6 +32,8 @@ const TeacherDashboardPage = React.lazy(() => import('./pages/TeacherDashboardPa
 const NCERTBooksPage = React.lazy(() => import('./pages/NCERTBooksPage').then(module => ({ default: module.NCERTBooksPage })));
 import { AuthPage } from './pages/AuthPage';
 
+import { Toaster } from 'react-hot-toast';
+
 const AppContent: React.FC = () => {
   const { activeTab, setActiveTab, isDarkMode } = useApp();
   const { user, loading } = useAuth();
@@ -149,6 +151,13 @@ const AppContent: React.FC = () => {
       onTouchEnd={handleTouchEnd}
       className={`min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-300 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}
     >
+      <Toaster 
+        position="top-center" 
+        toastOptions={{ 
+          className: 'text-sm font-bold',
+          style: { borderRadius: '16px' }
+        }} 
+      />
       <Navbar />
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
         <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8 overflow-y-auto max-w-7xl mx-auto w-full">

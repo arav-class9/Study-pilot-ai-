@@ -120,11 +120,14 @@ export const HomePage: React.FC = () => {
                 <ArrowRight className="w-4 h-4 ml-1" />
               </button>
               
-              <button className="bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold px-8 py-3.5 rounded-full flex items-center gap-2 shadow-sm transition-transform hover:-translate-y-0.5 cursor-pointer">
+              <button 
+                onClick={() => setActiveTab('learn')}
+                className="bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold px-8 py-3.5 rounded-full flex items-center gap-2 shadow-sm transition-transform hover:-translate-y-0.5 cursor-pointer"
+              >
                 <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                   <Play className="w-3 h-3 ml-0.5" fill="currentColor" />
                 </div>
-                <span>Watch Video</span>
+                <span>Watch Lessons</span>
               </button>
             </div>
           </div>
@@ -196,7 +199,10 @@ export const HomePage: React.FC = () => {
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Explore Our Features</h2>
               <p className="text-sm text-slate-500 mt-1">Everything you need to ace your exams, in one place.</p>
             </div>
-            <button className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 group cursor-pointer transition-colors">
+            <button 
+              onClick={() => setActiveTab('learn')}
+              className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 group cursor-pointer transition-colors"
+            >
               <span>View All</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>

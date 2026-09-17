@@ -1,3 +1,4 @@
+import { toast } from 'react-hot-toast';
 import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { askAIDoubt } from '../services/aiClient';
@@ -63,7 +64,7 @@ export const AITutorPage: React.FC = () => {
   const handleVoiceInputToggle = () => {
     const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) {
-      alert('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
+      toast.error('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
       return;
     }
 

@@ -39,6 +39,8 @@ import { ConceptMindmapModal } from '../components/ai/ConceptMindmapModal';
 import { VivaVoiceSimulatorModal } from '../components/ai/VivaVoiceSimulatorModal';
 import { FeynmanExplainerModal } from '../components/ai/FeynmanExplainerModal';
 
+import { toast } from 'react-hot-toast';
+
 export const LearnPage: React.FC = () => {
   const {
     user,
@@ -190,7 +192,7 @@ export const LearnPage: React.FC = () => {
       setActiveSubTab('my_notes');
     } catch (err) {
       console.error('Failed to generate notes:', err);
-      alert('Failed to generate study notes. Please try again.');
+      toast.error('Failed to generate study notes. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -202,6 +204,7 @@ export const LearnPage: React.FC = () => {
     }\n\nQuick Revision:\n${note.quickRevisionPoints?.join('\n') || ''}`;
     navigator.clipboard.writeText(text);
     setCopiedId(note.id);
+    toast.success('Notes copied to clipboard!');
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -553,12 +556,12 @@ export const LearnPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Chapter Name</label>
+                <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Topic / Chapter Name</label>
                 <input
                   type="text"
                   value={genChapter}
                   onChange={(e) => setGenChapter(e.target.value)}
-                  placeholder="e.g. Electricity, Real Numbers..."
+                  placeholder="e.g. Quantum Physics, Electricity, World War 2..."
                   className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-bold bg-slate-50"
                 />
               </div>
@@ -566,13 +569,13 @@ export const LearnPage: React.FC = () => {
 
             <div>
               <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                Specific Sub-Topic (Optional)
+                Specific Focus or Sub-Topic (Optional)
               </label>
               <input
                 type="text"
                 value={genTopic}
                 onChange={(e) => setGenTopic(e.target.value)}
-                placeholder="e.g. Ohm's Law, Series Circuits..."
+                placeholder="e.g. Advanced theories, historical impact, or specific formulas..."
                 className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-bold bg-slate-50"
               />
             </div>
@@ -656,6 +659,18 @@ export const LearnPage: React.FC = () => {
                   >
                     <Lightbulb className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
                     <span>Feynman Studio</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to delete this note?')) {
+                        deleteNote(activeNoteViewer.id);
+                        setActiveNoteViewer(null);
+                      }
+                    }}
+                    className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Delete</span>
                   </button>
                   <button
                     onClick={() => handleCopyNote(activeNoteViewer)}

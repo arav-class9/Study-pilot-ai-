@@ -1,3 +1,4 @@
+import { toast } from 'react-hot-toast';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   FileText,
@@ -186,7 +187,7 @@ export const ExamPage: React.FC = () => {
 
   const handleStartExam = async () => {
     if (selectedChapters.length === 0) {
-      alert('Please select at least one chapter for your exam.');
+      toast.error('Please select at least one chapter for your exam.');
       return;
     }
 
