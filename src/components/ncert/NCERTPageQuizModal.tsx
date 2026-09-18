@@ -82,6 +82,12 @@ export const NCERTPageQuizModal: React.FC<NCERTPageQuizModalProps> = ({
 
   const getFriendlyQuizErrorMessage = (err: any): string => {
     const code = err?.code;
+    const msg = String(err?.message || '');
+
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network') || err?.name === 'TypeError') {
+      return 'Network connection issue. Please check your internet connection or try again.';
+    }
+
     switch (code) {
       case 'PAGE_CONTENT_NOT_FOUND':
         return 'The selected NCERT page could not be loaded. Please ensure the page exists and try again.';
@@ -96,7 +102,7 @@ export const NCERTPageQuizModal: React.FC<NCERTPageQuizModalProps> = ({
       case 'AI_GENERATION_FAILED':
         return 'The AI tutor encountered an issue generating questions. Please try again in a moment.';
       default:
-        return err?.message || 'Unable to generate quiz for this page. Please try again.';
+        return msg || 'Unable to generate quiz for this page. Please try again.';
     }
   };
 

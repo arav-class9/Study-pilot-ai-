@@ -57,8 +57,8 @@ Generate structured revision notes strictly from this excerpt.`;
 
     try {
       const response = await generateContentWithRetry({
-        primaryModel: 'gemini-3.6-flash',
-        fallbackModel: 'gemini-3.6-flash',
+        primaryModel: 'gemini-3.8-flash',
+        fallbackModel: 'gemini-3.8-flash',
         contents: prompt,
         config: {
           systemInstruction,
@@ -140,8 +140,8 @@ Explain this excerpt simply and pedagogically.`;
 
     try {
       const response = await generateContentWithRetry({
-        primaryModel: 'gemini-3.6-flash',
-        fallbackModel: 'gemini-3.6-flash',
+        primaryModel: 'gemini-3.8-flash',
+        fallbackModel: 'gemini-3.8-flash',
         contents: prompt,
         config: {
           systemInstruction,
@@ -213,8 +213,8 @@ Create 2-3 rigorous questions strictly testing the concepts in this excerpt.`;
   let rawQuestions: any[] = [];
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.6-flash',
-      fallbackModel: 'gemini-3.6-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: prompt,
       config: {
         systemInstruction,

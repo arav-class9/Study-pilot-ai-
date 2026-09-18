@@ -69,8 +69,8 @@ Provide a structured, step-by-step educational solution for the student in valid
     });
 
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.6-flash',
-      fallbackModel: 'gemini-3.6-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: { parts: contents },
       config: {
         systemInstruction,

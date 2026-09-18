@@ -23,6 +23,7 @@ import { generateFullBookTest } from './services/ncertFullBookTestService.js';
 import { generateTeacherWorksheet } from './services/teacherToolsService.js';
 import { answerWithTextbookRAG } from './services/ncertRAGService.js';
 import { evaluateCustomAIResponse } from './services/aiEvaluation.js';
+import { serverCache } from './cache.js';
 
 export const apiRouter = Router();
 apiRouter.use(requireAuth);
@@ -403,6 +404,13 @@ apiRouter.post('/ncert-page-quiz', async (req: Request, res: Response) => {
     const normalizedMode = mode === 'adaptive' || difficulty === 'adaptive' ? 'adaptive' : 'standard';
     const normalizedDifficulty = difficulty || (normalizedMode === 'adaptive' ? 'adaptive' : 'medium');
 
+    const cacheKey = `quiz_${classLevel || '10'}_${subject || 'sci'}_${chapterName || chapterId || 'ch'}_p${parsedPageNumber}_c${targetCount}_m${normalizedMode}`;
+    const cachedQuestions = serverCache.get<any[]>(cacheKey);
+    if (cachedQuestions && Array.isArray(cachedQuestions) && cachedQuestions.length >= targetCount) {
+      console.log(`[NCERT QUIZ CACHE HIT] Serving ${cachedQuestions.length} questions instantly from server cache for page ${parsedPageNumber}`);
+      return res.json({ success: true, data: cachedQuestions.slice(0, targetCount) });
+    }
+
     console.log(`[NCERT QUIZ] request payload: page=${parsedPageNumber}, count=${targetCount}, mode=${normalizedMode}, chapter=${chapterName || chapterId || 'unspecified'}`);
 
     const questions = await generateNCERTPageQuiz({
@@ -418,6 +426,10 @@ apiRouter.post('/ncert-page-quiz', async (req: Request, res: Response) => {
       difficulty: normalizedDifficulty,
       pageContent: typeof pageContent === 'string' && pageContent.trim().length > 0 ? pageContent.trim() : undefined,
     });
+
+    if (Array.isArray(questions) && questions.length > 0) {
+      serverCache.set(cacheKey, questions, 3600); // cache for 1 hour
+    }
 
     res.json({ success: true, data: questions });
   } catch (error: any) {
@@ -450,12 +462,24 @@ apiRouter.post('/ncert-page-content', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'chapterName is required.' });
     }
 
+    const parsedPageNum = Number(pageNumber) || 1;
+    const cacheKey = `content_${classLevel || '10'}_${subject || 'Science'}_${chapterName}_p${parsedPageNum}`;
+    const cachedContent = serverCache.get(cacheKey);
+    if (cachedContent) {
+      return res.json({ success: true, data: cachedContent });
+    }
+
     const content = await fetchOrGenerateNCERTPageContent({
       classLevel: String(classLevel || '10'),
       subject: subject || 'Science',
       chapterName: String(chapterName).trim(),
-      pageNumber: Number(pageNumber) || 1,
+      pageNumber: parsedPageNum,
     });
+
+    if (content) {
+      serverCache.set(cacheKey, content, 7200); // Cache for 2 hours
+    }
+
     res.json({ success: true, data: content });
   } catch (error: any) {
     console.error('API /ncert-page-content error:', error);
@@ -601,8 +625,15 @@ apiRouter.post('/textbook-rag', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'Query is required for textbook RAG.' });
     }
 
+    const cleanQuery = String(query).trim();
+    const cacheKey = `rag_${classLevel || '10'}_${subject || 'sci'}_${chapterName || 'core'}_p${filterPageNumber || 'all'}_${cleanQuery.toLowerCase()}`;
+    const cachedRAG = serverCache.get(cacheKey);
+    if (cachedRAG) {
+      return res.json({ success: true, data: cachedRAG });
+    }
+
     const result = await answerWithTextbookRAG({
-      query: String(query).trim(),
+      query: cleanQuery,
       bookTitle: bookTitle || 'NCERT Official Textbook',
       chapterName: chapterName || 'Core Curriculum',
       classLevel: String(classLevel || '10'),
@@ -611,6 +642,10 @@ apiRouter.post('/textbook-rag', async (req: Request, res: Response) => {
       availablePages: Array.isArray(availablePages) ? availablePages : [],
       filterPageNumber: filterPageNumber ? Number(filterPageNumber) : undefined,
     });
+
+    if (result) {
+      serverCache.set(cacheKey, result, 1800); // 30 min cache
+    }
 
     res.json({ success: true, data: result });
   } catch (error: any) {

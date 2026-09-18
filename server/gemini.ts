@@ -30,27 +30,36 @@ export interface GenerateContentRetryOptions {
 
 /**
  * Robust Gemini content generator that automatically handles 503 (high demand), 
- * 429 rate limits, and transient network errors with exponential backoff and model fallback.
+ * 429 rate limits, and transient network errors with multi-model fallback and backoff.
  */
 export async function generateContentWithRetry(options: GenerateContentRetryOptions): Promise<{ text: string }> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY environment variable is missing.');
+  }
+
   const ai = getGeminiClient();
   
-  const primaryModel = options.primaryModel || 'gemini-3.6-flash';
-  const fallbackModel = options.fallbackModel || 'gemini-3.6-flash';
-  const maxRetries = options.maxRetries ?? 3; // Let's give it 3 retries.
+  const primaryModel = options.primaryModel || 'gemini-3.8-flash';
+  const fallbackModel = options.fallbackModel || 'gemini-flash-latest';
+  const maxRetries = options.maxRetries ?? 1;
 
-  // Build unique sequence of models to try
+  // Build unique sequence of models to try in order of preference
   const modelsToTry = Array.from(
     new Set([
       primaryModel,
       fallbackModel,
-      'gemini-3.6-flash'
-    ])
+      'gemini-3.8-flash',
+      'gemini-flash-latest',
+      'gemini-3.1-flash-lite',
+      'gemini-2.5-flash',
+    ].filter(Boolean))
   );
 
   let lastError: any = null;
 
-  for (const model of modelsToTry) {
+  for (let mIdx = 0; mIdx < modelsToTry.length; mIdx++) {
+    const model = modelsToTry[mIdx];
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         const response = await ai.models.generateContent({
@@ -84,15 +93,17 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
 
         console.warn(`[Gemini API] Attempt ${attempt + 1}/${maxRetries + 1} for model ${model}:`, errorMessage);
 
-        // For this issue, if we hit a rate limit, let's just back off and retry since 
-        // gemini-3.6-flash is our only available model in this environment.
-        if (isQuotaExhausted || isTransient) {
-          // Exponential backoff with jitter
-          const delayMs = (attempt + 1) * 2000 + Math.random() * 1000;
-          console.warn(`[Gemini API] Waiting ${delayMs}ms before retrying...`);
+        // If high demand (503) or quota (429), switch immediately to the next available fallback model
+        if ((isTransient || isQuotaExhausted) && mIdx < modelsToTry.length - 1) {
+          console.warn(`[Gemini API] Switching from ${model} to next model ${modelsToTry[mIdx + 1]}...`);
+          break; // Break inner loop to try next model immediately
+        }
+
+        if (attempt < maxRetries && (isQuotaExhausted || isTransient)) {
+          const delayMs = (attempt + 1) * 800 + Math.random() * 400;
+          console.warn(`[Gemini API] Retrying in ${Math.round(delayMs)}ms...`);
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         } else {
-          // If not transient/quota, break and throw
           break;
         }
       }

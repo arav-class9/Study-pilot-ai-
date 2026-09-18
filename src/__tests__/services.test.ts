@@ -5,7 +5,7 @@ import { verifyNumericalSolution, verifyMCQQuestion } from '../../server/service
 describe('StudyPilot AI Open-Source Engineering Test Suite', () => {
   describe('AI Evaluation & Benchmark Service', () => {
     it('should run deterministic benchmarks with high pass rate', async () => {
-      const report = await runAIEvaluationBenchmark();
+      const report = await runAIEvaluationBenchmark({ skipLiveNetworkCall: true });
       expect(report).toBeDefined();
       expect(report.totalBenchmarksRun).toBeGreaterThanOrEqual(4);
       expect(report.passedBenchmarks).toBeGreaterThanOrEqual(4);
