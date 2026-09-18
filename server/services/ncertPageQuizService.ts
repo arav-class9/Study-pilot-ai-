@@ -393,7 +393,7 @@ Generate EXACTLY ${targetCount} high-yield MCQs strictly from Page ${pageNum} ab
   try {
     const response = await generateContentWithRetry({
       primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.1-flash-lite',
       contents: promptText,
       config: {
         systemInstruction,
