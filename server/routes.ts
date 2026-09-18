@@ -20,6 +20,9 @@ import { fetchOrGenerateNCERTPageContent } from './services/ncertPageContentServ
 import { processUploadedBookPage, NCERTOcrValidationError } from './services/ncertPageOcrService.js';
 import { processNCERTSelectionAction } from './services/ncertSelectionActions.js';
 import { generateFullBookTest } from './services/ncertFullBookTestService.js';
+import { generateTeacherWorksheet } from './services/teacherToolsService.js';
+import { answerWithTextbookRAG } from './services/ncertRAGService.js';
+import { evaluateCustomAIResponse } from './services/aiEvaluation.js';
 
 export const apiRouter = Router();
 apiRouter.use(requireAuth);
@@ -561,4 +564,85 @@ apiRouter.post('/ncert-fullbook-test', async (req: Request, res: Response) => {
     });
   }
 });
+
+// 20. Teacher Tools & Assessment Generator (Worksheets, Question Papers, Chapter Tests)
+apiRouter.post('/teacher-worksheet', async (req: Request, res: Response) => {
+  try {
+    const { subject, classLevel, board, chapterName, topicNames, worksheetType, difficulty, totalMarks, includeAnswerKey, language } = req.body;
+    if (!chapterName || String(chapterName).trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Chapter name is required for teacher worksheet generation.' });
+    }
+
+    const result = await generateTeacherWorksheet({
+      subject: subject || 'Science',
+      classLevel: String(classLevel || '10'),
+      board: board || 'CBSE',
+      chapterName: String(chapterName).trim(),
+      topicNames: Array.isArray(topicNames) ? topicNames : undefined,
+      worksheetType: worksheetType || 'question_paper',
+      difficulty: difficulty || 'mixed',
+      totalMarks: Number(totalMarks) || 40,
+      includeAnswerKey: includeAnswerKey !== false,
+      language: language || 'en',
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /teacher-worksheet error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to generate teacher assessment.' });
+  }
+});
+
+// 21. Textbook-Grounded RAG (Strictly cited Q&A over textbook pages)
+apiRouter.post('/textbook-rag', async (req: Request, res: Response) => {
+  try {
+    const { query, bookTitle, chapterName, classLevel, subject, language, availablePages, filterPageNumber } = req.body;
+    if (!query || String(query).trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Query is required for textbook RAG.' });
+    }
+
+    const result = await answerWithTextbookRAG({
+      query: String(query).trim(),
+      bookTitle: bookTitle || 'NCERT Official Textbook',
+      chapterName: chapterName || 'Core Curriculum',
+      classLevel: String(classLevel || '10'),
+      subject: subject || 'Science',
+      language: language || 'en',
+      availablePages: Array.isArray(availablePages) ? availablePages : [],
+      filterPageNumber: filterPageNumber ? Number(filterPageNumber) : undefined,
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /textbook-rag error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to answer query with textbook RAG.' });
+  }
+});
+
+// 22. AI Safety, Grounding & Hallucination Evaluator
+apiRouter.post('/evaluate-response', async (req: Request, res: Response) => {
+  try {
+    const { question, aiResponse, referenceSourceText, subject, classLevel } = req.body;
+    if (!question || !aiResponse || !referenceSourceText) {
+      return res.status(400).json({
+        success: false,
+        error: 'question, aiResponse, and referenceSourceText are required for evaluation.',
+      });
+    }
+
+    const result = await evaluateCustomAIResponse({
+      question: String(question).trim(),
+      aiResponse: String(aiResponse).trim(),
+      referenceSourceText: String(referenceSourceText).trim(),
+      subject: subject || 'Science',
+      classLevel: String(classLevel || '10'),
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /evaluate-response error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to evaluate response.' });
+  }
+});
+
 

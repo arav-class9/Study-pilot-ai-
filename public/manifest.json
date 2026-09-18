@@ -1,14 +1,14 @@
 {
   "id": "/",
   "name": "StudyPilot AI",
-  "short_name": "StudyPilot",
+  "short_name": "StudyPilot AI",
   "description": "AI-powered study coach featuring official NCERT school books, interactive quizzes, handwritten solution grader, and AI tutor.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#1E1B4B",
-  "theme_color": "#2563EB",
+  "background_color": "#1e1b4b",
+  "theme_color": "#2563eb",
   "icons": [
     {
       "src": "/pwa-192x192.png",
@@ -20,13 +20,19 @@
       "src": "/pwa-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/pwa-maskable-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icon.svg",

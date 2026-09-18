@@ -10,12 +10,15 @@ import {
   Send,
   Sparkles,
   ClipboardList,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { TeacherClass, TeacherAssignment } from '../types';
+import { TeacherAssessmentModal } from '../components/teacher/TeacherAssessmentModal';
 
 export const TeacherDashboardPage: React.FC = () => {
   const { user } = useApp();
+  const [assessmentModalOpen, setAssessmentModalOpen] = useState(false);
 
   const [classes, setClasses] = useState<TeacherClass[]>([
     {
@@ -111,13 +114,23 @@ export const TeacherDashboardPage: React.FC = () => {
             </p>
           </div>
 
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-sm cursor-pointer transition-all self-start md:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create New Cohort</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+            <button
+              onClick={() => setAssessmentModalOpen(true)}
+              className="flex items-center gap-2 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs sm:text-sm px-4 py-3 rounded-2xl shadow-md cursor-pointer transition-all"
+            >
+              <Sparkles className="w-4 h-4 fill-white" />
+              <span>Generate CBSE Question Paper / Worksheet</span>
+            </button>
+
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm px-4 py-3 rounded-2xl shadow-sm cursor-pointer transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create New Cohort</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -234,6 +247,12 @@ export const TeacherDashboardPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* AI Teacher Assessment Modal */}
+      <TeacherAssessmentModal
+        isOpen={assessmentModalOpen}
+        onClose={() => setAssessmentModalOpen(false)}
+      />
     </div>
   );
 };

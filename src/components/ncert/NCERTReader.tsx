@@ -20,6 +20,7 @@ import { NCERTFormulaSheetModal } from './NCERTFormulaSheetModal';
 import { NCERTFlashcardsModal } from './NCERTFlashcardsModal';
 import { NCERTChatModal } from './NCERTChatModal';
 import { NCERTPageSummaryModal } from './NCERTPageSummaryModal';
+import { NCERTPageLearningModal } from './NCERTPageLearningModal';
 import {
   ChevronLeft,
   ChevronRight,
@@ -27,6 +28,7 @@ import {
   Volume2,
   VolumeX,
   BookOpen,
+  Brain,
   ZoomIn,
   ZoomOut,
   RotateCcw,
@@ -100,6 +102,7 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
   const [flashcardsModalOpen, setFlashcardsModalOpen] = useState<boolean>(false);
   const [chatModalOpen, setChatModalOpen] = useState<boolean>(false);
   const [summaryModalOpen, setSummaryModalOpen] = useState<boolean>(false);
+  const [pageLearningModalOpen, setPageLearningModalOpen] = useState<boolean>(false);
 
   // Audio Speech Controls
   const [speechRate, setSpeechRate] = useState<number>(1.0);
@@ -512,6 +515,17 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
                 <span className="hidden sm:inline">Upload Full PDF</span>
               </button>
             )}
+
+            {/* Page Learning Hub (AI Explanation, Summary, Key Points, Questions, Flashcards) */}
+            <button
+              id="ncert-page-learning-btn"
+              onClick={() => setPageLearningModalOpen(true)}
+              className="px-2.5 sm:px-3 py-1.5 text-xs font-bold text-white bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer"
+              title="Open Complete Page Learning Hub (Explanation, Summary, Questions, Flashcards)"
+            >
+              <Brain className="w-3.5 h-3.5 text-amber-300" />
+              <span>Page Learning Hub</span>
+            </button>
 
             {/* Weak Topics */}
             <button
@@ -1133,6 +1147,20 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
         chapter={chapter}
         pageContent={pageData}
         pageNumber={currentPage}
+      />
+
+      {/* Complete Page-Based Learning Hub Modal */}
+      <NCERTPageLearningModal
+        isOpen={pageLearningModalOpen}
+        onClose={() => setPageLearningModalOpen(false)}
+        chapter={chapter}
+        pageContent={pageData}
+        pageNumber={currentPage}
+        onStartQuiz={() => {
+          if (pageData) {
+            onLaunchQuiz(pageData, currentPage);
+          }
+        }}
       />
     </div>
   );
