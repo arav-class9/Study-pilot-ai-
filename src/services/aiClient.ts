@@ -174,6 +174,7 @@ export async function askAIDoubt(params: {
   subject?: string;
   classLevel?: string;
   chapter?: string;
+  language?: string;
 }): Promise<DoubtSolution> {
   return await callBackendAI<DoubtSolution>('/api/ai/doubt', {
     method: 'POST',
@@ -192,6 +193,7 @@ export async function generateAIQuiz(params: {
   difficulty: DifficultyLevel;
   count: number;
   weakConcepts?: string[];
+  language?: string;
 }): Promise<{
   title: string;
   subject: string;

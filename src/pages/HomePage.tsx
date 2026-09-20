@@ -2,6 +2,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
+import { translateUI, SupportedLanguage } from '../services/i18n';
 import { 
   Sparkles, Rocket, 
   Play, 
@@ -15,13 +16,28 @@ import {
   PenTool,
   Lightbulb,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  Users,
+  Layers,
+  Share2
 } from 'lucide-react';
 import robotImage from '../assets/images/cute_robot_reading_1789570270647.jpg';
 
+import { SM2SpacedRepetitionModal } from '../components/repetition/SM2SpacedRepetitionModal';
+import { InteractiveDiagramExplainerModal } from '../components/ai/InteractiveDiagramExplainerModal';
+import { PeerStudyRoomModal } from '../components/workspace/PeerStudyRoomModal';
+import { ClassroomLMSExportModal } from '../components/teacher/ClassroomLMSExportModal';
+
 export const HomePage: React.FC = () => {
-  const { setActiveTab, learningProfile } = useApp();
+  const { setActiveTab, learningProfile, language } = useApp();
   const { user } = useAuth();
+
+  const currentLang = (language as SupportedLanguage) || 'en';
+
+  const [isSM2Open, setIsSM2Open] = React.useState(false);
+  const [isDiagramOpen, setIsDiagramOpen] = React.useState(false);
+  const [isPeerRoomOpen, setIsPeerRoomOpen] = React.useState(false);
+  const [isLMSExportOpen, setIsLMSExportOpen] = React.useState(false);
   
   // Calculate dynamic progress based on user's mastery score
   const progressPercentage = typeof learningProfile?.masteryScore === "number" ? learningProfile.masteryScore : 65;
@@ -132,7 +148,7 @@ export const HomePage: React.FC = () => {
                 className="bg-gradient-to-r from-amber-600 via-indigo-600 to-purple-600 hover:from-amber-700 hover:to-purple-700 text-white font-bold px-7 py-3.5 rounded-full flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-transform hover:-translate-y-0.5 cursor-pointer"
               >
                 <BookOpen className="w-5 h-5" />
-                <span>Create Study Topic</span>
+                <span>{translateUI('Topic Workspace', currentLang)}</span>
                 <ArrowRight className="w-4 h-4 ml-1" />
               </button>
 
@@ -141,7 +157,7 @@ export const HomePage: React.FC = () => {
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-7 py-3.5 rounded-full flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-transform hover:-translate-y-0.5 cursor-pointer"
               >
                 <Rocket className="w-5 h-5" />
-                <span>AI Tutor</span>
+                <span>{translateUI('AI Tutor', currentLang)}</span>
               </button>
             </div>
           </div>
@@ -195,11 +211,88 @@ export const HomePage: React.FC = () => {
                 <feature.icon className="w-7 h-7" />
               </div>
               <div className="space-y-1">
-                <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{feature.title}</h4>
+                <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{translateUI(feature.title, currentLang)}</h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 whitespace-pre-line leading-relaxed">{feature.desc}</p>
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* GSoC Innovation Suite Section */}
+      <section className="space-y-4 pt-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-extrabold text-[10px] uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>GSoC Open Source Innovation Suite</span>
+            </div>
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">
+              Advanced Neural Study Tools
+            </h2>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <button
+            onClick={() => setIsSM2Open(true)}
+            className="p-5 rounded-3xl bg-gradient-to-br from-indigo-50 to-white dark:from-slate-900 dark:to-indigo-950/50 border border-indigo-100 dark:border-indigo-900/60 shadow-sm hover:shadow-md transition text-left cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform">
+              <Brain className="w-5 h-5" />
+            </div>
+            <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">
+              SuperMemo SM-2 Engine
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+              Adaptive spaced repetition with memory retention decay curves.
+            </p>
+          </button>
+
+          <button
+            onClick={() => setIsDiagramOpen(true)}
+            className="p-5 rounded-3xl bg-gradient-to-br from-purple-50 to-white dark:from-slate-900 dark:to-purple-950/50 border border-purple-100 dark:border-purple-900/60 shadow-sm hover:shadow-md transition text-left cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-purple-600 text-white flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform">
+              <Layers className="w-5 h-5" />
+            </div>
+            <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">
+              Diagram Vision Canvas
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+              Interactive textbook diagram & math bounding box explainer.
+            </p>
+          </button>
+
+          <button
+            onClick={() => setIsPeerRoomOpen(true)}
+            className="p-5 rounded-3xl bg-gradient-to-br from-emerald-50 to-white dark:from-slate-900 dark:to-emerald-950/50 border border-emerald-100 dark:border-emerald-900/60 shadow-sm hover:shadow-md transition text-left cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform">
+              <Users className="w-5 h-5" />
+            </div>
+            <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">
+              Peer Room & Live Battles
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+              Real-time room code study, live chat, and AI quiz battles.
+            </p>
+          </button>
+
+          <button
+            onClick={() => setIsLMSExportOpen(true)}
+            className="p-5 rounded-3xl bg-gradient-to-br from-amber-50 to-white dark:from-slate-900 dark:to-amber-950/50 border border-amber-100 dark:border-amber-900/60 shadow-sm hover:shadow-md transition text-left cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform">
+              <Share2 className="w-5 h-5" />
+            </div>
+            <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">
+              Classroom LMS Export
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+              Google Classroom & LTI 1.3 educational analytics export.
+            </p>
+          </button>
         </div>
       </section>
 
@@ -233,7 +326,7 @@ export const HomePage: React.FC = () => {
                   <feat.icon className="w-7 h-7" strokeWidth={2} />
                 </div>
                 <div className="flex-1 space-y-1.5">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{feat.title}</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{translateUI(feat.title, currentLang)}</h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pr-6">{feat.desc}</p>
                 </div>
                 <ArrowRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-blue-600 dark:group-hover:text-indigo-400 group-hover:translate-x-1 transition-all mt-4" />
@@ -292,6 +385,11 @@ export const HomePage: React.FC = () => {
 
       </section>
 
+      {/* Modal Instances */}
+      <SM2SpacedRepetitionModal isOpen={isSM2Open} onClose={() => setIsSM2Open(false)} />
+      <InteractiveDiagramExplainerModal isOpen={isDiagramOpen} onClose={() => setIsDiagramOpen(false)} />
+      <PeerStudyRoomModal isOpen={isPeerRoomOpen} onClose={() => setIsPeerRoomOpen(false)} />
+      <ClassroomLMSExportModal isOpen={isLMSExportOpen} onClose={() => setIsLMSExportOpen(false)} />
     </div>
   );
 };

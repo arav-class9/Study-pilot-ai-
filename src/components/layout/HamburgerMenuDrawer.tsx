@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { translateUI, SupportedLanguage } from '../../services/i18n';
 import {
   Menu,
   X,
@@ -37,7 +38,8 @@ interface MenuSection {
 }
 
 export const HamburgerMenuDrawer: React.FC = () => {
-  const { setActiveTab, activeTab, setIsUpgradeModalOpen, user, addNotification } = useApp();
+  const { setActiveTab, activeTab, setIsUpgradeModalOpen, user, addNotification, language } = useApp();
+  const currentLang = (language as SupportedLanguage) || 'en';
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -193,7 +195,7 @@ export const HamburgerMenuDrawer: React.FC = () => {
             {menuSections.map((sec, idx) => (
               <div key={idx} className="space-y-1.5">
                 <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 px-1">
-                  {sec.title}
+                  {translateUI(sec.title, currentLang)}
                 </span>
                 <div className="space-y-1">
                   {sec.items.map((item) => {
@@ -217,7 +219,7 @@ export const HamburgerMenuDrawer: React.FC = () => {
                           >
                             <Icon className="w-4 h-4 shrink-0" />
                           </div>
-                          <span className="truncate">{item.label}</span>
+                          <span className="truncate">{translateUI(item.label, currentLang)}</span>
                         </div>
 
                         <div className="flex items-center gap-1.5">

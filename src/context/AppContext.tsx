@@ -1,4 +1,5 @@
 import { useAuth } from './AuthContext';
+import { useLanguage } from './LanguageContext';
 import { DatabaseService } from '../lib/firebase/db';
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import confetti from 'canvas-confetti';
@@ -71,6 +72,8 @@ interface AppContextType {
   navigateToTab: (tab: string, options?: { subTab?: string; subject?: SubjectId; classLevel?: ClassLevel; board?: string; chapters?: string[] }) => void;
   language: LanguageCode;
   setLanguage: (lang: LanguageCode) => void;
+  selectedLanguage: LanguageCode;
+  setSelectedLanguage: (lang: LanguageCode) => void;
   isOffline: boolean;
   isProfileLoading: boolean;
   isDarkMode: boolean;
@@ -477,7 +480,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (options?.chapters) setSelectedExamChapters(options.chapters);
     setActiveTab(tab);
   };
-  const [language, setLanguage] = useState<LanguageCode>('en');
+  let langContext: any = null;
+  try {
+    langContext = useLanguage();
+  } catch {
+    // fallback
+  }
+
+  const [localLangState, setLocalLangState] = useState<LanguageCode>(() => {
+    const saved = safeGetStorage('studypilot_language');
+    return (saved as LanguageCode) || 'en';
+  });
+
+  const language: LanguageCode = (langContext?.language as LanguageCode) || localLangState;
+
+  const setLanguage = (lang: LanguageCode) => {
+    if (langContext?.setLanguage) {
+      langContext.setLanguage(lang as any);
+    }
+    setLocalLangState(lang);
+    safeSetStorage('studypilot_language', lang);
+  };
   const [isOffline, setIsOffline] = useState<boolean>(
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
@@ -1193,6 +1216,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         navigateToTab,
         language,
         setLanguage,
+        selectedLanguage: language,
+        setSelectedLanguage: setLanguage,
         isOffline,
         isProfileLoading,
         isDarkMode,

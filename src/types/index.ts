@@ -41,7 +41,7 @@ export type VerificationStatus = 'verified' | 'needs_review' | 'verification_fai
 
 export type SourceType = 'curriculum' | 'user_uploaded' | 'ai_generated';
 
-export type LanguageCode = 'en' | 'hi' | 'hinglish';
+export type LanguageCode = 'en' | 'hi' | 'hinglish' | 'ta' | 'te' | 'mr';
 
 export interface SubjectMeta {
   id: SubjectId;

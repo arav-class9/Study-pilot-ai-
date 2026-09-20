@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { translateUI, SupportedLanguage } from '../../services/i18n';
 import { 
   GraduationCap, 
   Search, 
@@ -20,12 +21,14 @@ import { GlobalSearchModal } from '../search/GlobalSearchModal';
 import { NotificationDrawer } from '../notifications/NotificationDrawer';
 import { HamburgerMenuDrawer } from './HamburgerMenuDrawer';
 import { PWAInstallButton } from '../common/PWAInstallButton';
+import { LanguageSwitcher } from '../common/LanguageSwitcher';
 
 export const Navbar: React.FC = () => {
-  const { user, activeTab, setActiveTab, notifications, isDarkMode, toggleDarkMode } = useApp();
+  const { user, activeTab, setActiveTab, notifications, isDarkMode, toggleDarkMode, language } = useApp();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   
+  const currentLang = (language as SupportedLanguage) || 'en';
   const unreadNotifsCount = notifications.filter((n) => !n.read).length;
 
   const navLinks = [
@@ -71,7 +74,7 @@ export const Navbar: React.FC = () => {
                   }`}
                 >
                   <link.icon className="w-4 h-4" />
-                  <span>{link.label}</span>
+                  <span>{translateUI(link.label, currentLang)}</span>
                 </button>
               );
             })}
@@ -79,6 +82,7 @@ export const Navbar: React.FC = () => {
 
           {/* Right: Actions */}
           <div className="flex-1 flex items-center justify-end gap-1.5 sm:gap-3">
+            <LanguageSwitcher />
             <PWAInstallButton />
 
             {/* Dark Mode Toggle */}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { generateAIQuiz } from '../services/aiClient';
+import { translateUI, SupportedLanguage } from '../services/i18n';
 import {
   getCurriculumChapters,
   getCurriculumSubjects,
@@ -48,6 +49,7 @@ export const PracticeQuizPage: React.FC = () => {
     selectedClassLevel: globalClass,
     selectedBoard: globalBoard,
     selectedExamChapters: globalChapters,
+    language,
   } = useApp();
 
   // Curriculum Hierarchy Selection
@@ -169,6 +171,7 @@ export const PracticeQuizPage: React.FC = () => {
         chapter: chapterName,
         difficulty,
         count: questionCount,
+        language,
       });
 
       if (!result?.questions || result.questions.length === 0) {
@@ -341,7 +344,7 @@ export const PracticeQuizPage: React.FC = () => {
                   <span>Curriculum-Aligned Adaptive Practice</span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-                  Smart Quiz & Practice Drills 🎯
+                  {translateUI('Quiz', (language as SupportedLanguage) || 'en')} 🎯
                 </h1>
                 <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
                   Select your Board, Class, and Subject to practice authentic textbook chapters with step-by-step verified explanations.

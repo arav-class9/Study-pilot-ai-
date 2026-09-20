@@ -288,16 +288,19 @@ export interface NCERTSelectionActionResult {
   actionType: 'notes' | 'explain' | 'quiz';
   selectedText: string;
   pageNumber: number;
-  chapterName: string;
+  chapterName?: string;
   // For 'notes':
+  formattedNotes?: string;
   bulletNotes?: string[];
   keyTerms?: { term: string; definition: string }[];
   examSignificance?: string;
   // For 'explain':
+  explanationText?: string;
   simplifiedExplanation?: string;
   realWorldAnalogy?: string;
   ncertRuleToRemember?: string;
   // For 'quiz':
+  strictQuizQuestions?: NCERTQuizQuestion[];
   questions?: NCERTQuizQuestion[];
 }
 

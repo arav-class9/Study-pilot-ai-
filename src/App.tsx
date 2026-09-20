@@ -1,4 +1,5 @@
 import React from 'react';
+import { LanguageProvider } from './context/LanguageContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FocusProvider } from './context/FocusContext';
@@ -17,7 +18,7 @@ import { OfflineBanner } from './components/common/OfflineBanner';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 // Pages
-const HomePage = React.lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
+import { HomePage } from './pages/HomePage';
 const AITutorPage = React.lazy(() => import('./pages/AITutorPage').then(module => ({ default: module.AITutorPage })));
 const LearnPage = React.lazy(() => import('./pages/LearnPage').then(module => ({ default: module.LearnPage })));
 const PracticeQuizPage = React.lazy(() => import('./pages/PracticeQuizPage').then(module => ({ default: module.PracticeQuizPage })));
@@ -204,13 +205,15 @@ const AppContent: React.FC = () => {
 export function App() {
   return (
     <ErrorBoundary sectionName="StudyPilot Root">
-      <AuthProvider>
-        <AppProvider>
-          <FocusProvider>
-            <AppContent />
-          </FocusProvider>
-        </AppProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <AppProvider>
+            <FocusProvider>
+              <AppContent />
+            </FocusProvider>
+          </AppProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </ErrorBoundary>
   );
 }

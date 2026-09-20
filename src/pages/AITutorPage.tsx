@@ -2,6 +2,7 @@ import { toast } from 'react-hot-toast';
 import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { askAIDoubt } from '../services/aiClient';
+import { translateUI, SupportedLanguage } from '../services/i18n';
 import { DoubtSolution, SubjectId, ClassLevel } from '../types';
 import {
   Bot,
@@ -45,6 +46,7 @@ export const AITutorPage: React.FC = () => {
     toggleDeepWork,
     selectedSubjectId: globalSubject,
     selectedClassLevel: globalClass,
+    language,
   } = useApp();
 
   const [activeTutorTab, setActiveTutorTab] = useState<'doubt' | 'formula_solver' | 'handwritten' | 'textbook_photo' | 'viva_feynman'>('doubt');
@@ -156,6 +158,7 @@ export const AITutorPage: React.FC = () => {
         imageMimeType,
         subject: selectedSubject,
         classLevel: selectedClass,
+        language,
       });
       if (!res) throw new Error('Unable to retrieve solution from AI Tutor.');
       setSolution(res);
@@ -228,6 +231,8 @@ export const AITutorPage: React.FC = () => {
     setTimeout(() => setCopiedLatex(false), 2000);
   };
 
+  const currentLang = (language as SupportedLanguage) || 'en';
+
   return (
     <div id="ai-tutor-page" className="space-y-6 pb-20 md:pb-8 max-w-5xl mx-auto">
       {/* Header */}
@@ -238,13 +243,13 @@ export const AITutorPage: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">StudyPilot AI Tutor</h1>
+              <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">{translateUI('AI Tutor', currentLang)}</h1>
               <span className="bg-indigo-100 text-indigo-700 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full">
                 Step-by-Step Coach
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-500">
-              Type or scan any academic problem to get pedagogical explanations & formulas.
+              Type or scan any academic problem to get pedagogical explanations &amp; formulas.
             </p>
           </div>
         </div>

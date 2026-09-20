@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { translateUI, SupportedLanguage } from '../services/i18n';
 import { SUBJECTS_META } from '../data/curriculum';
 import { CurriculumSubject } from '../types';
 import {
@@ -36,7 +37,8 @@ import {
 } from 'recharts';
 
 export const ProgressPage: React.FC = () => {
-  const { user, topicProgressList, quizAttempts, achievements, isProfileLoading, studyGroupMembers, inviteStudyPartner, removeStudyPartner } = useApp();
+  const { user, topicProgressList, quizAttempts, achievements, isProfileLoading, studyGroupMembers, inviteStudyPartner, removeStudyPartner, language } = useApp();
+  const currentLang = (language as SupportedLanguage) || 'en';
 
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteName, setInviteName] = useState('');
@@ -122,7 +124,7 @@ export const ProgressPage: React.FC = () => {
             <BarChart3 className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900">Academic Progress & Study Groups</h1>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900">{translateUI('Progress', currentLang)}</h1>
             <p className="text-xs sm:text-sm text-slate-500">
               Real-time telemetry of your CBSE concept retention, practice tests, and study group comparisons.
             </p>

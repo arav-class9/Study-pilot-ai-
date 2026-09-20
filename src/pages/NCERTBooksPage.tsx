@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { translateUI, SupportedLanguage } from '../services/i18n';
 import {
   NCERTClass,
   NCERTSubjectId,
@@ -54,7 +55,8 @@ import {
 } from 'lucide-react';
 
 export const NCERTBooksPage: React.FC = () => {
-  const { user } = useApp();
+  const { user, language } = useApp();
+  const currentLang = (language as SupportedLanguage) || 'en';
   const defaultClass = (user?.classLevel && ['6', '7', '8', '9', '10', '11', '12'].includes(user.classLevel)
     ? user.classLevel
     : '10') as NCERTClass;
@@ -353,7 +355,7 @@ export const NCERTBooksPage: React.FC = () => {
                 <span>OFFICIAL NCERT TEXTBOOKS &amp; PDF PROCESSOR</span>
               </div>
               <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-                NCERT Books, PDF Upload &amp; Board Mock Tests
+                {translateUI('NCERT & Books', currentLang)}
               </h1>
               <p className="text-xs sm:text-sm text-indigo-100 max-w-2xl leading-relaxed">
                 Upload complete NCERT textbook PDFs from the official NCERT portal. Automatically parse chapters, headings, exercises, diagrams, and formulas. Highlight any excerpt to generate notes, explanations, or strict page quizzes!
