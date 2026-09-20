@@ -40,8 +40,10 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
 
   const ai = getGeminiClient();
   
-  const primaryModel = options.primaryModel || 'gemini-3.8-flash';
-  const fallbackModel = options.fallbackModel || 'gemini-3.1-flash-lite';
+  const primaryModel = options.primaryModel || 'gemini-2.5-flash';
+  const fallbackModel = (options.fallbackModel && options.fallbackModel !== primaryModel) 
+    ? options.fallbackModel 
+    : 'gemini-flash-latest';
   const maxRetries = options.maxRetries ?? 1;
 
   // Build unique sequence of models to try in order of preference
@@ -49,9 +51,10 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
     new Set([
       primaryModel,
       fallbackModel,
-      'gemini-3.1-flash-lite',
-      'gemini-3.8-flash',
+      'gemini-2.5-flash',
       'gemini-flash-latest',
+      'gemini-2.5-flash',
+      'gemini-2.5-pro',
     ].filter(Boolean))
   );
 
@@ -88,24 +91,18 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
           errorMessage.includes('high demand') ||
           errorMessage.includes('UNAVAILABLE') ||
           errorMessage.includes('503') ||
-          errorMessage.includes('overloaded') ||
-          errorMessage.includes('fetch failed') ||
-          errorMessage.includes('Failed to fetch') ||
-          errorMessage.includes('ECONNRESET') ||
-          errorMessage.includes('ETIMEDOUT') ||
-          errorMessage.includes('socket hang up') ||
-          errorMessage.includes('NetworkError');
+          errorMessage.includes('overloaded');
 
         console.warn(`[Gemini API] Attempt ${attempt + 1}/${maxRetries + 1} for model ${model}:`, errorMessage);
 
-        // If high demand (503), quota (429), or network drop, switch immediately to the next fallback model
+        // If high demand (503) or quota (429), switch immediately to the next available fallback model
         if ((isTransient || isQuotaExhausted) && mIdx < modelsToTry.length - 1) {
-          console.warn(`[Gemini API] Switching from ${model} to fallback model ${modelsToTry[mIdx + 1]}...`);
+          console.warn(`[Gemini API] Switching from ${model} to next model ${modelsToTry[mIdx + 1]}...`);
           break; // Break inner loop to try next model immediately
         }
 
         if (attempt < maxRetries && (isQuotaExhausted || isTransient)) {
-          const delayMs = (attempt + 1) * 600 + Math.random() * 300;
+          const delayMs = (attempt + 1) * 800 + Math.random() * 400;
           console.warn(`[Gemini API] Retrying in ${Math.round(delayMs)}ms...`);
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         } else {
@@ -116,4 +113,54 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
   }
 
   throw lastError || new Error('Failed to generate AI content after retries and model fallbacks');
+}
+
+/**
+ * Strips markdown code fences (```json ... ```) and safely parses JSON with embedded object/array fallback extraction.
+ */
+export function safeJsonParse<T = any>(text?: string, fallback?: T): T {
+  if (!text || typeof text !== 'string') {
+    if (fallback !== undefined) return fallback;
+    throw new Error('Empty or invalid string provided for JSON parsing');
+  }
+
+  let clean = text.trim();
+  if (clean.startsWith('```json')) {
+    clean = clean.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
+  } else if (clean.startsWith('```')) {
+    clean = clean.replace(/^```\s*/i, '').replace(/\s*```$/, '');
+  }
+
+  try {
+    return JSON.parse(clean);
+  } catch {
+    // Try to extract first JSON code block
+    const codeBlockMatch = clean.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    if (codeBlockMatch && codeBlockMatch[1]) {
+      try {
+        return JSON.parse(codeBlockMatch[1].trim());
+      } catch {}
+    }
+
+    // Try finding enclosing JSON object { ... }
+    const firstBrace = clean.indexOf('{');
+    const lastBrace = clean.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+      try {
+        return JSON.parse(clean.substring(firstBrace, lastBrace + 1));
+      } catch {}
+    }
+
+    // Try finding enclosing JSON array [ ... ]
+    const firstBracket = clean.indexOf('[');
+    const lastBracket = clean.lastIndexOf(']');
+    if (firstBracket !== -1 && lastBracket > firstBracket) {
+      try {
+        return JSON.parse(clean.substring(firstBracket, lastBracket + 1));
+      } catch {}
+    }
+
+    if (fallback !== undefined) return fallback;
+    throw new Error(`Failed to parse JSON response: ${clean.substring(0, 100)}...`);
+  }
 }

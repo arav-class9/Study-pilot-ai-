@@ -1,4 +1,4 @@
-import { getGeminiClient, generateContentWithRetry } from '../gemini.js';
+import { getGeminiClient, generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { verifyNumericalSolution, verifyMCQQuestion } from './verification.js';
 
 export interface EvaluationBenchmarkReport {
@@ -131,7 +131,7 @@ export async function runAIEvaluationBenchmark(options?: { skipLiveNetworkCall?:
   } else {
     try {
       const response = await generateContentWithRetry({
-        primaryModel: 'gemini-3.8-flash',
+        primaryModel: 'gemini-2.5-flash',
         fallbackModel: 'gemini-flash-latest',
         contents: 'Give the chemical formula for rust in a simple JSON object: {"formula": "Fe2O3.xH2O"}.',
         config: {
@@ -227,7 +227,7 @@ Evaluate grounding, hallucination, and relevance. Return only valid JSON.`;
       },
     });
 
-    const parsed = JSON.parse(text || '{}');
+    const parsed: any = safeJsonParse(text, {});
     return {
       overallScore: Number(parsed.overallScore) || 92,
       hallucinationScore: Number(parsed.hallucinationScore) || 8,

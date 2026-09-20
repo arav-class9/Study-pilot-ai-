@@ -1,4 +1,4 @@
-import { getGeminiClient, generateContentWithRetry } from '../gemini.js';
+import { getGeminiClient, generateContentWithRetry, safeJsonParse } from '../gemini.js';
 
 export interface TeacherWorksheetRequest {
   subject: string;
@@ -157,7 +157,7 @@ Return only valid JSON.`;
       },
     });
 
-    const parsed = JSON.parse(text || '{}');
+    const parsed: any = safeJsonParse(text, {});
     if (parsed && parsed.title && parsed.sections) {
       return {
         id: parsed.id || `ws_${Date.now()}`,

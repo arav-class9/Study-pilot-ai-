@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 
 export interface GenerateNotesInput {
@@ -43,8 +43,8 @@ Generate comprehensive, beautifully structured educational notes adhering strict
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: promptText,
       config: {
         systemInstruction,
@@ -100,8 +100,7 @@ Generate comprehensive, beautifully structured educational notes adhering strict
       },
     });
 
-    const text = response.text?.trim() || '{}';
-    const parsed = JSON.parse(text);
+    const parsed = safeJsonParse(response.text, {});
     return parsed;
   } catch (error: any) {
     console.error('Error generating notes with AI:', error);

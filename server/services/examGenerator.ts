@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 import { verifyMCQQuestion } from './verification.js';
 
@@ -178,8 +178,8 @@ Generate ${targetCount} high-yield MCQs adhering strictly to the JSON schema.`;
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: promptText,
       config: {
         systemInstruction,
@@ -222,8 +222,7 @@ Generate ${targetCount} high-yield MCQs adhering strictly to the JSON schema.`;
       },
     });
 
-    const text = response.text?.trim() || '{}';
-    const parsed = JSON.parse(text);
+    const parsed: any = safeJsonParse(response.text, {});
 
     if (parsed.questions && Array.isArray(parsed.questions)) {
       const validQuestions: any[] = [];

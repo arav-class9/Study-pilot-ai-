@@ -51,11 +51,19 @@ import {
   Play,
   Pause,
   Square,
+  Bookmark,
+  X,
 } from 'lucide-react';
+import {
+  onCitationNavigation,
+  CitationNavigationTarget,
+  clearActiveCitationTarget,
+} from '../../services/citationNavigation';
 
 interface NCERTReaderProps {
   chapter: NCERTChapter;
   initialPage?: number;
+  targetCitation?: CitationNavigationTarget | null;
   userId: string;
   uploadedBook?: NCERTUploadedBook | null;
   onLaunchQuiz: (pageContent: NCERTPageContent, pageNumber: number) => void;
@@ -69,6 +77,7 @@ interface NCERTReaderProps {
 export const NCERTReader: React.FC<NCERTReaderProps> = ({
   chapter,
   initialPage = 1,
+  targetCitation = null,
   userId,
   uploadedBook,
   onLaunchQuiz,
@@ -109,10 +118,76 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
   const [isSpeechPaused, setIsSpeechPaused] = useState<boolean>(false);
 
   // PDF Authentic View vs Structured Textbook View
-  const [viewMode, setViewMode] = useState<'text' | 'pdf'>('text');
+  const [viewMode, setViewMode] = useState<'text' | 'pdf'>(targetCitation?.viewMode || 'text');
   const [pdfZoom, setPdfZoom] = useState<number>(1.0);
 
+  // Citation Spotlight State
+  const [activeCitation, setActiveCitation] = useState<CitationNavigationTarget | null>(targetCitation || null);
+  const [hasScrolledToCitation, setHasScrolledToCitation] = useState<boolean>(false);
+
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Listen for global citation navigation events
+  useEffect(() => {
+    const unsubscribe = onCitationNavigation((target) => {
+      if (target.pageNumber) {
+        setCurrentPage(target.pageNumber);
+        if (target.viewMode) {
+          setViewMode(target.viewMode);
+        }
+        setActiveCitation(target);
+        setHasScrolledToCitation(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Update activeCitation if prop changes
+  useEffect(() => {
+    if (targetCitation) {
+      setActiveCitation(targetCitation);
+      if (targetCitation.pageNumber && targetCitation.pageNumber !== currentPage) {
+        setCurrentPage(targetCitation.pageNumber);
+      }
+      if (targetCitation.viewMode) {
+        setViewMode(targetCitation.viewMode);
+      }
+      setHasScrolledToCitation(false);
+    }
+  }, [targetCitation]);
+
+  // Auto-scroll and highlight target citation when pageData loads
+  useEffect(() => {
+    if (!loading && pageData && activeCitation && !hasScrolledToCitation) {
+      const timer = setTimeout(() => {
+        const quoteToFind = activeCitation.exactQuote || activeCitation.highlightKeyword;
+        let matchedElem: HTMLElement | null = null;
+
+        if (quoteToFind && pageData.paragraphs) {
+          const cleanQuote = quoteToFind.toLowerCase().trim();
+          const matchIndex = pageData.paragraphs.findIndex((p) => {
+            const cleanP = p.toLowerCase();
+            return cleanP.includes(cleanQuote.slice(0, 25)) || cleanQuote.includes(cleanP.slice(0, 25));
+          });
+
+          if (matchIndex !== -1) {
+            matchedElem = document.getElementById(`ncert-para-${matchIndex}`);
+          }
+        }
+
+        if (!matchedElem) {
+          matchedElem = document.getElementById(`ncert-page-${currentPage}`) || contentRef.current;
+        }
+
+        if (matchedElem) {
+          matchedElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHasScrolledToCitation(true);
+        }
+      }, 250);
+
+      return () => clearTimeout(timer);
+    }
+  }, [loading, pageData, activeCitation, hasScrolledToCitation, currentPage]);
 
   // Load Highlights for Current Page
   const loadHighlights = useCallback(async () => {
@@ -773,6 +848,75 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
                 </div>
               </div>
 
+              {/* Citation Spotlight Banner */}
+              {activeCitation && (
+                <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-indigo-500/10 to-purple-500/15 border-2 border-amber-400/80 dark:border-amber-500/60 shadow-md animate-in fade-in slide-in-from-top-3 duration-300">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                        <Sparkles className="w-4 h-4 animate-spin-slow" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-black uppercase tracking-wider text-amber-900 dark:text-amber-300">
+                            AI Tutor Citation Spotlight
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-200 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200 font-mono">
+                            Page {currentPage}
+                          </span>
+                        </div>
+                        {activeCitation.exactQuote ? (
+                          <p className="mt-1 text-xs sm:text-sm text-slate-800 dark:text-slate-200 italic font-serif leading-snug">
+                            "{activeCitation.exactQuote}"
+                          </p>
+                        ) : (
+                          <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                            Referenced in AI Doubt explanation from {activeCitation.bookTitle || 'NCERT Curriculum'}.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-1.5 shrink-0">
+                      {activeCitation.exactQuote && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newHl: NCERTHighlight = {
+                              id: `hl_cite_${Date.now()}`,
+                              userId,
+                              chapterId: chapter.id,
+                              pageNumber: currentPage,
+                              text: activeCitation.exactQuote!,
+                              color: 'yellow',
+                              createdAt: new Date().toISOString(),
+                            };
+                            NCERTBookStorage.saveHighlight(newHl);
+                            setHighlights((prev) => [...prev, newHl]);
+                          }}
+                          className="px-2.5 py-1 rounded-lg text-xs font-bold text-amber-900 dark:text-amber-200 bg-amber-200/70 dark:bg-amber-900/60 hover:bg-amber-300 transition-colors flex items-center space-x-1 cursor-pointer"
+                          title="Save this referenced citation as permanent highlight"
+                        >
+                          <Bookmark className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Save Highlight</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveCitation(null);
+                          clearActiveCitationTarget();
+                        }}
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                        title="Dismiss Citation Spotlight"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Saved Highlights on this page */}
               {highlights.length > 0 && (
                 <div className="mb-6 p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs">
@@ -868,11 +1012,33 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
 
               {/* NCERT Textbook Paragraphs */}
               <div className={`space-y-4 ${getFontSizeClass()} select-text selection:bg-indigo-200 dark:selection:bg-indigo-800`}>
-                {pageData.paragraphs.map((para, idx) => (
-                  <p key={idx} className="text-justify font-serif leading-relaxed">
-                    {para}
-                  </p>
-                ))}
+                {pageData.paragraphs.map((para, idx) => {
+                  const quoteToFind = activeCitation?.exactQuote || activeCitation?.highlightKeyword;
+                  const isMatch = Boolean(
+                    quoteToFind &&
+                      (para.toLowerCase().includes(quoteToFind.toLowerCase().slice(0, 25)) ||
+                        quoteToFind.toLowerCase().includes(para.toLowerCase().slice(0, 25)))
+                  );
+
+                  return (
+                    <p
+                      key={idx}
+                      id={`ncert-para-${idx}`}
+                      className={`text-justify font-serif leading-relaxed transition-all duration-300 ${
+                        isMatch
+                          ? 'bg-amber-100/90 dark:bg-amber-950/70 border-l-4 border-amber-500 pl-4 py-2.5 rounded-r-xl shadow-xs ring-2 ring-amber-300/50 dark:ring-amber-500/30'
+                          : ''
+                      }`}
+                    >
+                      {isMatch && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-amber-900 dark:text-amber-300 bg-amber-200/80 dark:bg-amber-900/80 px-2 py-0.5 rounded mr-2 align-middle">
+                          <Sparkles className="w-2.5 h-2.5" /> Referenced Citation
+                        </span>
+                      )}
+                      {para}
+                    </p>
+                  );
+                })}
               </div>
 
               {/* NCERT Activities Callout Box */}

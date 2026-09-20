@@ -1,4 +1,4 @@
-import { getGeminiClient, generateContentWithRetry } from '../gemini.js';
+import { getGeminiClient, generateContentWithRetry, safeJsonParse } from '../gemini.js';
 
 export interface RAGTextbookChunk {
   pageNumber: number;
@@ -179,7 +179,7 @@ Generate a strictly grounded RAG response with citations and verification. Retur
       },
     });
 
-    const parsed = JSON.parse(text || '{}');
+    const parsed: any = safeJsonParse(text, {});
     if (parsed && parsed.answer) {
       return {
         id: parsed.id || `rag_${Date.now()}`,

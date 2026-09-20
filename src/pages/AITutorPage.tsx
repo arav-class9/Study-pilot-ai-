@@ -29,6 +29,11 @@ import { motion } from 'motion/react';
 import { HandwrittenSolutionTab } from '../components/tutor/HandwrittenSolutionTab';
 import { TextbookPhotoTab } from '../components/tutor/TextbookPhotoTab';
 import { VivaFeynmanTab } from '../components/tutor/VivaFeynmanTab';
+import { FormulaSolver } from '../components/FormulaSolver';
+import { CitationInjector, CitationListPanel } from '../components/tutor/CitationInjector';
+import { CitationBadge } from '../components/tutor/CitationBadge';
+import { Calculator, BookOpen, FileCode } from 'lucide-react';
+import { formatDoubtSolutionAsLaTeX } from '../utils/latexExporter';
 
 export const AITutorPage: React.FC = () => {
   const {
@@ -42,7 +47,7 @@ export const AITutorPage: React.FC = () => {
     selectedClassLevel: globalClass,
   } = useApp();
 
-  const [activeTutorTab, setActiveTutorTab] = useState<'doubt' | 'handwritten' | 'textbook_photo' | 'viva_feynman'>('doubt');
+  const [activeTutorTab, setActiveTutorTab] = useState<'doubt' | 'formula_solver' | 'handwritten' | 'textbook_photo' | 'viva_feynman'>('doubt');
   const [questionText, setQuestionText] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>(globalSubject || 'science');
   const [selectedClass, setSelectedClass] = useState<ClassLevel>((globalClass || user?.classLevel || '10') as ClassLevel);
@@ -56,6 +61,7 @@ export const AITutorPage: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const [revealedPracticeAnswer, setRevealedPracticeAnswer] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedLatex, setCopiedLatex] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -210,6 +216,18 @@ export const AITutorPage: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleCopyLatex = () => {
+    if (!solution) return;
+    const latexCode = formatDoubtSolutionAsLaTeX(solution, {
+      subject: selectedSubject,
+      classLevel: selectedClass,
+    });
+    navigator.clipboard.writeText(latexCode);
+    setCopiedLatex(true);
+    toast.success('LaTeX snippet copied! Ready for your notes or Overleaf.');
+    setTimeout(() => setCopiedLatex(false), 2000);
+  };
+
   return (
     <div id="ai-tutor-page" className="space-y-6 pb-20 md:pb-8 max-w-5xl mx-auto">
       {/* Header */}
@@ -285,6 +303,18 @@ export const AITutorPage: React.FC = () => {
         </button>
 
         <button
+          onClick={() => setActiveTutorTab('formula_solver')}
+          className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center space-x-2 whitespace-nowrap transition-all cursor-pointer ${
+            activeTutorTab === 'formula_solver'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Calculator className="w-4 h-4" />
+          <span>Formula &amp; Numerical Solver 📐</span>
+        </button>
+
+        <button
           onClick={() => setActiveTutorTab('handwritten')}
           className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center space-x-2 whitespace-nowrap transition-all cursor-pointer ${
             activeTutorTab === 'handwritten'
@@ -320,6 +350,34 @@ export const AITutorPage: React.FC = () => {
           <span>Viva Voce &amp; Feynman Mode</span>
         </button>
       </div>
+
+      {activeTutorTab === 'formula_solver' && (
+        <FormulaSolver
+          defaultSubject={selectedSubject === 'math' ? 'mathematics' : selectedSubject}
+          defaultClassLevel={selectedClass}
+          onSaveToNotes={(sol) => {
+            saveNote({
+              id: `note-formula-${Date.now()}`,
+              userId: user.uid,
+              title: `${sol.problemText.slice(0, 45)}... — Solved Formula`,
+              subjectId: (selectedSubject?.toLowerCase() || 'science') as SubjectId,
+              chapterName: 'Formula Solutions',
+              topicName: 'Formula Solver',
+              detailLevel: 'detailed',
+              content: `### Problem\n${sol.problemText}\n\n### Step-by-Step Derivation\n${sol.steps.map((s, i) => `**Step ${i + 1}**: ${s}`).join('\n\n')}\n\n**Final Answer**: ${sol.finalAnswer}`,
+              definitions: [],
+              keyFormulas: sol.keyFormulas || [],
+              commonMistakes: sol.commonPitfalls || [],
+              examTips: ['Memorize intermediate derivation steps for board examinations.'],
+              quickRevisionPoints: [sol.finalAnswer],
+              isFavorite: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            });
+            toast.success('Formula derivation saved to your Study Notes!');
+          }}
+        />
+      )}
 
       {activeTutorTab === 'handwritten' && (
         <HandwrittenSolutionTab currentClass={selectedClass} currentSubject={selectedSubject} />
@@ -525,6 +583,21 @@ export const AITutorPage: React.FC = () => {
 
                 <button
                   type="button"
+                  id="copy-latex-snippet-button"
+                  onClick={handleCopyLatex}
+                  className={`p-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    copiedLatex
+                      ? 'bg-violet-100 text-violet-800 border-violet-300'
+                      : 'border-slate-200 bg-slate-50 hover:bg-violet-50 hover:text-violet-900 text-slate-700'
+                  }`}
+                  title="Copy explanation and equations as formatted LaTeX for your notes or Overleaf"
+                >
+                  <FileCode className="w-4 h-4 text-violet-600" />
+                  <span>{copiedLatex ? 'LaTeX Copied!' : 'Copy LaTeX'}</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={handleSaveToNotes}
                   className={`p-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
                     savedSuccess
@@ -541,8 +614,38 @@ export const AITutorPage: React.FC = () => {
             {/* Concept Intuition Box */}
             <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 text-xs sm:text-sm text-indigo-950 leading-relaxed">
               <strong className="block text-indigo-900 font-bold mb-1">💡 Core Academic Intuition:</strong>
-              {solution.conceptExplanation}
+              <CitationInjector
+                text={solution.conceptExplanation}
+                citations={solution.citations}
+                defaultBookTitle={`NCERT Class ${selectedClass} ${selectedSubject}`}
+                defaultChapterName={solution.concept}
+              />
             </div>
+
+            {/* Verified NCERT Textbook Citations List */}
+            {((solution.citations && solution.citations.length > 0) || solution.source) && (
+              <CitationListPanel
+                citations={
+                  solution.citations && solution.citations.length > 0
+                    ? solution.citations
+                    : solution.source
+                    ? [
+                        {
+                          citationId: 'cite-auto-1',
+                          pageNumber: solution.source.pageNumber || 1,
+                          bookTitle: solution.source.bookTitle || `NCERT Class ${selectedClass} ${selectedSubject}`,
+                          chapterName: solution.source.chapterName || solution.concept,
+                          sectionTitle: solution.source.sectionTitle,
+                          exactQuote: solution.source.exactQuote,
+                          relevanceScore: 98,
+                        },
+                      ]
+                    : []
+                }
+                bookTitle={`NCERT Class ${selectedClass} ${selectedSubject}`}
+                chapterName={solution.concept}
+              />
+            )}
 
             {/* Numerical Breakdown Box (If Numerical) */}
             {solution.numericalBreakdown && (
@@ -581,18 +684,29 @@ export const AITutorPage: React.FC = () => {
                     </span>
                     <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">{step.title}</h4>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed pl-8">
-                    {step.explanation}
-                  </p>
+                  <div className="text-xs sm:text-sm text-slate-700 leading-relaxed pl-8">
+                    <CitationInjector
+                      text={step.explanation}
+                      citations={solution.citations}
+                      defaultBookTitle={`NCERT Class ${selectedClass} ${selectedSubject}`}
+                      defaultChapterName={solution.concept}
+                    />
+                  </div>
                   {step.calculation && (
                     <div className="ml-8 bg-white border border-slate-200 rounded-xl p-2.5 font-mono text-xs text-indigo-900">
                       {step.calculation}
                     </div>
                   )}
                   {step.whyItWorks && (
-                    <p className="text-[11px] text-slate-500 italic pl-8">
-                      <strong>Why this works:</strong> {step.whyItWorks}
-                    </p>
+                    <div className="text-[11px] text-slate-500 italic pl-8">
+                      <strong>Why this works:</strong>{' '}
+                      <CitationInjector
+                        text={step.whyItWorks}
+                        citations={solution.citations}
+                        defaultBookTitle={`NCERT Class ${selectedClass} ${selectedSubject}`}
+                        defaultChapterName={solution.concept}
+                      />
+                    </div>
                   )}
                 </div>
               ))}

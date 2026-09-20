@@ -23,6 +23,12 @@ import { NCERTRevisionDeck } from '../components/ncert/NCERTRevisionDeck';
 import { NCERTChapterAnalytics } from '../components/ncert/NCERTChapterAnalytics';
 import { NCERTBookStorage } from '../services/ncertBookStorage';
 import {
+  onCitationNavigation,
+  getActiveCitationTarget,
+  clearActiveCitationTarget,
+  CitationNavigationTarget,
+} from '../services/citationNavigation';
+import {
   BookOpen,
   Search,
   Upload,
@@ -71,6 +77,7 @@ export const NCERTBooksPage: React.FC = () => {
   const [activeChapter, setActiveChapter] = useState<NCERTChapter | null>(null);
   const [activeUploadedBook, setActiveUploadedBook] = useState<NCERTUploadedBook | null>(null);
   const [readerPageNumber, setReaderPageNumber] = useState<number>(1);
+  const [targetCitation, setTargetCitation] = useState<CitationNavigationTarget | null>(null);
 
   // Uploaded Books collection
   const [uploadedBooks, setUploadedBooks] = useState<NCERTUploadedBook[]>([]);
@@ -101,6 +108,54 @@ export const NCERTBooksPage: React.FC = () => {
   useEffect(() => {
     refreshUploadedBooks();
   }, []);
+
+  // Citation Navigation Listener
+  useEffect(() => {
+    const handleTarget = (target: CitationNavigationTarget) => {
+      setTargetCitation(target);
+      const pageToOpen = target.pageNumber || 1;
+      setReaderPageNumber(pageToOpen);
+
+      // Find best matching chapter
+      const targetClass = (target.classLevel as NCERTClass) || selectedClass;
+      const allClassChapters = getNCERTChaptersForClass(targetClass);
+
+      let matchedChapter: NCERTChapter | undefined;
+      if (target.chapterId) {
+        matchedChapter = getNCERTChapterById(target.chapterId);
+      }
+      if (!matchedChapter && target.chapterName) {
+        const cleanName = target.chapterName.toLowerCase();
+        matchedChapter = allClassChapters.find(
+          (c) =>
+            c.title.toLowerCase().includes(cleanName) ||
+            cleanName.includes(c.title.toLowerCase())
+        );
+      }
+      if (!matchedChapter && target.subjectId) {
+        matchedChapter = allClassChapters.find((c) => c.subjectId === target.subjectId);
+      }
+      if (!matchedChapter && allClassChapters.length > 0) {
+        matchedChapter = allClassChapters[0];
+      }
+
+      if (matchedChapter) {
+        setActiveChapter(matchedChapter);
+      }
+    };
+
+    // Check if there's an existing target stored in memory
+    const existing = getActiveCitationTarget();
+    if (existing) {
+      handleTarget(existing);
+    }
+
+    const unsubscribe = onCitationNavigation((target) => {
+      handleTarget(target);
+    });
+
+    return () => unsubscribe();
+  }, [selectedClass]);
 
   // Filter chapters
   const filteredChapters = useMemo(() => {
@@ -211,6 +266,7 @@ export const NCERTBooksPage: React.FC = () => {
         <NCERTReader
           chapter={activeChapter}
           initialPage={readerPageNumber}
+          targetCitation={targetCitation}
           userId={user?.uid || 'guest-student'}
           uploadedBook={activeUploadedBook}
           onLaunchQuiz={handleLaunchQuizFromReader}
@@ -218,7 +274,10 @@ export const NCERTBooksPage: React.FC = () => {
           onOpenUploadPDF={() => setPdfUploadModalOpen(true)}
           onOpenAnalytics={() => setAnalyticsModalOpen(true)}
           onOpenRevision={() => setRevisionDeckOpen(true)}
-          onBackToCatalogue={() => setActiveChapter(null)}
+          onBackToCatalogue={() => {
+            setActiveChapter(null);
+            setTargetCitation(null);
+          }}
         />
 
         {quizModalOpen && quizPageContent && (

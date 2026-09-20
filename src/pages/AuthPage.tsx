@@ -1,34 +1,98 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   BookOpen, AlertCircle, Mail, Lock, Eye, EyeOff, ArrowRight,
-  GraduationCap, Sparkles, CheckCircle2, FileText
+  GraduationCap, Sparkles, CheckCircle2, FileText, ShieldAlert, Clock
 } from 'lucide-react';
 import { motion } from 'motion/react';
 // Import the generated image
 import robotImage from '../assets/images/cute_robot_reading_1789570270647.jpg';
+import {
+  checkLoginRateLimit,
+  recordFailedLoginAttempt,
+  clearFailedAttempts,
+  formatCooldownTime,
+  RateLimitState,
+} from '../utils/loginRateLimiter';
 
 export const AuthPage: React.FC = () => {
-  const { signInWithGoogle, login, signup } = useAuth();
+  const { signInWithGoogle, signInGuest, login, signup } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rateLimit, setRateLimit] = useState<RateLimitState>(() => checkLoginRateLimit('global'));
+
+  // Timer interval to tick down cooldown seconds when locked out
+  useEffect(() => {
+    const identifier = email.trim() || 'global';
+    const status = checkLoginRateLimit(identifier);
+    setRateLimit(status);
+
+    if (status.isLockedOut) {
+      const timer = setInterval(() => {
+        const updated = checkLoginRateLimit(identifier);
+        setRateLimit(updated);
+        if (!updated.isLockedOut) {
+          clearInterval(timer);
+        }
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [email, isLogin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const identifier = email.trim() || 'global';
+
+    // Rate Limit Check prior to execution
+    if (isLogin) {
+      const currentRateState = checkLoginRateLimit(identifier);
+      if (currentRateState.isLockedOut) {
+        setRateLimit(currentRateState);
+        setError(
+          `Too many failed login attempts. Account sign-in is locked. Please wait ${formatCooldownTime(
+            currentRateState.cooldownSeconds
+          )} before trying again.`
+        );
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       if (isLogin) {
         await login(email, password);
+        clearFailedAttempts(identifier);
+        setRateLimit(checkLoginRateLimit(identifier));
       } else {
         await signup(email, password);
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      if (isLogin) {
+        const newRateState = recordFailedLoginAttempt(identifier);
+        setRateLimit(newRateState);
+
+        if (newRateState.isLockedOut) {
+          setError(
+            `Account temporarily locked due to 5 consecutive failed login attempts. Please wait ${formatCooldownTime(
+              newRateState.cooldownSeconds
+            )} before trying again.`
+          );
+        } else {
+          setError(
+            `${err.message || 'Authentication failed'}. (${newRateState.remainingAttempts} attempt${
+              newRateState.remainingAttempts === 1 ? '' : 's'
+            } remaining before 15-min lockout)`
+          );
+        }
+      } else {
+        setError(err.message || 'Authentication failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -41,6 +105,18 @@ export const AuthPage: React.FC = () => {
       await signInWithGoogle();
     } catch (err: any) {
       setError(err.message || 'Google Sign-In failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestSignIn = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await signInGuest();
+    } catch (err: any) {
+      setError(err.message || 'Guest login failed');
     } finally {
       setLoading(false);
     }
@@ -186,7 +262,21 @@ export const AuthPage: React.FC = () => {
               </div>
 
               <form className="space-y-5" onSubmit={handleSubmit}>
-                {error && (
+                {rateLimit.isLockedOut && isLogin && (
+                  <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-2xl text-xs font-semibold flex items-center gap-3 shadow-sm">
+                    <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
+                    <div className="flex-1">
+                      <div className="font-bold text-amber-800 text-sm">Sign-In Rate Limit Active</div>
+                      <div>Login locked due to 5 consecutive failed attempts.</div>
+                      <div className="flex items-center gap-1.5 mt-1 font-mono text-amber-700 font-black text-xs">
+                        <Clock className="w-3.5 h-3.5 animate-spin text-amber-600" />
+                        <span>Try again in {formatCooldownTime(rateLimit.cooldownSeconds)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {error && !rateLimit.isLockedOut && (
                   <div className="bg-red-50 text-red-700 p-4 rounded-xl text-sm flex items-center gap-3">
                     <AlertCircle className="w-5 h-5 shrink-0" />
                     <span>{error}</span>
@@ -206,8 +296,9 @@ export const AuthPage: React.FC = () => {
                       type="email"
                       required
                       value={email}
+                      disabled={loading || (isLogin && rateLimit.isLockedOut)}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="block w-full pl-11 pr-4 py-3.5 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all text-sm font-medium bg-transparent"
+                      className="block w-full pl-11 pr-4 py-3.5 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all text-sm font-medium bg-transparent disabled:opacity-50"
                       placeholder="student@example.com"
                     />
                   </div>
@@ -226,8 +317,9 @@ export const AuthPage: React.FC = () => {
                       type={showPassword ? 'text' : 'password'}
                       required
                       value={password}
+                      disabled={loading || (isLogin && rateLimit.isLockedOut)}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="block w-full pl-11 pr-12 py-3.5 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all text-sm font-medium bg-transparent"
+                      className="block w-full pl-11 pr-12 py-3.5 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all text-sm font-medium bg-transparent disabled:opacity-50"
                       placeholder="Enter your password"
                     />
                     <button
@@ -240,6 +332,15 @@ export const AuthPage: React.FC = () => {
                   </div>
                 </div>
 
+                {isLogin && rateLimit.attemptsCount > 0 && !rateLimit.isLockedOut && (
+                  <div className="text-[11px] text-amber-700 font-semibold flex items-center gap-1.5 px-1 bg-amber-50/80 p-2 rounded-lg border border-amber-200/60">
+                    <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>
+                      {rateLimit.attemptsCount} of 5 login attempts used. Account will lock for 15 mins after 5 failed attempts.
+                    </span>
+                  </div>
+                )}
+
                 {isLogin && (
                   <div className="flex justify-end mt-1">
                     <a href="#" className="text-xs font-semibold text-blue-600 hover:text-blue-700">
@@ -250,11 +351,11 @@ export const AuthPage: React.FC = () => {
 
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full mt-2 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-white font-bold text-sm bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] hover:from-[#2563EB] hover:to-[#7C3AED] focus:outline-none focus:ring-4 focus:ring-blue-500/20 shadow-md shadow-blue-500/25 transition-all disabled:opacity-70 active:scale-[0.98]"
+                  disabled={loading || (isLogin && rateLimit.isLockedOut)}
+                  className="w-full mt-2 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-white font-bold text-sm bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] hover:from-[#2563EB] hover:to-[#7C3AED] focus:outline-none focus:ring-4 focus:ring-blue-500/20 shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
                 >
-                  {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Sign Up')}
-                  {!loading && <ArrowRight className="w-4 h-4" />}
+                  {loading ? 'Please wait...' : rateLimit.isLockedOut && isLogin ? `Locked (${formatCooldownTime(rateLimit.cooldownSeconds)})` : (isLogin ? 'Sign In' : 'Sign Up')}
+                  {!loading && !rateLimit.isLockedOut && <ArrowRight className="w-4 h-4" />}
                 </button>
               </form>
 
@@ -268,7 +369,7 @@ export const AuthPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-6 flex flex-col gap-3">
                   <button
                     onClick={handleGoogleSignIn}
                     disabled={loading}
@@ -276,6 +377,16 @@ export const AuthPage: React.FC = () => {
                   >
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
                     Continue with Google
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleGuestSignIn}
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-dashed border-slate-300 rounded-xl bg-slate-50/70 hover:bg-slate-100/80 text-xs font-semibold text-slate-600 hover:text-slate-800 transition-all disabled:opacity-70 active:scale-[0.98]"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                    Explore as Guest Student (No sign up needed)
                   </button>
                 </div>
               </div>

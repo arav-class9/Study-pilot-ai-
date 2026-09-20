@@ -1,125 +1,165 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // -------------------------------------------------------------
+    // Authentication & Role Helper Functions
+    // -------------------------------------------------------------
     function isAuthenticated() {
       return request.auth != null;
-    }
-    
-    function hasRole(role) {
-      return get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == role;
-    }
-    function isTeacher() { return hasRole('teacher'); }
-    function isParent() { return hasRole('parent'); }
-    function isAdmin() { return hasRole('admin'); }
-    function isAuthorizedForStudent(studentId) {
-      return isOwner(studentId) || isTeacher() || isParent() || isAdmin();
     }
 
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function userProfileDoc() {
+      return get(/databases/$(database)/documents/profiles/$(request.auth.uid));
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) && 
+        userProfileDoc().data.role == role;
+    }
+
+    function isTeacher() { 
+      return hasRole('teacher') || (isAuthenticated() && request.auth.token.role == 'teacher'); 
+    }
+
+    function isParent() { 
+      return hasRole('parent') || (isAuthenticated() && request.auth.token.role == 'parent'); 
+    }
+
+    function isAdmin() { 
+      return hasRole('admin') || (isAuthenticated() && request.auth.token.admin == true); 
+    }
+
+    function isAuthorizedForStudent(studentId) {
+      return isOwner(studentId) || isTeacher() || isParent() || isAdmin();
+    }
+
+    // -------------------------------------------------------------
+    // User Core Profiles & Subscriptions
+    // -------------------------------------------------------------
     match /users/{userId} {
-      allow write: if isOwner(userId);
+      allow write: if isOwner(userId) || isAdmin();
       allow read: if isAuthorizedForStudent(userId);
     }
     
     match /profiles/{userId} {
-      allow write: if isOwner(userId);
+      allow write: if isOwner(userId) || isAdmin();
       allow read: if isAuthorizedForStudent(userId);
     }
 
     match /subscriptions/{userId} {
-      allow write: if isOwner(userId);
+      allow write: if isOwner(userId) || isAdmin();
       allow read: if isAuthorizedForStudent(userId);
     }
     
     match /usageLimits/{userId} {
-      allow write: if isOwner(userId);
+      allow write: if isOwner(userId) || isAdmin();
       allow read: if isAuthorizedForStudent(userId);
     }
 
+    // -------------------------------------------------------------
+    // Student Academic History & Study Telemetry
+    // -------------------------------------------------------------
     match /quizAttempts/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
-      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isAuthorizedForStudent(resource.data.userId);
     }
+
     match /examAttempts/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
-      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isAuthorizedForStudent(resource.data.userId);
     }
+
     match /mistakes/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
-      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isAuthorizedForStudent(resource.data.userId);
     }
+
     match /weaknesses/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
-      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isAuthorizedForStudent(resource.data.userId);
     }
+
     match /studyPlans/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId) || isTeacher();
+      allow update, delete: if isOwner(resource.data.userId) || isTeacher() || isAdmin();
       allow read: if isAuthorizedForStudent(resource.data.userId);
-      allow create: if isOwner(request.resource.data.userId);
     }
+
     match /studySessions/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
-      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isAuthorizedForStudent(resource.data.userId);
     }
+
     match /revisionItems/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
-      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isAuthorizedForStudent(resource.data.userId);
     }
+
     match /notes/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
-      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isAuthorizedForStudent(resource.data.userId);
     }
+
     match /aiConversations/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
-      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isAuthorizedForStudent(resource.data.userId);
     }
+
     match /aiMessages/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
-      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isAuthorizedForStudent(resource.data.userId);
     }
+
     match /bookmarks/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
-      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isAuthorizedForStudent(resource.data.userId);
     }
+
     match /achievements/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
-      allow read: if isAuthorizedForStudent(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isAuthorizedForStudent(resource.data.userId);
     }
+
     match /notifications/{docId} {
-      allow update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId) || isTeacher() || isAdmin();
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
       allow read: if isAuthorizedForStudent(resource.data.userId);
-      allow create: if isOwner(request.resource.data.userId);
     }
-    
+
+    // -------------------------------------------------------------
+    // Public Curriculum & Reference Materials
+    // -------------------------------------------------------------
     match /subjects/{docId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
     }
     match /chapters/{docId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
     }
     match /topics/{docId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
     }
     match /questions/{docId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
     }
     match /subjectDiscussions/{docId} {
       allow read: if isAuthenticated();
@@ -128,37 +168,89 @@ service cloud.firestore {
         request.auth.uid == resource.data.userId || 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
       );
-      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
     }
 
+    // -------------------------------------------------------------
+    // Role-Based Access Control: Teacher Classes & Assignments
+    // -------------------------------------------------------------
     match /teacherClasses/{classId} {
+      // Teachers can create and manage classes; Enrolled students & teachers can read
+      allow create: if (isTeacher() && request.resource.data.teacherUid == request.auth.uid) || isAdmin();
+      allow update, delete: if (isTeacher() && resource.data.teacherUid == request.auth.uid) || isAdmin();
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated();
-      
+
       match /students/{studentId} {
-        allow read, write: if isAuthenticated();
+        allow read: if isAuthenticated();
+        allow write: if isOwner(studentId) || 
+          (isTeacher() && get(/databases/$(database)/documents/teacherClasses/$(classId)).data.teacherUid == request.auth.uid) || 
+          isAdmin();
       }
     }
 
     match /classAssignments/{assignmentId} {
-      allow read, write: if isAuthenticated();
+      // Teachers can create/edit/delete; students enrolled in the class can read
+      allow create: if (isTeacher() && request.resource.data.teacherUid == request.auth.uid) || isAdmin();
+      allow update, delete: if (isTeacher() && resource.data.teacherUid == request.auth.uid) || isAdmin();
+      allow read: if isAuthenticated();
     }
 
     match /assignmentSubmissions/{subId} {
-      allow read, write: if isAuthenticated();
+      // Submitting student can create/read their submission; class teacher can read and grade
+      allow create: if isOwner(request.resource.data.studentUid);
+      allow read: if isOwner(resource.data.studentUid) || 
+        (isTeacher() && resource.data.teacherUid == request.auth.uid) || 
+        isAdmin();
+      allow update: if isOwner(resource.data.studentUid) || 
+        (isTeacher() && resource.data.teacherUid == request.auth.uid) || 
+        isAdmin();
+      allow delete: if isOwner(resource.data.studentUid) || isAdmin();
     }
 
+    // -------------------------------------------------------------
+    // Parent-Student Verified Access Links
+    // -------------------------------------------------------------
     match /parentStudentLinks/{linkId} {
-      allow read, write: if isAuthenticated();
+      // Parents can only access records matching verified student links
+      allow read: if isAuthenticated() && (
+        resource.data.parentUid == request.auth.uid || 
+        resource.data.studentUid == request.auth.uid || 
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.parentUid == request.auth.uid || 
+        request.resource.data.studentUid == request.auth.uid
+      );
+      allow update, delete: if isAuthenticated() && (
+        resource.data.parentUid == request.auth.uid || 
+        resource.data.studentUid == request.auth.uid || 
+        isAdmin()
+      );
     }
 
+    // -------------------------------------------------------------
+    // Multiplayer Competitive Rooms
+    // -------------------------------------------------------------
     match /multiplayerRooms/{roomId} {
-      allow read, write: if isAuthenticated();
+      // Only players listed in room.players or playerUids can write/update room status
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (
+        (request.resource.data.hostUid == request.auth.uid) ||
+        (request.resource.data.playerUids != null && request.auth.uid in request.resource.data.playerUids)
+      );
+      allow update: if isAuthenticated() && (
+        (resource.data.hostUid == request.auth.uid) ||
+        (resource.data.playerUids != null && request.auth.uid in resource.data.playerUids) ||
+        (request.resource.data.playerUids != null && request.auth.uid in request.resource.data.playerUids)
+      );
+      allow delete: if isAuthenticated() && (resource.data.hostUid == request.auth.uid || isAdmin());
+
       match /players/{playerId} {
-        allow read, write: if isAuthenticated();
+        allow read: if isAuthenticated();
+        allow write: if isOwner(playerId) || 
+          (get(/databases/$(database)/documents/multiplayerRooms/$(roomId)).data.hostUid == request.auth.uid) || 
+          isAdmin();
       }
     }
-
   }
 }

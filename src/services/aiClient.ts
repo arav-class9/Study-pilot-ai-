@@ -1,74 +1,5 @@
-import { auth, db } from '../lib/firebase/config';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth } from '../lib/firebase/config';
 import { getBankQuestions } from '../data/questionBank';
-
-async function checkClientSideLimits() {
-  const user = auth.currentUser;
-  if (!user) return;
-  const uid = user.uid;
-  try {
-    const limitPromise = (async () => {
-      const limitRef = doc(db, 'usageLimits', uid);
-      const docSnap = await getDoc(limitRef);
-      let currentUsage = 0;
-      if (docSnap.exists()) {
-        currentUsage = docSnap.data()?.aiQuestions || 0;
-      }
-
-      const subRef = doc(db, 'subscriptions', uid);
-      const subSnap = await getDoc(subRef);
-      const plan = subSnap.exists() ? subSnap.data()?.plan || 'free' : 'free';
-
-      const limits: any = {
-        free: 10,
-        plus: 100,
-        pro: 99999,
-      };
-
-      if (currentUsage >= limits[plan]) {
-        throw new Error('Usage limit reached. Please upgrade your plan.');
-      }
-
-      await setDoc(limitRef, { aiQuestions: currentUsage + 1 }, { merge: true });
-    })();
-
-    // 2-second timeout to prevent stalling if firestore is slow
-    await Promise.race([
-      limitPromise,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Limit check timeout')), 2000)),
-    ]);
-  } catch (err: any) {
-    if (err.message === 'Usage limit reached. Please upgrade your plan.') throw err;
-    console.warn('Client limit check skipped or timed out:', err.message);
-  }
-}
-
-async function getAuthHeaders() {
-  try {
-    await checkClientSideLimits();
-  } catch (err) {
-    console.warn('Limit check skipped:', err);
-  }
-
-  let token: string | undefined;
-  try {
-    const tokenPromise = auth.currentUser?.getIdToken();
-    if (tokenPromise) {
-      token = await Promise.race([
-        tokenPromise,
-        new Promise<string | undefined>((_, reject) => setTimeout(() => reject(new Error('Token timeout')), 2000)),
-      ]);
-    }
-  } catch (err) {
-    console.warn('ID token fetch bypassed:', err);
-  }
-
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
 import {
   DoubtSolution,
   QuizQuestion,
@@ -84,6 +15,158 @@ import {
   ClassLevel,
 } from '../types';
 
+export class QuotaExceededError extends Error {
+  code: string;
+  limit?: number;
+  currentUsage?: number;
+  plan?: string;
+
+  constructor(message = 'Plan limit reached. Please upgrade to continue asking questions.', data?: any) {
+    super(message);
+    this.name = 'QuotaExceededError';
+    this.code = 'QUOTA_EXCEEDED';
+    if (data) {
+      this.limit = data.limit;
+      this.currentUsage = data.currentUsage;
+      this.plan = data.plan;
+    }
+  }
+}
+
+/**
+ * Centrally retrieves the current Firebase ID token.
+ */
+export async function getAuthBearerToken(): Promise<string | undefined> {
+  try {
+    const user = auth.currentUser;
+    if (!user) return undefined;
+    return await Promise.race([
+      user.getIdToken(),
+      new Promise<string | undefined>((_, reject) =>
+        setTimeout(() => reject(new Error('Token timeout')), 3000)
+      ),
+    ]);
+  } catch (err) {
+    console.warn('[AUTH] ID token fetch bypassed or timed out:', err);
+    return undefined;
+  }
+}
+
+/**
+ * Centrally manages HTTP requests to backend AI endpoints with auth bearer headers
+ * and centralized quota handling.
+ */
+export async function callBackendAI<T = any>(
+  endpoint: string,
+  options: {
+    method?: 'GET' | 'POST';
+    body?: any;
+    isFormData?: boolean;
+    timeoutMs?: number;
+  } = {}
+): Promise<T> {
+  const { method = 'POST', body, isFormData = false, timeoutMs = 25000 } = options;
+  const token = await getAuthBearerToken();
+
+  const headers: Record<string, string> = {};
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(endpoint, {
+      method,
+      headers,
+      body: isFormData ? body : body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    const json = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      if (response.status === 403 && (json.code === 'QUOTA_EXCEEDED' || json.error?.includes('limit reached'))) {
+        // Broadcast custom event so the UI can open the Upgrade Modal seamlessly
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('studypilot:quota-exceeded', {
+              detail: {
+                message: json.message || 'Daily AI question limit reached.',
+                limit: json.limit,
+                currentUsage: json.currentUsage,
+                plan: json.plan,
+              },
+            })
+          );
+        }
+        throw new QuotaExceededError(json.message || 'Plan quota limit reached. Please upgrade.', json);
+      }
+
+      throw new Error(json.error || json.message || `Request failed with status ${response.status}`);
+    }
+
+    return json.data !== undefined ? json.data : json;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err instanceof QuotaExceededError) {
+      throw err;
+    }
+    if (err.name === 'AbortError') {
+      throw new Error('AI request timed out. Please check your connection and try again.');
+    }
+    throw err;
+  }
+}
+
+// -------------------------------------------------------------
+// Formula Solver
+// -------------------------------------------------------------
+export interface FormulaSolverResult {
+  problemText: string;
+  steps: string[];
+  finalAnswer: string;
+  keyFormulas: string[];
+  commonPitfalls: string[];
+}
+
+export async function solveFormulaAPI(params: {
+  file?: File | Blob;
+  problemText?: string;
+  subject?: string;
+  classLevel?: string;
+}): Promise<FormulaSolverResult> {
+  const formData = new FormData();
+  if (params.file) {
+    formData.append('file', params.file);
+  }
+  if (params.problemText) {
+    formData.append('problemText', params.problemText);
+  }
+  if (params.subject) {
+    formData.append('subject', params.subject);
+  }
+  if (params.classLevel) {
+    formData.append('classLevel', params.classLevel);
+  }
+
+  return await callBackendAI<FormulaSolverResult>('/api/ai/solve-formula', {
+    method: 'POST',
+    body: formData,
+    isFormData: true,
+    timeoutMs: 30000,
+  });
+}
+
+// -------------------------------------------------------------
+// Doubt Solver
+// -------------------------------------------------------------
 export async function askAIDoubt(params: {
   questionText?: string;
   imageBase64?: string;
@@ -92,21 +175,15 @@ export async function askAIDoubt(params: {
   classLevel?: string;
   chapter?: string;
 }): Promise<DoubtSolution> {
-  const response = await fetch('/api/ai/doubt', {
+  return await callBackendAI<DoubtSolution>('/api/ai/doubt', {
     method: 'POST',
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(params),
+    body: params,
   });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to solve doubt');
-  }
-
-  const result = await response.json();
-  return result.data;
 }
 
+// -------------------------------------------------------------
+// Quiz Generator
+// -------------------------------------------------------------
 export async function generateAIQuiz(params: {
   subject: string;
   classLevel: string;
@@ -123,46 +200,40 @@ export async function generateAIQuiz(params: {
   questions: QuizQuestion[];
 }> {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000);
-
-    const headers = await getAuthHeaders();
-    const response = await fetch('/api/ai/quiz', {
+    const result = await callBackendAI<any>('/api/ai/quiz', {
       method: 'POST',
-      headers,
-      body: JSON.stringify(params),
-      signal: controller.signal,
+      body: params,
+      timeoutMs: 12000,
     });
-    clearTimeout(timeoutId);
 
-    if (response.ok) {
-      const result = await response.json();
-      if (result?.data?.questions && Array.isArray(result.data.questions) && result.data.questions.length > 0) {
-        // Sanitize options and answer indices
-        const sanitized = result.data.questions.map((q: any, i: number) => {
-          const opts = Array.isArray(q.options) && q.options.length >= 2 ? q.options : ['Option A', 'Option B', 'Option C', 'Option D'];
-          let correctIdx = typeof q.correctAnswerIndex === 'number' ? q.correctAnswerIndex : 0;
-          if (correctIdx < 0 || correctIdx >= opts.length) correctIdx = 0;
-          return {
-            ...q,
-            id: q.id || `quiz-q-${i + 1}`,
-            options: opts,
-            correctAnswerIndex: correctIdx,
-            correctAnswer: q.correctAnswer || opts[correctIdx],
-          };
-        });
-
+    if (result?.questions && Array.isArray(result.questions) && result.questions.length > 0) {
+      const sanitized = result.questions.map((q: any, i: number) => {
+        const opts =
+          Array.isArray(q.options) && q.options.length >= 2
+            ? q.options
+            : ['Option A', 'Option B', 'Option C', 'Option D'];
+        let correctIdx = typeof q.correctAnswerIndex === 'number' ? q.correctAnswerIndex : 0;
+        if (correctIdx < 0 || correctIdx >= opts.length) correctIdx = 0;
         return {
-          ...result.data,
-          questions: sanitized,
+          ...q,
+          id: q.id || `quiz-q-${i + 1}`,
+          options: opts,
+          correctAnswerIndex: correctIdx,
+          correctAnswer: q.correctAnswer || opts[correctIdx],
         };
-      }
+      });
+
+      return {
+        ...result,
+        questions: sanitized,
+      };
     }
   } catch (err) {
+    if (err instanceof QuotaExceededError) throw err;
     console.warn('AI Quiz endpoint fallback triggered:', err);
   }
 
-  // Resilient fallback from Question Bank with normalized subject ID
+  // Resilient fallback from Question Bank
   let subjId: SubjectId = 'science';
   const subLower = (params.subject || '').toLowerCase();
   if (subLower.includes('math')) subjId = 'math';
@@ -207,6 +278,9 @@ export async function generateAIQuiz(params: {
   };
 }
 
+// -------------------------------------------------------------
+// Notes Generator
+// -------------------------------------------------------------
 export async function generateAINotes(params: {
   subject: string;
   classLevel: string;
@@ -214,21 +288,15 @@ export async function generateAINotes(params: {
   topic?: string;
   detailLevel: NoteDetailLevel;
 }): Promise<Partial<StudyNote>> {
-  const response = await fetch('/api/ai/notes', {
+  return await callBackendAI<Partial<StudyNote>>('/api/ai/notes', {
     method: 'POST',
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(params),
+    body: params,
   });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to generate notes');
-  }
-
-  const result = await response.json();
-  return result.data;
 }
 
+// -------------------------------------------------------------
+// Weakness & Study Planner
+// -------------------------------------------------------------
 export async function generateAIWeaknessPlan(params: {
   topicName: string;
   subjectName: string;
@@ -236,19 +304,10 @@ export async function generateAIWeaknessPlan(params: {
   accuracy: number;
   recentMistakes?: string[];
 }): Promise<WeaknessRecoveryPlan> {
-  const response = await fetch('/api/ai/weakness-plan', {
+  return await callBackendAI<WeaknessRecoveryPlan>('/api/ai/weakness-plan', {
     method: 'POST',
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(params),
+    body: params,
   });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to create recovery plan');
-  }
-
-  const result = await response.json();
-  return result.data;
 }
 
 export async function generateAIStudyPlan(params: {
@@ -259,21 +318,15 @@ export async function generateAIStudyPlan(params: {
   examDate?: string;
   preferredTimeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
 }): Promise<Partial<DailyStudyPlan>> {
-  const response = await fetch('/api/ai/study-plan', {
+  return await callBackendAI<Partial<DailyStudyPlan>>('/api/ai/study-plan', {
     method: 'POST',
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(params),
+    body: params,
   });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to generate study timetable');
-  }
-
-  const result = await response.json();
-  return result.data;
 }
 
+// -------------------------------------------------------------
+// Mistake Analysis
+// -------------------------------------------------------------
 export async function analyzeAIMistake(params: {
   questionText: string;
   studentAnswer: string;
@@ -282,21 +335,15 @@ export async function analyzeAIMistake(params: {
   classLevel?: string;
   chapter?: string;
 }) {
-  const response = await fetch('/api/ai/mistake-analysis', {
+  return await callBackendAI<any>('/api/ai/mistake-analysis', {
     method: 'POST',
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(params),
+    body: params,
   });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to analyze mistake');
-  }
-
-  const result = await response.json();
-  return result.data;
 }
 
+// -------------------------------------------------------------
+// Exam Paper Generator
+// -------------------------------------------------------------
 export async function generateAIExamPaper(params: {
   subject: string;
   classLevel: string;
@@ -308,44 +355,38 @@ export async function generateAIExamPaper(params: {
   difficulty: string;
 }) {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000);
-
-    const headers = await getAuthHeaders();
-    const response = await fetch('/api/ai/exam', {
+    const result = await callBackendAI<any>('/api/ai/exam', {
       method: 'POST',
-      headers,
-      body: JSON.stringify(params),
-      signal: controller.signal,
+      body: params,
+      timeoutMs: 14000,
     });
-    clearTimeout(timeoutId);
 
-    if (response.ok) {
-      const result = await response.json();
-      if (result?.data?.questions && Array.isArray(result.data.questions) && result.data.questions.length > 0) {
-        // Ensure every question has required fields
-        const sanitized = result.data.questions.map((q: any, i: number) => {
-          const opts = Array.isArray(q.options) && q.options.length >= 2 ? q.options : ['Option A', 'Option B', 'Option C', 'Option D'];
-          let correctIdx = typeof q.correctAnswerIndex === 'number' ? q.correctAnswerIndex : 0;
-          if (correctIdx < 0 || correctIdx >= opts.length) correctIdx = 0;
-          return {
-            ...q,
-            id: q.id || `exam-q-${i + 1}`,
-            questionNumber: i + 1,
-            options: opts,
-            correctAnswerIndex: correctIdx,
-            correctAnswer: q.correctAnswer || opts[correctIdx],
-            isVerified: true,
-          };
-        });
-
+    if (result?.questions && Array.isArray(result.questions) && result.questions.length > 0) {
+      const sanitized = result.questions.map((q: any, i: number) => {
+        const opts =
+          Array.isArray(q.options) && q.options.length >= 2
+            ? q.options
+            : ['Option A', 'Option B', 'Option C', 'Option D'];
+        let correctIdx = typeof q.correctAnswerIndex === 'number' ? q.correctAnswerIndex : 0;
+        if (correctIdx < 0 || correctIdx >= opts.length) correctIdx = 0;
         return {
-          ...result.data,
-          questions: sanitized,
+          ...q,
+          id: q.id || `exam-q-${i + 1}`,
+          questionNumber: i + 1,
+          options: opts,
+          correctAnswerIndex: correctIdx,
+          correctAnswer: q.correctAnswer || opts[correctIdx],
+          isVerified: true,
         };
-      }
+      });
+
+      return {
+        ...result,
+        questions: sanitized,
+      };
     }
   } catch (err) {
+    if (err instanceof QuotaExceededError) throw err;
     console.warn('AI Exam endpoint fallback triggered:', err);
   }
 
@@ -393,6 +434,9 @@ export async function generateAIExamPaper(params: {
   };
 }
 
+// -------------------------------------------------------------
+// Handwritten Solution Checker
+// -------------------------------------------------------------
 export async function checkAIHandwrittenSolution(params: {
   imageBase64: string;
   mimeType?: string;
@@ -400,21 +444,15 @@ export async function checkAIHandwrittenSolution(params: {
   subject?: string;
   classLevel?: string;
 }): Promise<HandwrittenSolutionAnalysis> {
-  const response = await fetch('/api/ai/handwriting', {
+  return await callBackendAI<HandwrittenSolutionAnalysis>('/api/ai/handwriting', {
     method: 'POST',
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(params),
+    body: params,
   });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to check handwritten solution');
-  }
-
-  const result = await response.json();
-  return result.data;
 }
 
+// -------------------------------------------------------------
+// Recommendations & Evaluation Benchmarks
+// -------------------------------------------------------------
 export async function getAIStudyRecommendation(params: {
   weakTopics: string[];
   dueRevisionCount: number;
@@ -423,43 +461,27 @@ export async function getAIStudyRecommendation(params: {
   classLevel?: string;
   board?: string;
 }): Promise<StudyRecommendation> {
-  const response = await fetch('/api/ai/recommendation', {
+  return await callBackendAI<StudyRecommendation>('/api/ai/recommendation', {
     method: 'POST',
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(params),
+    body: params,
   });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to get recommendation');
-  }
-
-  const result = await response.json();
-  return result.data;
 }
 
 export async function fetchAIEvaluationBenchmark() {
-  const response = await fetch('/api/ai/benchmark', { headers: await getAuthHeaders() });
-  if (!response.ok) {
-    throw new Error('Failed to run AI evaluation benchmark');
-  }
-  const result = await response.json();
-  return result.data;
+  return await callBackendAI<any>('/api/ai/benchmark', {
+    method: 'GET',
+  });
 }
 
 export async function searchCurriculumApi(params: { query: string; classLevel?: string; notes?: any[] }) {
   try {
-    const response = await fetch('/api/ai/search', {
+    const result = await callBackendAI<any[]>('/api/ai/search', {
       method: 'POST',
-      headers: await getAuthHeaders(),
-      body: JSON.stringify(params),
+      body: params,
     });
-    if (!response.ok) {
-      throw new Error('Search failed');
-    }
-    const result = await response.json();
-    return result.data || [];
+    return result || [];
   } catch (e) {
+    if (e instanceof QuotaExceededError) throw e;
     console.warn('Search API fallback to local:', e);
     return [];
   }
@@ -472,19 +494,13 @@ export async function chatWithNotesApi(params: {
   subject: string;
   classLevel?: string;
 }): Promise<{ answer: string; relatedKeyConcept: string; followUpSuggestions: string[] }> {
-  const response = await fetch('/api/ai/notes-chat', {
-    method: 'POST',
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(params),
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to chat with notes');
-  }
-
-  const result = await response.json();
-  return result.data;
+  return await callBackendAI<{ answer: string; relatedKeyConcept: string; followUpSuggestions: string[] }>(
+    '/api/ai/notes-chat',
+    {
+      method: 'POST',
+      body: params,
+    }
+  );
 }
 
 export async function generateChapterMindmapApi(params: {
@@ -492,19 +508,13 @@ export async function generateChapterMindmapApi(params: {
   subject: string;
   classLevel?: string;
 }): Promise<{ centralTopic: string; subject: string; summary: string; nodes: any[] }> {
-  const response = await fetch('/api/ai/mindmap', {
-    method: 'POST',
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(params),
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to generate mindmap');
-  }
-
-  const result = await response.json();
-  return result.data;
+  return await callBackendAI<{ centralTopic: string; subject: string; summary: string; nodes: any[] }>(
+    '/api/ai/mindmap',
+    {
+      method: 'POST',
+      body: params,
+    }
+  );
 }
 
 export async function conductVivaVoiceTurnApi(params: {
@@ -513,19 +523,16 @@ export async function conductVivaVoiceTurnApi(params: {
   studentAnswer: string;
   questionNumber: number;
 }): Promise<{ evalScore: number; feedback: string; modelAnswer: string; nextQuestion: string; isComplete: boolean }> {
-  const response = await fetch('/api/ai/viva-voice', {
+  return await callBackendAI<{
+    evalScore: number;
+    feedback: string;
+    modelAnswer: string;
+    nextQuestion: string;
+    isComplete: boolean;
+  }>('/api/ai/viva-voice', {
     method: 'POST',
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(params),
+    body: params,
   });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to process viva voice turn');
-  }
-
-  const result = await response.json();
-  return result.data;
 }
 
 export async function evaluateFeynmanApi(params: {
@@ -533,19 +540,14 @@ export async function evaluateFeynmanApi(params: {
   subject: string;
   studentExplanation: string;
 }): Promise<{ clarityScore: number; jargonCheck: string; missingGaps: string[]; simplifiedAnalogy: string; feedback: string }> {
-  const response = await fetch('/api/ai/feynman-explain', {
+  return await callBackendAI<{
+    clarityScore: number;
+    jargonCheck: string;
+    missingGaps: string[];
+    simplifiedAnalogy: string;
+    feedback: string;
+  }>('/api/ai/feynman-explain', {
     method: 'POST',
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(params),
+    body: params,
   });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || 'Failed to evaluate Feynman explanation');
-  }
-
-  const result = await response.json();
-  return result.data;
 }
-
-

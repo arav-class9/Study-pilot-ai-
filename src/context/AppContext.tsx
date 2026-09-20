@@ -2,6 +2,7 @@ import { useAuth } from './AuthContext';
 import { DatabaseService } from '../lib/firebase/db';
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import confetti from 'canvas-confetti';
+import { safeGetStorage, safeSetStorage, safeRemoveStorage } from '../utils/storage';
 import {
   CustomTimetable,
   UserProfile,
@@ -208,13 +209,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Dark Mode preference
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    return localStorage.getItem('studypilot_dark_mode') === 'true';
+    return safeGetStorage('studypilot_dark_mode') === 'true';
   });
 
   const toggleDarkMode = () => {
     setIsDarkMode((prev) => {
       const next = !prev;
-      localStorage.setItem('studypilot_dark_mode', String(next));
+      safeSetStorage('studypilot_dark_mode', String(next));
       return next;
     });
   };
@@ -224,7 +225,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // 1. User state
   const [user, setUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('studypilot_user');
+    const saved = safeGetStorage('studypilot_user');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -239,7 +240,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           return parsed;
         }
       } catch {
-        localStorage.removeItem('studypilot_user');
+        safeRemoveStorage('studypilot_user');
       }
     }
     return DEFAULT_USER;
@@ -252,7 +253,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsProfileLoading(true);
 
       // Verify cached user in local storage. If mismatched UID or demo/mock ID, purge local cache.
-      const savedUserStr = localStorage.getItem('studypilot_user');
+      const savedUserStr = safeGetStorage('studypilot_user');
       let isMismatch = false;
       if (savedUserStr) {
         try {
@@ -266,16 +267,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       if (isMismatch) {
-        localStorage.removeItem('studypilot_user');
-        localStorage.removeItem('studypilot_progress');
-        localStorage.removeItem('studypilot_quizzes');
-        localStorage.removeItem('studypilot_notes');
-        localStorage.removeItem('studypilot_mistakes');
-        localStorage.removeItem('studypilot_revision_queue');
-        localStorage.removeItem('studypilot_exams');
-        localStorage.removeItem('studypilot_notifications');
-        localStorage.removeItem('studypilot_plan');
-        localStorage.removeItem('studypilot_achievements');
+        safeRemoveStorage('studypilot_user');
+        safeRemoveStorage('studypilot_progress');
+        safeRemoveStorage('studypilot_quizzes');
+        safeRemoveStorage('studypilot_notes');
+        safeRemoveStorage('studypilot_mistakes');
+        safeRemoveStorage('studypilot_revision_queue');
+        safeRemoveStorage('studypilot_exams');
+        safeRemoveStorage('studypilot_notifications');
+        safeRemoveStorage('studypilot_plan');
+        safeRemoveStorage('studypilot_achievements');
 
         setTopicProgressList([]);
         setQuizAttempts([]);
@@ -442,7 +443,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [firebaseUser]);
 
   const [isOnboarded, setIsOnboarded] = useState<boolean>(() => {
-    return localStorage.getItem('studypilot_onboarded') === 'true';
+    return safeGetStorage('studypilot_onboarded') === 'true';
   });
 
   const [activeTab, setActiveTab] = useState<string>('home');
@@ -477,9 +478,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTab(tab);
   };
   const [language, setLanguage] = useState<LanguageCode>('en');
-  const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
+  const [isOffline, setIsOffline] = useState<boolean>(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
     window.addEventListener('online', handleOnline);
@@ -491,7 +495,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const [topicProgressList, setTopicProgressList] = useState<TopicProgress[]>(() => {
-    const savedUser = localStorage.getItem('studypilot_user');
+    const savedUser = safeGetStorage('studypilot_user');
     if (!savedUser) return [];
     try {
       const parsedUser = JSON.parse(savedUser);
@@ -501,12 +505,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       return [];
     }
-    const saved = localStorage.getItem('studypilot_progress');
+    const saved = safeGetStorage('studypilot_progress');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>(() => {
-    const savedUser = localStorage.getItem('studypilot_user');
+    const savedUser = safeGetStorage('studypilot_user');
     if (!savedUser) return [];
     try {
       const parsedUser = JSON.parse(savedUser);
@@ -516,12 +520,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       return [];
     }
-    const saved = localStorage.getItem('studypilot_quizzes');
+    const saved = safeGetStorage('studypilot_quizzes');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [notesList, setNotesList] = useState<StudyNote[]>(() => {
-    const savedUser = localStorage.getItem('studypilot_user');
+    const savedUser = safeGetStorage('studypilot_user');
     if (!savedUser) return [];
     try {
       const parsedUser = JSON.parse(savedUser);
@@ -531,12 +535,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       return [];
     }
-    const saved = localStorage.getItem('studypilot_notes');
+    const saved = safeGetStorage('studypilot_notes');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [mistakes, setMistakes] = useState<MistakeItem[]>(() => {
-    const savedUser = localStorage.getItem('studypilot_user');
+    const savedUser = safeGetStorage('studypilot_user');
     if (!savedUser) return [];
     try {
       const parsedUser = JSON.parse(savedUser);
@@ -546,12 +550,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       return [];
     }
-    const saved = localStorage.getItem('studypilot_mistakes');
+    const saved = safeGetStorage('studypilot_mistakes');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [revisionQueue, setRevisionQueue] = useState<RevisionQueueItem[]>(() => {
-    const savedUser = localStorage.getItem('studypilot_user');
+    const savedUser = safeGetStorage('studypilot_user');
     if (!savedUser) return [];
     try {
       const parsedUser = JSON.parse(savedUser);
@@ -561,12 +565,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       return [];
     }
-    const saved = localStorage.getItem('studypilot_revision_queue');
+    const saved = safeGetStorage('studypilot_revision_queue');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [examAttempts, setExamAttempts] = useState<ExamAttempt[]>(() => {
-    const savedUser = localStorage.getItem('studypilot_user');
+    const savedUser = safeGetStorage('studypilot_user');
     if (!savedUser) return [];
     try {
       const parsedUser = JSON.parse(savedUser);
@@ -576,12 +580,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       return [];
     }
-    const saved = localStorage.getItem('studypilot_exams');
+    const saved = safeGetStorage('studypilot_exams');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [notifications, setNotifications] = useState<AppNotification[]>(() => {
-    const savedUser = localStorage.getItem('studypilot_user');
+    const savedUser = safeGetStorage('studypilot_user');
     if (!savedUser) return [];
     try {
       const parsedUser = JSON.parse(savedUser);
@@ -591,18 +595,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       return [];
     }
-    const saved = localStorage.getItem('studypilot_notifications');
+    const saved = safeGetStorage('studypilot_notifications');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [customTimetable, setCustomTimetable] = useState<CustomTimetable | null>(() => {
-    const saved = localStorage.getItem('studypilot_custom_timetable');
-    if (saved) return JSON.parse(saved);
+    const saved = safeGetStorage('studypilot_custom_timetable');
+    if (saved) {
+      try { return JSON.parse(saved); } catch {}
+    }
     return null;
   });
 
   const [studyGroupMembers, setStudyGroupMembers] = useState<StudyGroupMember[]>(() => {
-    const saved = localStorage.getItem('studypilot_study_group');
+    const saved = safeGetStorage('studypilot_study_group');
     if (saved) {
       try { return JSON.parse(saved); } catch {}
     }
@@ -633,7 +639,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   useEffect(() => {
-    localStorage.setItem('studypilot_study_group', JSON.stringify(studyGroupMembers));
+    safeSetStorage('studypilot_study_group', JSON.stringify(studyGroupMembers));
   }, [studyGroupMembers]);
 
   const inviteStudyPartner = (email: string, name?: string) => {
@@ -657,16 +663,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const saveCustomTimetable = (timetable: CustomTimetable) => {
     setCustomTimetable(timetable);
-    localStorage.setItem('studypilot_custom_timetable', JSON.stringify(timetable));
+    safeSetStorage('studypilot_custom_timetable', JSON.stringify(timetable));
   };
 
   const [dailyPlan, setDailyPlan] = useState<DailyStudyPlan>(() => {
-    const savedUser = localStorage.getItem('studypilot_user');
+    const savedUser = safeGetStorage('studypilot_user');
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
         if (parsedUser?.uid && parsedUser.uid !== 'pilot-student-001' && !parsedUser.uid.includes('demo') && !parsedUser.uid.includes('mock')) {
-          const saved = localStorage.getItem('studypilot_plan');
+          const saved = safeGetStorage('studypilot_plan');
           if (saved) return JSON.parse(saved);
         }
       } catch {
@@ -687,12 +693,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [achievements, setAchievements] = useState<Achievement[]>(() => {
-    const savedUser = localStorage.getItem('studypilot_user');
+    const savedUser = safeGetStorage('studypilot_user');
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
         if (parsedUser?.uid && parsedUser.uid !== 'pilot-student-001' && !parsedUser.uid.includes('demo') && !parsedUser.uid.includes('mock')) {
-          const saved = localStorage.getItem('studypilot_achievements');
+          const saved = safeGetStorage('studypilot_achievements');
           if (saved) return JSON.parse(saved);
         }
       } catch {
@@ -704,12 +710,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [usageToday, setUsageToday] = useState<DailyUsage>(() => {
     const todayStr = new Date().toISOString().split('T')[0];
-    const savedUser = localStorage.getItem('studypilot_user');
+    const savedUser = safeGetStorage('studypilot_user');
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
         if (parsedUser?.uid && parsedUser.uid !== 'pilot-student-001' && !parsedUser.uid.includes('demo') && !parsedUser.uid.includes('mock')) {
-          const saved = localStorage.getItem(`studypilot_usage_${todayStr}`);
+          const saved = safeGetStorage(`studypilot_usage_${todayStr}`);
           if (saved) return JSON.parse(saved);
         }
       } catch {
@@ -722,70 +728,82 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [activeRecoveryTopic, setActiveRecoveryTopic] = useState<{ topicName: string; subjectName: string; accuracy: number } | null>(null);
 
+  // Centralized quota listener
+  useEffect(() => {
+    const handleQuotaExceeded = () => {
+      setIsUpgradeModalOpen(true);
+    };
+
+    window.addEventListener('studypilot:quota-exceeded', handleQuotaExceeded);
+    return () => {
+      window.removeEventListener('studypilot:quota-exceeded', handleQuotaExceeded);
+    };
+  }, []);
+
   // Sync to local storage only for authenticated user when profile loading has completed
   useEffect(() => {
     if (firebaseUser && user.uid === firebaseUser.uid && !isProfileLoading) {
-      localStorage.setItem('studypilot_user', JSON.stringify(user));
+      safeSetStorage('studypilot_user', JSON.stringify(user));
     }
   }, [user, firebaseUser, isProfileLoading]);
 
   useEffect(() => {
     if (firebaseUser && user.uid === firebaseUser.uid && !isProfileLoading) {
-      localStorage.setItem('studypilot_progress', JSON.stringify(topicProgressList));
+      safeSetStorage('studypilot_progress', JSON.stringify(topicProgressList));
     }
   }, [topicProgressList, firebaseUser, user.uid, isProfileLoading]);
 
   useEffect(() => {
     if (firebaseUser && user.uid === firebaseUser.uid && !isProfileLoading) {
-      localStorage.setItem('studypilot_quizzes', JSON.stringify(quizAttempts));
+      safeSetStorage('studypilot_quizzes', JSON.stringify(quizAttempts));
     }
   }, [quizAttempts, firebaseUser, user.uid, isProfileLoading]);
 
   useEffect(() => {
     if (firebaseUser && user.uid === firebaseUser.uid && !isProfileLoading) {
-      localStorage.setItem('studypilot_notes', JSON.stringify(notesList));
+      safeSetStorage('studypilot_notes', JSON.stringify(notesList));
     }
   }, [notesList, firebaseUser, user.uid, isProfileLoading]);
 
   useEffect(() => {
     if (firebaseUser && user.uid === firebaseUser.uid && !isProfileLoading) {
-      localStorage.setItem('studypilot_mistakes', JSON.stringify(mistakes));
+      safeSetStorage('studypilot_mistakes', JSON.stringify(mistakes));
     }
   }, [mistakes, firebaseUser, user.uid, isProfileLoading]);
 
   useEffect(() => {
     if (firebaseUser && user.uid === firebaseUser.uid && !isProfileLoading) {
-      localStorage.setItem('studypilot_revision_queue', JSON.stringify(revisionQueue));
+      safeSetStorage('studypilot_revision_queue', JSON.stringify(revisionQueue));
     }
   }, [revisionQueue, firebaseUser, user.uid, isProfileLoading]);
 
   useEffect(() => {
     if (firebaseUser && user.uid === firebaseUser.uid && !isProfileLoading) {
-      localStorage.setItem('studypilot_exams', JSON.stringify(examAttempts));
+      safeSetStorage('studypilot_exams', JSON.stringify(examAttempts));
     }
   }, [examAttempts, firebaseUser, user.uid, isProfileLoading]);
 
   useEffect(() => {
     if (firebaseUser && user.uid === firebaseUser.uid && !isProfileLoading) {
-      localStorage.setItem('studypilot_notifications', JSON.stringify(notifications));
+      safeSetStorage('studypilot_notifications', JSON.stringify(notifications));
     }
   }, [notifications, firebaseUser, user.uid, isProfileLoading]);
 
   useEffect(() => {
     if (firebaseUser && user.uid === firebaseUser.uid && !isProfileLoading) {
-      localStorage.setItem('studypilot_plan', JSON.stringify(dailyPlan));
+      safeSetStorage('studypilot_plan', JSON.stringify(dailyPlan));
     }
   }, [dailyPlan, firebaseUser, user.uid, isProfileLoading]);
 
   useEffect(() => {
     if (firebaseUser && user.uid === firebaseUser.uid && !isProfileLoading) {
-      localStorage.setItem('studypilot_achievements', JSON.stringify(achievements));
+      safeSetStorage('studypilot_achievements', JSON.stringify(achievements));
     }
   }, [achievements, firebaseUser, user.uid, isProfileLoading]);
 
   useEffect(() => {
     if (firebaseUser && user.uid === firebaseUser.uid && !isProfileLoading) {
-      localStorage.setItem(`studypilot_usage_${usageToday.date}`, JSON.stringify(usageToday));
+      safeSetStorage(`studypilot_usage_${usageToday.date}`, JSON.stringify(usageToday));
     }
   }, [usageToday, firebaseUser, user.uid, isProfileLoading]);
 
@@ -1105,22 +1123,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       await signInWithGoogle();
       setIsOnboarded(true);
-      localStorage.setItem('studypilot_onboarded', 'true');
+      safeSetStorage('studypilot_onboarded', 'true');
     } catch(err) { console.error(err); }
   };
 
   const logout = async () => {
-    localStorage.removeItem('studypilot_user');
-    localStorage.removeItem('studypilot_onboarded');
-    localStorage.removeItem('studypilot_progress');
-    localStorage.removeItem('studypilot_quizzes');
-    localStorage.removeItem('studypilot_notes');
-    localStorage.removeItem('studypilot_mistakes');
-    localStorage.removeItem('studypilot_revision_queue');
-    localStorage.removeItem('studypilot_exams');
-    localStorage.removeItem('studypilot_plan');
-    localStorage.removeItem('studypilot_achievements');
-    localStorage.removeItem('studypilot_notifications');
+    safeRemoveStorage('studypilot_user');
+    safeRemoveStorage('studypilot_onboarded');
+    safeRemoveStorage('studypilot_progress');
+    safeRemoveStorage('studypilot_quizzes');
+    safeRemoveStorage('studypilot_notes');
+    safeRemoveStorage('studypilot_mistakes');
+    safeRemoveStorage('studypilot_revision_queue');
+    safeRemoveStorage('studypilot_exams');
+    safeRemoveStorage('studypilot_plan');
+    safeRemoveStorage('studypilot_achievements');
+    safeRemoveStorage('studypilot_notifications');
     setUser(DEFAULT_USER);
     setTopicProgressList([]);
     setQuizAttempts([]);

@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 
 export interface GenerateQuizInput {
@@ -281,8 +281,8 @@ ${input.weakConcepts && input.weakConcepts.length > 0 ? `Focus on student weak a
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: promptText,
       config: {
         systemInstruction,
@@ -323,8 +323,7 @@ ${input.weakConcepts && input.weakConcepts.length > 0 ? `Focus on student weak a
       },
     });
 
-    const text = response.text?.trim() || '{}';
-    const parsed = JSON.parse(text);
+    const parsed: any = safeJsonParse(response.text, {});
 
     const validQuestions: QuizQuestionItem[] = [];
     if (Array.isArray(parsed.questions)) {

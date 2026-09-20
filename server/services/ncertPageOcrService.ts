@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 
 export interface ProcessUploadedPageInput {
@@ -106,8 +106,8 @@ Transcribe faithfully and extract key elements strictly from this provided excer
   let responseText = '';
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents,
       config: {
         systemInstruction,
@@ -157,7 +157,7 @@ Transcribe faithfully and extract key elements strictly from this provided excer
 
   let parsed: any;
   try {
-    parsed = JSON.parse(responseText);
+    parsed = safeJsonParse(responseText);
   } catch (err) {
     throw new NCERTOcrValidationError('Failed to parse OCR response from textbook analyzer.');
   }

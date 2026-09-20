@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 import { getPageContentForBook, ResolvedNCERTPage } from './ncertTextbookRepository.js';
 
@@ -392,8 +392,8 @@ Generate EXACTLY ${targetCount} high-yield MCQs strictly from Page ${pageNum} ab
   let responseText = '';
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.1-flash-lite',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: promptText,
       config: {
         systemInstruction,
@@ -450,7 +450,7 @@ Generate EXACTLY ${targetCount} high-yield MCQs strictly from Page ${pageNum} ab
   // 4. Parse AI Response JSON
   let rawQuestions: any[] = [];
   try {
-    rawQuestions = JSON.parse(responseText);
+    rawQuestions = safeJsonParse(responseText);
   } catch (err) {
     console.warn('[NCERT QUIZ] Malformed JSON from AI service, utilizing authentic textbook fallback questions:', err);
     const fallbacks = generateTextbookPageFallbackQuestions(

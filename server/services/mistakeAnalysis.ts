@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 import { getCachedAIResponse, setCachedAIResponse, generateCacheKey } from './costControl.js';
 
@@ -41,8 +41,8 @@ Correct Answer: ${input.correctAnswer}
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: promptText,
       config: {
         systemInstruction,
@@ -73,8 +73,7 @@ Correct Answer: ${input.correctAnswer}
       },
     });
 
-    const text = response.text?.trim() || '{}';
-    const parsed = JSON.parse(text);
+    const parsed = safeJsonParse(response.text, {});
     setCachedAIResponse(cacheKey, parsed);
     return parsed;
   } catch (error: any) {

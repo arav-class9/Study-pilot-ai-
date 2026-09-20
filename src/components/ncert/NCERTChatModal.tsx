@@ -16,6 +16,9 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { askTextbookRAG, CitationItem } from '../../services/ncertRAGClient';
+import { CitationBadge } from '../tutor/CitationBadge';
+import { CitationInjector } from '../tutor/CitationInjector';
+import { navigateToCitation } from '../../services/citationNavigation';
 
 interface Message {
   id: string;
@@ -256,45 +259,55 @@ export const NCERTChatModal: React.FC<NCERTChatModalProps> = ({
                     </div>
                   )}
 
-                  <div className="whitespace-pre-wrap">{msg.text}</div>
+                  {isAI ? (
+                    <CitationInjector
+                      text={msg.text}
+                      citations={msg.citations}
+                      defaultBookTitle={chapter.bookTitle}
+                      defaultChapterName={chapter.title}
+                      onNavigate={onClose}
+                    />
+                  ) : (
+                    <div className="whitespace-pre-wrap">{msg.text}</div>
+                  )}
 
                   {/* Textbook Citations Block */}
                   {isAI && msg.citations && msg.citations.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700/80 space-y-1.5">
+                    <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-700/80 space-y-2">
                       <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
                         <BookOpen className="w-3 h-3 text-indigo-500" />
-                        <span>Textbook Sources & Citations:</span>
+                        <span>Textbook Sources &amp; Citations:</span>
                       </p>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         {msg.citations.map((cite) => (
-                          <div
+                          <CitationBadge
                             key={cite.citationId}
-                            className="bg-white dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] flex items-center justify-between gap-2"
-                          >
-                            <div className="truncate">
-                              <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                                {cite.bookTitle} (Page {cite.pageNumber})
-                              </span>
-                              {cite.exactQuote && (
-                                <p className="text-slate-500 dark:text-slate-400 truncate italic">
-                                  "{cite.exactQuote}"
-                                </p>
-                              )}
-                            </div>
-                            {onNavigateToPage && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  onNavigateToPage(cite.pageNumber);
-                                  onClose();
-                                }}
-                                className="shrink-0 px-2 py-1 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 rounded-lg font-bold text-[10px] hover:bg-indigo-100 flex items-center gap-1"
-                              >
-                                <span>Go to Page</span>
-                                <ExternalLink className="w-2.5 h-2.5" />
-                              </button>
-                            )}
-                          </div>
+                            citation={{
+                              citationId: cite.citationId,
+                              pageNumber: cite.pageNumber,
+                              bookTitle: cite.bookTitle || chapter.bookTitle,
+                              chapterName: chapter.title,
+                              chapterId: chapter.id,
+                              exactQuote: cite.exactQuote,
+                              relevanceScore: msg.groundingScore || 95,
+                            }}
+                            variant="card"
+                            onClick={() => {
+                              navigateToCitation({
+                                citationId: cite.citationId,
+                                pageNumber: cite.pageNumber,
+                                bookTitle: cite.bookTitle || chapter.bookTitle,
+                                chapterName: chapter.title,
+                                chapterId: chapter.id,
+                                exactQuote: cite.exactQuote,
+                                viewMode: 'pdf',
+                              });
+                              if (onNavigateToPage) {
+                                onNavigateToPage(cite.pageNumber);
+                              }
+                              onClose();
+                            }}
+                          />
                         ))}
                       </div>
                     </div>

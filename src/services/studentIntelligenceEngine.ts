@@ -167,8 +167,9 @@ export class StudentIntelligenceEngine {
     };
 
     mistakes.filter((m) => !m.resolved).forEach((m) => {
-      if (m.mistakeType in mistakeCategoryCounts) {
-        mistakeCategoryCounts[m.mistakeType]++;
+      const typeKey = m.mistakeType || m.category || 'Misconception';
+      if (typeKey && typeKey in mistakeCategoryCounts) {
+        mistakeCategoryCounts[typeKey as MistakeCategory]++;
       }
     });
 
@@ -252,9 +253,9 @@ export class StudentIntelligenceEngine {
       estimatedExamScore,
       recommendedNextFocus,
       recentMistakes: mistakes.slice(0, 5).map((m) => ({
-        questionText: m.question,
-        concept: m.topic,
-        mistakeType: m.mistakeType,
+        questionText: m.question || m.questionText || '',
+        concept: m.topic || 'General',
+        mistakeType: m.mistakeType || m.category || 'Misconception',
         timestamp: m.createdAt,
       })),
       lastUpdated: new Date().toISOString(),

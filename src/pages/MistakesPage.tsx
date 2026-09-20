@@ -43,8 +43,9 @@ export const MistakesPage: React.FC = () => {
     const counts: Record<string, number> = {};
     categories.forEach((c) => (counts[c] = 0));
     mistakes.forEach((m) => {
-      if (counts[m.mistakeType] !== undefined) {
-        counts[m.mistakeType]++;
+      const typeKey = m.mistakeType || m.category || 'Misconception';
+      if (typeKey && counts[typeKey] !== undefined) {
+        counts[typeKey]++;
       }
     });
     return counts;

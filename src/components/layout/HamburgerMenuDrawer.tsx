@@ -20,6 +20,7 @@ import {
   ShieldAlert,
   Users,
   GraduationCap,
+  Layers,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -57,6 +58,8 @@ export const HamburgerMenuDrawer: React.FC = () => {
     {
       title: 'Study Tools',
       items: [
+        { id: 'workspace', label: 'Topic Workspace', icon: Layers, badge: 'NEW' },
+        { id: 'coach', label: 'Study Coach (5-in-1)', icon: Sparkles, badge: 'PRO' },
         { id: 'tutor', label: 'AI Socratic Tutor', icon: Bot, badge: 'AI' },
         { id: 'flashcards', label: 'Flashcards', icon: Repeat },
         { id: 'notes', label: 'My Notes', icon: FileText },

@@ -18,7 +18,7 @@ import {
 import { DailyStudyPlan, StudyTask } from '../types';
 
 export const StudyPlanPage: React.FC = () => {
-  const { user, dailyPlan, updateDailyPlan, toggleTaskCompletion, topicProgressList } = useApp();
+  const { user, dailyPlan, updateDailyPlan, toggleTaskCompletion, topicProgressList, setActiveTab } = useApp();
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [preferredTime, setPreferredTime] = useState<'morning' | 'afternoon' | 'evening' | 'night'>('evening');
@@ -111,6 +111,31 @@ export const StudyPlanPage: React.FC = () => {
           <span>"{dailyPlan.motivationQuote}"</span>
         </div>
       )}
+
+      {/* Quick link to 25+5 Pomodoro & Study Coach */}
+      <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-blue-500/10 border border-indigo-200 dark:border-indigo-900/60 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+            <Clock className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+              Try the 25+5 Pomodoro Schedule & Feynman Coach
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              Structured 25m work + 5m rest intervals, 10 active-recall cards, exam diagnostics, and emergency syllabus triage.
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setActiveTab('coach')}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm cursor-pointer shrink-0"
+        >
+          <span>Open Study Coach</span>
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
 
       {/* Progress & Target Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

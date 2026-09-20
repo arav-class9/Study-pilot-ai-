@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 import { verifyNumericalSolution } from './verification.js';
 import { executeWithSafetyLayer } from './safety/aiQualityLayer.js';
@@ -35,7 +35,8 @@ When solving academic questions for students:
 6. If the uploaded image or text is blurry, truncated, or unreadable, set "unclearImageWarning": true and set conceptExplanation to: "I can't read part of the question clearly. Please upload a clearer image."
 7. Highlight 1 or 2 common student misconceptions for this topic.
 8. Provide 1 similar practice drill with a hint and final answer to reinforce learning.
-9. Ground the explanation strictly in authentic NCERT curriculum standards.`;
+9. Ground the explanation strictly in authentic NCERT curriculum standards.
+10. When referencing textbook principles, include citations in the citations array with the exact pageNumber, bookTitle, chapterName, and exactQuote from the NCERT textbook, and reference [Page X] in the explanations.`;
 
   const promptText = `Subject: ${input.subject || 'Academic Studies'}
 Target Class: Class ${input.classLevel || '10'}
@@ -69,8 +70,8 @@ Provide a structured, step-by-step educational solution for the student in valid
     });
 
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: { parts: contents },
       config: {
         systemInstruction,
@@ -121,6 +122,22 @@ Provide a structured, step-by-step educational solution for the student in valid
               },
               required: ['question', 'hint', 'answer'],
             },
+            citations: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  citationId: { type: Type.STRING },
+                  bookTitle: { type: Type.STRING },
+                  chapterName: { type: Type.STRING },
+                  pageNumber: { type: Type.INTEGER },
+                  sectionTitle: { type: Type.STRING },
+                  exactQuote: { type: Type.STRING },
+                  relevanceScore: { type: Type.NUMBER },
+                },
+                required: ['pageNumber'],
+              },
+            },
           },
           required: [
             'question',
@@ -135,8 +152,7 @@ Provide a structured, step-by-step educational solution for the student in valid
       },
     });
 
-    const text = response.text?.trim() || '{}';
-    const parsed = JSON.parse(text);
+    const parsed: any = safeJsonParse(response.text, {});
     if (parsed.unclearImageWarning) {
       parsed.conceptExplanation = "I can't read part of the question clearly. Please upload a clearer image.";
     }
@@ -161,7 +177,7 @@ Provide a structured, step-by-step educational solution for the student in valid
   );
 
   if (safetyResult.success && safetyResult.data) {
-    const finalData = safetyResult.data;
+    const finalData: any = safetyResult.data;
     finalData.verificationStatus = safetyResult.status;
     finalData.verificationConfidence = safetyResult.metadata.confidenceScore;
     finalData.verificationMessage =

@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 import { NCERTPageQuizValidationError, validateNCERTPageQuestion } from './ncertPageQuizService.js';
 
@@ -57,8 +57,8 @@ Generate structured revision notes strictly from this excerpt.`;
 
     try {
       const response = await generateContentWithRetry({
-        primaryModel: 'gemini-3.8-flash',
-        fallbackModel: 'gemini-3.8-flash',
+        primaryModel: 'gemini-2.5-flash',
+        fallbackModel: 'gemini-2.5-flash',
         contents: prompt,
         config: {
           systemInstruction,
@@ -92,7 +92,7 @@ Generate structured revision notes strictly from this excerpt.`;
         },
       });
 
-      const parsed = JSON.parse(response.text || '{}');
+      const parsed: any = safeJsonParse(response.text, {});
       return {
         actionType: 'notes',
         selectedText: cleanText,
@@ -140,8 +140,8 @@ Explain this excerpt simply and pedagogically.`;
 
     try {
       const response = await generateContentWithRetry({
-        primaryModel: 'gemini-3.8-flash',
-        fallbackModel: 'gemini-3.8-flash',
+        primaryModel: 'gemini-2.5-flash',
+        fallbackModel: 'gemini-2.5-flash',
         contents: prompt,
         config: {
           systemInstruction,
@@ -167,7 +167,7 @@ Explain this excerpt simply and pedagogically.`;
         },
       });
 
-      const parsed = JSON.parse(response.text || '{}');
+      const parsed: any = safeJsonParse(response.text, {});
       return {
         actionType: 'explain',
         selectedText: cleanText,
@@ -213,8 +213,8 @@ Create 2-3 rigorous questions strictly testing the concepts in this excerpt.`;
   let rawQuestions: any[] = [];
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         systemInstruction,
@@ -257,7 +257,7 @@ Create 2-3 rigorous questions strictly testing the concepts in this excerpt.`;
       },
     });
 
-    const parsed = JSON.parse(response.text || '{}');
+    const parsed: any = safeJsonParse(response.text, {});
     rawQuestions = Array.isArray(parsed.questions) ? parsed.questions : [];
   } catch (err: any) {
     console.warn('Selection quiz Gemini error, generating fallback from excerpt:', err.message);

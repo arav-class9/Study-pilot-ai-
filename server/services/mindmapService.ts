@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 
 export interface MindmapInput {
@@ -40,8 +40,8 @@ Return a JSON response with:
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: promptText,
       config: {
         systemInstruction,
@@ -72,7 +72,7 @@ Return a JSON response with:
       },
     });
 
-    return JSON.parse(response.text);
+    return safeJsonParse(response.text);
   } catch (error: any) {
     console.error('Mindmap generation error:', error);
     return {

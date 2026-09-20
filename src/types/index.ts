@@ -54,13 +54,28 @@ export interface SubjectMeta {
 
 export type CurriculumSubject = SubjectMeta;
 
+export interface CitationItem {
+  citationId?: string;
+  bookTitle?: string;
+  chapterName?: string;
+  pageNumber: number;
+  sectionTitle?: string;
+  exactQuote?: string;
+  relevanceScore?: number;
+}
+
 export interface SourceMetadata {
   sourceType: SourceType;
   sourceId?: string;
   sourceTitle?: string;
+  bookTitle?: string;
   chapterName?: string;
+  sectionTitle?: string;
+  exactQuote?: string;
   board?: string;
   classLevel?: string;
+  pageNumber?: number;
+  citations?: CitationItem[];
 }
 
 export interface UserProfile {
@@ -96,6 +111,7 @@ export interface UserProfile {
   subscriptionPlan: SubscriptionTier;
   role: 'student' | 'admin' | 'teacher' | 'parent';
   preferredLanguage?: 'en' | 'hi';
+  selectedSubject?: string;
   parentLinkedCode?: string;
   createdAt: string;
 }
@@ -379,14 +395,17 @@ export interface MistakeItem {
   id: string;
   userId: string;
   question: string;
+  questionText?: string;
   studentAnswer: string;
   correctAnswer: string;
   explanation: string;
   subject: SubjectId;
-  chapter: string;
+  chapter?: string;
   topic: string;
-  mistakeType: MistakeCategory;
-  difficulty: DifficultyLevel;
+  mistakeType?: MistakeCategory;
+  category?: MistakeCategory;
+  difficulty?: DifficultyLevel;
+  suggestedAction?: string;
   createdAt: string;
   lastReviewedAt?: string;
   reviewCount: number;
@@ -619,6 +638,7 @@ export interface DoubtSolution {
     whyItWorks?: string;
   }[];
   finalAnswer: string;
+  citations?: CitationItem[];
   commonMistakes: string[];
   similarPracticeQuestion: {
     question: string;

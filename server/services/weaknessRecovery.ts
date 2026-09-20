@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 
 export interface GenerateRecoveryPlanInput {
@@ -34,8 +34,8 @@ Generate a crisp, motivating 20-Minute Recovery Plan based strictly on NCERT cur
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: promptText,
       config: {
         systemInstruction,
@@ -83,8 +83,7 @@ Generate a crisp, motivating 20-Minute Recovery Plan based strictly on NCERT cur
       },
     });
 
-    const text = response.text?.trim() || '{}';
-    return JSON.parse(text);
+    return safeJsonParse(response.text);
   } catch (error: any) {
     console.error('Error in generateWeaknessRecoveryPlan:', error);
     return {

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { useApp } from './AppContext';
+import { safeGetStorage, safeSetStorage } from '../utils/storage';
 import {
   PomodoroMode,
   AmbientSoundType,
@@ -75,7 +76,7 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Mode & Timer
   const [mode, setModeState] = useState<PomodoroMode>('focus');
   const [customDurations, setCustomDurations] = useState<Record<PomodoroMode, number>>(() => {
-    const saved = localStorage.getItem('studypilot_pomodoro_durations');
+    const saved = safeGetStorage('studypilot_pomodoro_durations');
     return saved ? JSON.parse(saved) : DEFAULT_DURATIONS;
   });
   const [timeLeft, setTimeLeft] = useState<number>(customDurations.focus);
@@ -84,23 +85,23 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Stats
   const [completedSessions, setCompletedSessions] = useState<number>(() => {
-    const saved = localStorage.getItem('studypilot_pomodoro_completed');
+    const saved = safeGetStorage('studypilot_pomodoro_completed');
     return saved ? parseInt(saved, 10) : 0;
   });
   const [totalFocusedMinutes, setTotalFocusedMinutes] = useState<number>(() => {
-    const saved = localStorage.getItem('studypilot_pomodoro_minutes');
+    const saved = safeGetStorage('studypilot_pomodoro_minutes');
     return saved ? parseInt(saved, 10) : 0;
   });
 
   // History Log
   const [sessionHistory, setSessionHistory] = useState<FocusSessionRecord[]>(() => {
-    const saved = localStorage.getItem('studypilot_pomodoro_history');
+    const saved = safeGetStorage('studypilot_pomodoro_history');
     return saved ? JSON.parse(saved) : [];
   });
 
   // Tasks
   const [tasks, setTasks] = useState<FocusTask[]>(() => {
-    const saved = localStorage.getItem('studypilot_pomodoro_tasks');
+    const saved = safeGetStorage('studypilot_pomodoro_tasks');
     return saved ? JSON.parse(saved) : [
       { id: 't-1', text: 'Review core definitions & formulas', completed: false, createdAt: new Date().toISOString() },
       { id: 't-2', text: 'Solve 5 practice problems with high focus', completed: false, createdAt: new Date().toISOString() },
@@ -123,15 +124,15 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Persist durations, tasks, history
   useEffect(() => {
-    localStorage.setItem('studypilot_pomodoro_durations', JSON.stringify(customDurations));
+    safeSetStorage('studypilot_pomodoro_durations', JSON.stringify(customDurations));
   }, [customDurations]);
 
   useEffect(() => {
-    localStorage.setItem('studypilot_pomodoro_tasks', JSON.stringify(tasks));
+    safeSetStorage('studypilot_pomodoro_tasks', JSON.stringify(tasks));
   }, [tasks]);
 
   useEffect(() => {
-    localStorage.setItem('studypilot_pomodoro_history', JSON.stringify(sessionHistory));
+    safeSetStorage('studypilot_pomodoro_history', JSON.stringify(sessionHistory));
   }, [sessionHistory]);
 
   // Ambient sound engine sync

@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 
 export interface GenerateStudyPlanInput {
@@ -37,8 +37,8 @@ Generate today's optimal study timetable.`;
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: promptText,
       config: {
         systemInstruction,
@@ -73,8 +73,7 @@ Generate today's optimal study timetable.`;
       },
     });
 
-    const text = response.text?.trim() || '{}';
-    return JSON.parse(text);
+    return safeJsonParse(response.text);
   } catch (error: any) {
     console.error('Error generating study plan:', error);
     return {

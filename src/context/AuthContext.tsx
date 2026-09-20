@@ -7,7 +7,8 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  signInAnonymously
 } from 'firebase/auth';
 import { DatabaseService } from '../lib/firebase/db';
 
@@ -15,6 +16,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInGuest: () => Promise<void>;
   logout: () => Promise<void>;
   login: (email: string, pass: string) => Promise<void>;
   signup: (email: string, pass: string) => Promise<void>;
@@ -102,6 +104,40 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     }
   };
 
+  const signInGuest = async () => {
+    try {
+      const res = await signInAnonymously(auth);
+      if (res.user) {
+        purgeMismatchedStorage(res.user.uid);
+        const existing = await DatabaseService.getProfile(res.user.uid);
+        if (!existing) {
+          await DatabaseService.createInitialUserProfile(res.user.uid, {
+            displayName: 'Guest Student',
+            email: 'guest@studypilot.ai',
+          } as any);
+        }
+      }
+    } catch (err: any) {
+      console.warn('Anonymous auth unavailable, trying demo guest fallback:', err);
+      try {
+        await signInWithEmailAndPassword(auth, 'guest.student@studypilot.ai', 'StudyPilot123!');
+      } catch {
+        try {
+          const res = await createUserWithEmailAndPassword(auth, 'guest.student@studypilot.ai', 'StudyPilot123!');
+          if (res.user) {
+            purgeMismatchedStorage(res.user.uid);
+            await DatabaseService.createInitialUserProfile(res.user.uid, {
+              displayName: 'Guest Student',
+              email: 'guest.student@studypilot.ai',
+            } as any);
+          }
+        } catch {
+          throw err;
+        }
+      }
+    }
+  };
+
   const login = async (email: string, pass: string) => {
     const res = await signInWithEmailAndPassword(auth, email, pass);
     if (res.user) {
@@ -127,8 +163,8 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, logout, login, signup, resetPassword }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInGuest, logout, login, signup, resetPassword }}>
+      {children}
     </AuthContext.Provider>
   );
 };

@@ -1,15 +1,15 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Home, BookOpen, CheckCircle2, BookMarked, User } from 'lucide-react';
+import { Home, BookOpen, CheckCircle2, BookMarked, User, Layers } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const { activeTab, setActiveTab } = useApp();
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
+    { id: 'workspace', label: 'Topics', icon: Layers },
     { id: 'ncert', label: 'NCERT', icon: BookMarked },
     { id: 'practice', label: 'Quiz', icon: CheckCircle2 },
-    { id: 'learn', label: 'Library', icon: BookOpen },
     { id: 'profile', label: 'Profile', icon: User },
   ];
 

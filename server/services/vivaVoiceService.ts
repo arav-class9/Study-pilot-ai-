@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 
 export interface VivaTurnInput {
@@ -34,8 +34,8 @@ Evaluate the student's answer and formulate the next response in JSON.`;
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: promptText,
       config: {
         systemInstruction,
@@ -54,7 +54,7 @@ Evaluate the student's answer and formulate the next response in JSON.`;
       },
     });
 
-    return JSON.parse(response.text);
+    return safeJsonParse(response.text);
   } catch (error: any) {
     console.error('Viva voice turn error:', error);
     return {

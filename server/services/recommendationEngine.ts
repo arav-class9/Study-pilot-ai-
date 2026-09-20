@@ -1,4 +1,4 @@
-import { generateContentWithRetry } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
 
 export interface RecommendationInput {
@@ -31,8 +31,8 @@ Target Available Study Time: ${input.availableMinutes || 45} mins
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: promptText,
       config: {
         systemInstruction,
@@ -68,8 +68,7 @@ Target Available Study Time: ${input.availableMinutes || 45} mins
       },
     });
 
-    const text = response.text?.trim() || '{}';
-    return JSON.parse(text);
+    return safeJsonParse(response.text);
   } catch (error: any) {
     console.error('Error in recommendation engine:', error);
     return {

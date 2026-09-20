@@ -23,9 +23,52 @@ import { generateFullBookTest } from './services/ncertFullBookTestService.js';
 import { generateTeacherWorksheet } from './services/teacherToolsService.js';
 import { answerWithTextbookRAG } from './services/ncertRAGService.js';
 import { evaluateCustomAIResponse } from './services/aiEvaluation.js';
+import {
+  generatePomodoroSchedule,
+  generateFeynmanBreakdown,
+  verifyFeynmanQuizAnswers,
+  generateActiveRecallFlashcards,
+  generateDiagnosticPracticeExam,
+  gradeDiagnosticExam,
+  rescheduleStudyTriage,
+} from './services/studyCoachService.js';
 import { serverCache } from './cache.js';
+import { aiRouterExtended } from './routes/ai.js';
+import { topicWorkspaceRouter } from './routes/topicWorkspace.js';
+import {
+  validateNonEmptyString,
+  validateOptionalString,
+  validateBoundedNumber,
+  validateClassLevel,
+  validateEnum,
+  validateArray,
+  validateObject,
+} from './middleware/validation.js';
 
 export const apiRouter = Router();
+
+// Public telemetry / error tracking endpoint
+apiRouter.post('/telemetry/error', (req: Request, res: Response) => {
+  try {
+    const errorReport = req.body || {};
+    const timestamp = new Date().toISOString();
+    console.error(`[STUDYPILOT ERROR TELEMETRY ${timestamp}]`, {
+      eventId: errorReport.eventId,
+      message: errorReport.message,
+      name: errorReport.name,
+      section: errorReport.section,
+      url: errorReport.url,
+      stack: errorReport.stack?.substring?.(0, 300),
+      componentStack: errorReport.componentStack?.substring?.(0, 300),
+    });
+    return res.status(200).json({ success: true, logged: true, eventId: errorReport.eventId });
+  } catch (err: any) {
+    console.warn('[TELEMETRY] Logging failed:', err.message);
+    return res.status(200).json({ success: true, logged: false });
+  }
+});
+
+apiRouter.use(aiRouterExtended);
 apiRouter.use(requireAuth);
 
 // Notes Chat (Chat with your Notes)
@@ -679,5 +722,182 @@ apiRouter.post('/evaluate-response', async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message || 'Failed to evaluate response.' });
   }
 });
+
+// ==========================================
+// 23. AI STUDY COACH ENDPOINTS
+// ==========================================
+
+// 23a. Pomodoro Day-by-Day Timetable & Schedule
+apiRouter.post('/pomodoro-schedule', async (req: Request, res: Response) => {
+  try {
+    const subject = validateOptionalString(req.body.subject, 'subject', { maxLength: 100, fallback: 'Science' });
+    const topic = validateOptionalString(req.body.topic, 'topic', { maxLength: 300, fallback: 'General Syllabus' });
+    const syllabus = validateArray(req.body.syllabus, 'syllabus', { maxItems: 50, itemType: 'string' });
+    const examDate = validateOptionalString(req.body.examDate, 'examDate', { maxLength: 100, fallback: 'In 14 days' });
+    const dailyStudyHours = validateBoundedNumber(req.body.dailyStudyHours, 'dailyStudyHours', { min: 0.5, max: 16, fallback: 3 });
+    const classLevel = validateClassLevel(req.body.classLevel, '10');
+
+    const result = await generatePomodoroSchedule({
+      subject: subject!,
+      topic: topic!,
+      syllabus,
+      examDate: examDate!,
+      dailyStudyHours,
+      classLevel,
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /pomodoro-schedule error:', error);
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({ success: false, error: error.message || 'Failed to generate Pomodoro schedule.' });
+  }
+});
+
+// 23b. Feynman Conceptual Breakdown & 3-Question Mini-Quiz
+apiRouter.post('/feynman-breakdown', async (req: Request, res: Response) => {
+  try {
+    const concept = validateNonEmptyString(req.body.concept, 'concept', { minLength: 2, maxLength: 300 });
+    const subject = validateOptionalString(req.body.subject, 'subject', { maxLength: 100, fallback: 'General Science' });
+    const classLevel = validateClassLevel(req.body.classLevel, '10');
+
+    const result = await generateFeynmanBreakdown({
+      concept,
+      subject: subject!,
+      classLevel,
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /feynman-breakdown error:', error);
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({ success: false, error: error.message || 'Failed to generate Feynman breakdown.' });
+  }
+});
+
+// 23c. Check Feynman Mini-Quiz Student Answers
+apiRouter.post('/feynman-quiz-verify', async (req: Request, res: Response) => {
+  try {
+    const concept = validateNonEmptyString(req.body.concept, 'concept', { minLength: 2, maxLength: 300 });
+    const questions = validateArray(req.body.questions, 'questions', { minItems: 1, maxItems: 20, itemType: 'object' });
+    const studentAnswers = validateObject(req.body.studentAnswers, 'studentAnswers', {});
+
+    const result = await verifyFeynmanQuizAnswers({
+      concept,
+      questions,
+      studentAnswers,
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /feynman-quiz-verify error:', error);
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({ success: false, error: error.message || 'Failed to verify Feynman answers.' });
+  }
+});
+
+// 23d. Active Recall Flashcards
+apiRouter.post('/flashcards-deck', async (req: Request, res: Response) => {
+  try {
+    const materialText = validateOptionalString(req.body.materialText, 'materialText', { maxLength: 20000 });
+    const subject = validateOptionalString(req.body.subject, 'subject', { maxLength: 100, fallback: 'Science' });
+    const topic = validateOptionalString(req.body.topic, 'topic', { maxLength: 300, fallback: 'Core Board Concepts' });
+    const classLevel = validateClassLevel(req.body.classLevel, '10');
+
+    const result = await generateActiveRecallFlashcards({
+      materialText,
+      subject: subject!,
+      topic: topic!,
+      classLevel,
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /flashcards-deck error:', error);
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({ success: false, error: error.message || 'Failed to generate flashcards.' });
+  }
+});
+
+// 23e. Diagnostic Practice Exam
+apiRouter.post('/diagnostic-exam', async (req: Request, res: Response) => {
+  try {
+    const subject = validateOptionalString(req.body.subject, 'subject', { maxLength: 100, fallback: 'Science' });
+    const topic = validateOptionalString(req.body.topic, 'topic', { maxLength: 300, fallback: 'High-Yield Board Topics' });
+    const difficulty = validateEnum(
+      req.body.difficulty,
+      'difficulty',
+      ['easy', 'medium', 'hard', 'board_standard'] as const,
+      'board_standard'
+    );
+    const classLevel = validateClassLevel(req.body.classLevel, '10');
+
+    const result = await generateDiagnosticPracticeExam({
+      subject: subject!,
+      topic: topic!,
+      difficulty,
+      classLevel,
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /diagnostic-exam error:', error);
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({ success: false, error: error.message || 'Failed to generate diagnostic practice exam.' });
+  }
+});
+
+// 23f. Grade Diagnostic Practice Exam
+apiRouter.post('/grade-diagnostic-exam', async (req: Request, res: Response) => {
+  try {
+    const subject = validateOptionalString(req.body.subject, 'subject', { maxLength: 100, fallback: 'Science' });
+    const topic = validateOptionalString(req.body.topic, 'topic', { maxLength: 300, fallback: 'Diagnostic Exam' });
+    const questions = validateArray(req.body.questions, 'questions', { minItems: 1, maxItems: 50, itemType: 'object' });
+    const studentAnswers = validateObject(req.body.studentAnswers, 'studentAnswers', {});
+
+    const result = await gradeDiagnosticExam({
+      subject: subject!,
+      topic: topic!,
+      questions,
+      studentAnswers,
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /grade-diagnostic-exam error:', error);
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({ success: false, error: error.message || 'Failed to grade diagnostic exam.' });
+  }
+});
+
+// 23g. Rescheduling & Study Triage
+apiRouter.post('/study-triage', async (req: Request, res: Response) => {
+  try {
+    const remainingSyllabus = validateArray(req.body.remainingSyllabus, 'remainingSyllabus', { minItems: 1, maxItems: 50, itemType: 'string' });
+    const availableDays = validateBoundedNumber(req.body.availableDays, 'availableDays', { min: 1, max: 365, integerOnly: true, fallback: 7 });
+    const dailyStudyHours = validateBoundedNumber(req.body.dailyStudyHours, 'dailyStudyHours', { min: 0.5, max: 16, fallback: 3 });
+    const subject = validateOptionalString(req.body.subject, 'subject', { maxLength: 100, fallback: 'Board Syllabus' });
+    const classLevel = validateClassLevel(req.body.classLevel, '10');
+
+    const result = await rescheduleStudyTriage({
+      remainingSyllabus,
+      availableDays,
+      dailyStudyHours,
+      subject: subject!,
+      classLevel,
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /study-triage error:', error);
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({ success: false, error: error.message || 'Failed to create study triage plan.' });
+  }
+});
+
+// Topic Learning Workspace API Routes
+apiRouter.use('/topic-workspace', topicWorkspaceRouter);
+
+
 
 

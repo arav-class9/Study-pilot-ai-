@@ -13,6 +13,8 @@ import { ZenFocusModal } from './components/pomodoro/ZenFocusModal';
 import { FocusAnalyticsModal } from './components/pomodoro/FocusAnalyticsModal';
 import { FloatingFocusWidget } from './components/pomodoro/FloatingFocusWidget';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
+import { OfflineBanner } from './components/common/OfflineBanner';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 // Pages
 const HomePage = React.lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
@@ -30,6 +32,8 @@ const ExamPage = React.lazy(() => import('./pages/ExamPage').then(module => ({ d
 const ParentDashboardPage = React.lazy(() => import('./pages/ParentDashboardPage').then(module => ({ default: module.ParentDashboardPage })));
 const TeacherDashboardPage = React.lazy(() => import('./pages/TeacherDashboardPage').then(module => ({ default: module.TeacherDashboardPage })));
 const NCERTBooksPage = React.lazy(() => import('./pages/NCERTBooksPage').then(module => ({ default: module.NCERTBooksPage })));
+const StudyCoachPage = React.lazy(() => import('./pages/StudyCoachPage').then(module => ({ default: module.StudyCoachPage })));
+const TopicWorkspaceView = React.lazy(() => import('./components/workspace/TopicWorkspaceView').then(module => ({ default: module.TopicWorkspaceView })));
 import { AuthPage } from './pages/AuthPage';
 
 import { Toaster } from 'react-hot-toast';
@@ -78,11 +82,15 @@ const AppContent: React.FC = () => {
 
   const renderContent = () => {
     return (
-      <React.Suspense fallback={<div className="flex h-[80vh] items-center justify-center text-slate-500 font-bold animate-pulse">Loading ${activeTab} view...</div>}>
+      <React.Suspense fallback={<div className="flex h-[80vh] items-center justify-center text-slate-500 font-bold animate-pulse">Loading {activeTab} view...</div>}>
         {(() => {
           switch (activeTab) {
       case 'home':
         return <HomePage />;
+      case 'topic-workspace':
+      case 'workspace':
+      case 'topic':
+        return <TopicWorkspaceView onBackToDashboard={() => setActiveTab('home')} />;
       case 'tutor':
         return <AITutorPage />;
       case 'learn':
@@ -104,6 +112,19 @@ const AppContent: React.FC = () => {
         return <ProgressPage />;
       case 'mistakes':
         return <MistakesPage />;
+      case 'coach':
+      case 'study-coach':
+        return <StudyCoachPage initialTab="overview" />;
+      case 'pomo-schedule':
+        return <StudyCoachPage initialTab="schedule" />;
+      case 'feynman':
+        return <StudyCoachPage initialTab="feynman" />;
+      case 'flashcards':
+        return <StudyCoachPage initialTab="flashcards" />;
+      case 'diagnostic':
+        return <StudyCoachPage initialTab="exam" />;
+      case 'triage':
+        return <StudyCoachPage initialTab="triage" />;
       case 'exam':
         return <ExamPage />;
       case 'parent':
@@ -151,6 +172,7 @@ const AppContent: React.FC = () => {
       onTouchEnd={handleTouchEnd}
       className={`min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-300 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}
     >
+      <OfflineBanner />
       <Toaster 
         position="top-center" 
         toastOptions={{ 
@@ -159,9 +181,11 @@ const AppContent: React.FC = () => {
         }} 
       />
       <Navbar />
-      <div className="flex-1 flex max-w-7xl w-full mx-auto">
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8 overflow-y-auto max-w-7xl mx-auto w-full">
-          {renderContent()}
+      <div className={`flex-1 flex w-full mx-auto ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'max-w-full' : 'max-w-7xl'}`}>
+        <main className={`flex-1 overflow-y-auto w-full ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'p-0 pb-20 md:pb-6' : 'p-4 sm:p-6 lg:p-8 pb-24 md:pb-8 max-w-7xl mx-auto'}`}>
+          <ErrorBoundary sectionName={activeTab.toUpperCase()}>
+            {renderContent()}
+          </ErrorBoundary>
         </main>
       </div>
       <BottomNav />
@@ -179,13 +203,15 @@ const AppContent: React.FC = () => {
 
 export function App() {
   return (
-    <AuthProvider>
-      <AppProvider>
-        <FocusProvider>
-          <AppContent />
-        </FocusProvider>
-      </AppProvider>
-    </AuthProvider>
+    <ErrorBoundary sectionName="StudyPilot Root">
+      <AuthProvider>
+        <AppProvider>
+          <FocusProvider>
+            <AppContent />
+          </FocusProvider>
+        </AppProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
