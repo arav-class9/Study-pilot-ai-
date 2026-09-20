@@ -34,6 +34,19 @@ export async function fetchTopicDefinitionBreakdown(params: {
   // High quality smart fallback definition breakdown
   return {
     formalDefinition: `${params.topicName} is defined as a fundamental concept in ${params.subject} (${params.classLevel}, Chapter: ${params.chapter}) that establishes the quantitative, structural, and theoretical framework governing physical, chemical, or mathematical systems.`,
+    keyUses: [
+      `Used in ${params.subject} for quantitative analysis and predicting system behaviors.`,
+      `Applied in industrial manufacturing, laboratory experiments, and daily technological devices.`,
+      `Forms a core requirement for solving high-yield board exam questions in ${params.chapter}.`,
+    ],
+    solvedExamples: [
+      {
+        title: `Example 1: Practical Calculation of ${params.topicName}`,
+        explanation: `In standard textbook problems, ${params.topicName} is calculated by identifying the given parameters and substituting them into the standard equation.`,
+        calculationOrSteps: `Step 1: Identify given variables. Step 2: Apply formula V = A / B. Step 3: Express result in standard SI units.`,
+      },
+    ],
+    quickSummary: `${params.topicName}: Essential ${params.subject} concept governing operational rules, practical applications, and exam questions.`,
     coreConcepts: [
       `Foundational Principle: Defines the key operational rules and structural behaviors of ${params.topicName}.`,
       `Curriculum Alignment: Serves as a core prerequisite for advanced topics in ${params.chapter}.`,

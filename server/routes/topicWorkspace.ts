@@ -12,7 +12,29 @@ const definitionSchema: Schema = {
   properties: {
     formalDefinition: {
       type: Type.STRING,
-      description: 'Clear, authoritative, academic definition of the topic suitable for exams and textbooks.',
+      description: 'Clear, accurate, and easy-to-understand standard definition of the topic.',
+    },
+    keyUses: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: '2-3 concise bullet points explaining where and why this concept is used in science, daily life, or industry.',
+    },
+    solvedExamples: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          title: { type: Type.STRING, description: 'Short descriptive title of the example or scenario.' },
+          explanation: { type: Type.STRING, description: 'Clear explanation of the real-world or textbook example.' },
+          calculationOrSteps: { type: Type.STRING, description: 'Step-by-step formula derivation or calculation steps if applicable.' },
+        },
+        required: ['title', 'explanation'],
+      },
+      description: 'At least 1-2 concrete solved examples with step-by-step calculation or reasoning if applicable.',
+    },
+    quickSummary: {
+      type: Type.STRING,
+      description: 'A punchy 1-line recap summarizing the core idea for quick exam revision.',
     },
     coreConcepts: {
       type: Type.ARRAY,
@@ -27,7 +49,7 @@ const definitionSchema: Schema = {
     realWorldExamples: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
-      description: 'Concrete real-world applications, daily life phenomena, or industrial use cases.',
+      description: 'Concrete real-world applications or practical use cases.',
     },
     commonExamPoints: {
       type: Type.ARRAY,
@@ -35,7 +57,7 @@ const definitionSchema: Schema = {
       description: 'High-yield board exam questions, key marks criteria, memory tricks, and frequent traps.',
     },
   },
-  required: ['formalDefinition', 'coreConcepts', 'keyFormulasOrRules', 'realWorldExamples', 'commonExamPoints'],
+  required: ['formalDefinition', 'keyUses', 'solvedExamples', 'quickSummary'],
 };
 
 topicWorkspaceRouter.post('/generate-definition', async (req: Request, res: Response) => {
@@ -47,18 +69,21 @@ topicWorkspaceRouter.post('/generate-definition', async (req: Request, res: Resp
       return;
     }
 
-    const prompt = `You are a master academic educator creating the authoritative reference definition breakdown for the topic "${topicName}" in ${subject || 'Science'} for ${classLevel || 'Class 9-12'} (Chapter: ${chapter || 'General'}).
+    const prompt = `You are a master academic educator creating the official 4-part reference summary for the topic "${topicName}" in ${subject || 'Science'} for ${classLevel || 'Class 9-12'} (Chapter: ${chapter || 'General'}).
 
 ${uploadedContextText ? `GROUNDING CONTEXT:\n${uploadedContextText.slice(0, 4000)}\n` : ''}
 
-REQUIRED STRUCTURE:
-1. formalDefinition: A precise, formal 2-3 sentence academic definition suitable for board exams and textbooks.
-2. coreConcepts: 3-5 bullet points explaining the core mechanics, structural properties, or underlying theories.
-3. keyFormulasOrRules: 2-4 key mathematical formulas (with units/variables) or fundamental rules/laws.
-4. realWorldExamples: 2-4 tangible, real-world examples or practical applications.
-5. commonExamPoints: 3-5 high-yield exam points, mark-scheme keywords, or frequent memory traps.
+CRITICAL STRUCTURE REQUIREMENTS:
+1. formalDefinition: A clear, accurate, and easy-to-understand standard definition of "${topicName}".
+2. keyUses: 2-3 bullet points detailing where and why this concept is used in science, daily life, or industry.
+3. solvedExamples: 1-2 concrete, step-by-step solved examples or real-world applications (include formulas/calculations if applicable).
+4. quickSummary: A 1-line recap for quick revision.
+5. coreConcepts: 2-3 bullet points for core principles.
+6. keyFormulasOrRules: 1-3 key formulas or scientific laws.
+7. realWorldExamples: 2-3 real-world practical applications.
+8. commonExamPoints: 2-3 board exam key points or traps.
 
-Return clean JSON conforming to the schema.`;
+Return clean JSON conforming strictly to the schema.`;
 
     const response = await generateContentWithRetry({
       contents: prompt,
@@ -71,24 +96,32 @@ Return clean JSON conforming to the schema.`;
     });
 
     const parsed = safeJsonParse(response.text, {
-      formalDefinition: `${topicName} is a fundamental concept in ${subject || 'Science'} that describes the core principles governing its structure, behavior, and quantitative relationships in the ${classLevel || 'Class 9'} curriculum.`,
+      formalDefinition: `${topicName} is a fundamental concept in ${subject || 'Science'} that defines its primary properties, operational mechanics, and structural principles in the ${classLevel || 'Class 9'} syllabus.`,
+      keyUses: [
+        `Used in scientific research and industrial applications involving ${topicName}.`,
+        'Applies to daily physical or chemical processes to predict structural behavior.',
+        'Forms the basis for quantitative modeling and problem-solving in exams.',
+      ],
+      solvedExamples: [
+        {
+          title: `Example 1: Standard Application of ${topicName}`,
+          explanation: `In a standard lab scenario or real-world system, ${topicName} governs energy transfer or cellular function.`,
+          calculationOrSteps: 'Step 1: Identify given parameters. Step 2: Apply standard formula. Step 3: Compute final value with SI units.',
+        },
+      ],
+      quickSummary: `${topicName}: Core scientific concept governing system interactions and practical applications in ${subject || 'Science'}.`,
       coreConcepts: [
         `Primary structural and functional unit of ${topicName}.`,
         'Governs energy, matter, or relational interactions within the system.',
-        'Essential for understanding higher-level topics in the syllabus.',
       ],
       keyFormulasOrRules: [
-        `Standard ${topicName} relation: Variable A = Variable B / Unit.`,
-        'Always verify standard SI units before completing calculations.',
+        `Standard ${topicName} relation with SI units.`,
       ],
       realWorldExamples: [
-        `Practical application of ${topicName} in technology, biology, or daily physical phenomena.`,
-        'Industrial or experimental measurement context.',
+        `Practical application of ${topicName} in technology or daily life.`,
       ],
       commonExamPoints: [
         `High-yield board exam definition for ${topicName}.`,
-        'Pay close attention to exact terminology and scientific spellings.',
-        'Common mark-scheme points include step-by-step reasoning.',
       ],
     });
 

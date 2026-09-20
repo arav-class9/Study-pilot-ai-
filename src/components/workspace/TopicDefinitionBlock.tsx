@@ -4,17 +4,14 @@ import {
   Sparkles,
   Check,
   Copy,
-  Lightbulb,
-  Code2,
-  Globe,
-  Award,
+  Briefcase,
+  Calculator,
+  Zap,
   RefreshCw,
   Loader2,
-  Layers,
-  HelpCircle,
-  FileText,
+  CheckCircle2,
 } from 'lucide-react';
-import { TopicWorkspaceItem, TopicDefinitionBreakdown } from '../../types/workspace';
+import { TopicWorkspaceItem, SolvedExampleItem } from '../../types/workspace';
 import { fetchTopicDefinitionBreakdown } from '../../services/topicWorkspaceClient';
 
 interface TopicDefinitionBlockProps {
@@ -72,19 +69,17 @@ export const TopicDefinitionBlock: React.FC<TopicDefinitionBlockProps> = ({
   const copyDefinitionToClipboard = () => {
     if (!breakdown) return;
     const text = `TOPIC DEFINITION: ${topic.topicName} (${topic.subject} - ${topic.classLevel})
+1. DEFINITION:
 ${breakdown.formalDefinition}
 
-CORE CONCEPTS:
-${breakdown.coreConcepts.map((c) => `• ${c}`).join('\n')}
+2. KEY USES & APPLICATIONS:
+${(breakdown.keyUses || breakdown.realWorldExamples || []).map((u) => `• ${u}`).join('\n')}
 
-KEY FORMULAS / RULES:
-${breakdown.keyFormulasOrRules.map((f) => `• ${f}`).join('\n')}
+3. SOLVED EXAMPLES:
+${(breakdown.solvedExamples || []).map((ex, idx) => `Example ${idx + 1}: ${ex.title}\n${ex.explanation}${ex.calculationOrSteps ? `\nCalculation: ${ex.calculationOrSteps}` : ''}`).join('\n\n')}
 
-REAL-WORLD EXAMPLES:
-${breakdown.realWorldExamples.map((e) => `• ${e}`).join('\n')}
-
-COMMON EXAM POINTS:
-${breakdown.commonExamPoints.map((p) => `• ${p}`).join('\n')}`;
+4. QUICK SUMMARY:
+${breakdown.quickSummary || `${topic.topicName} is essential for ${topic.subject} exams and practical applications.`}`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -93,14 +88,14 @@ ${breakdown.commonExamPoints.map((p) => `• ${p}`).join('\n')}`;
 
   if (isGenerating && !breakdown) {
     return (
-      <div className={`p-6 rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900 dark:to-slate-800 border-2 border-amber-200 dark:border-slate-700 shadow-sm text-center py-10 ${className}`}>
+      <div className={`p-6 rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900 dark:to-slate-800 border-2 border-amber-200 dark:border-slate-700 shadow-xs text-center py-8 ${className}`}>
         <div className="flex flex-col items-center space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-600 dark:text-amber-400" />
-          <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-            Synthesizing Formal Definition & Structured Breakdown...
+          <Loader2 className="w-7 h-7 animate-spin text-amber-600 dark:text-amber-400" />
+          <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100">
+            Synthesizing Topic Summary & Standard Definition...
           </h3>
           <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md">
-            Analyzing curriculum standards for <span className="font-bold text-amber-800 dark:text-amber-300">{topic.topicName}</span> ({topic.subject}, {topic.classLevel})
+            Fetching standard curriculum definition, key uses, solved examples, and 1-line recap for <span className="font-bold text-amber-800 dark:text-amber-300">{topic.topicName}</span>.
           </p>
         </div>
       </div>
@@ -116,29 +111,52 @@ ${breakdown.commonExamPoints.map((p) => `• ${p}`).join('\n')}`;
           </div>
           <div>
             <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Formal Topic Definition & Structured Breakdown
+              Structured Topic Overview
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Generate instant textbook definition, formulas, examples, and exam points for {topic.topicName}.
+              Generate standard definition, key applications, solved examples, and quick summary for {topic.topicName}.
             </p>
           </div>
         </div>
         <button
           onClick={handleGenerateDefinition}
           disabled={isGenerating}
-          className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 shrink-0"
+          className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
         >
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Generate Definition</span>
+          <span>Generate Overview</span>
         </button>
       </div>
     );
   }
 
+  // Derive fallback values if loaded from legacy structure
+  const displayKeyUses: string[] = breakdown.keyUses && breakdown.keyUses.length > 0
+    ? breakdown.keyUses
+    : breakdown.realWorldExamples && breakdown.realWorldExamples.length > 0
+    ? breakdown.realWorldExamples
+    : [
+        `Used in ${topic.subject || 'science'} for quantitative analysis and modeling.`,
+        'Applied in daily technology, biological systems, and industrial processes.',
+        'Core topic required for solving high-yield board exam questions.',
+      ];
+
+  const displayExamples: SolvedExampleItem[] = breakdown.solvedExamples && breakdown.solvedExamples.length > 0
+    ? breakdown.solvedExamples
+    : [
+        {
+          title: `Real-World Application: ${topic.topicName}`,
+          explanation: breakdown.realWorldExamples?.[0] || `${topic.topicName} is routinely observed in natural and lab systems.`,
+          calculationOrSteps: breakdown.keyFormulasOrRules?.[0] ? `Formula: ${breakdown.keyFormulasOrRules[0]}` : undefined,
+        },
+      ];
+
+  const displayQuickSummary: string = breakdown.quickSummary || `${topic.topicName}: Fundamental ${topic.subject || 'Science'} concept governing structural rules, practical applications, and exam questions.`;
+
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Primary Formal Definition Hero Block */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-600/10 dark:from-indigo-950/60 dark:via-slate-900 dark:to-slate-900 border-2 border-amber-300/80 dark:border-indigo-900/80 p-5 sm:p-6 shadow-sm">
+      {/* 1. DEFINITION: Primary Standard Definition Hero Card */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-600/10 dark:from-indigo-950/60 dark:via-slate-900 dark:to-slate-900 border-2 border-amber-300/80 dark:border-indigo-900/80 p-5 sm:p-6 shadow-xs">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
             <span className="p-2 rounded-2xl bg-amber-600 text-white shadow-xs">
@@ -146,7 +164,7 @@ ${breakdown.commonExamPoints.map((p) => `• ${p}`).join('\n')}`;
             </span>
             <div>
               <span className="text-[10px] font-black tracking-widest text-amber-800 dark:text-amber-300 uppercase">
-                Official Formal Definition
+                1. Standard Topic Definition
               </span>
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-amber-50">
                 {topic.topicName}
@@ -158,14 +176,14 @@ ${breakdown.commonExamPoints.map((p) => `• ${p}`).join('\n')}`;
             <button
               onClick={handleGenerateDefinition}
               disabled={isGenerating}
-              title="Regenerate Definition"
-              className="p-2 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 border border-amber-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-all text-xs"
+              title="Regenerate Definition & Overview"
+              className="p-2 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 border border-amber-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-all text-xs cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={copyDefinitionToClipboard}
-              className="px-3 py-1.5 rounded-xl bg-white/90 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 border border-amber-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+              className="px-3 py-1.5 rounded-xl bg-white/90 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 border border-amber-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
             >
               {copied ? (
                 <>
@@ -175,93 +193,87 @@ ${breakdown.commonExamPoints.map((p) => `• ${p}`).join('\n')}`;
               ) : (
                 <>
                   <Copy className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-                  <span>Copy Definition</span>
+                  <span>Copy All</span>
                 </>
               )}
             </button>
           </div>
         </div>
 
-        {/* Clear Formal Definition Text */}
-        <p className="text-sm sm:text-base font-serif text-slate-800 dark:text-slate-100 leading-relaxed bg-white/70 dark:bg-slate-950/70 p-4 rounded-2xl border border-amber-200/60 dark:border-slate-800 shadow-2xs">
+        {/* Clear Standard Definition Text */}
+        <p className="text-sm sm:text-base font-serif text-slate-800 dark:text-slate-100 leading-relaxed bg-white/80 dark:bg-slate-950/80 p-4 rounded-2xl border border-amber-200/60 dark:border-slate-800 shadow-2xs">
           {breakdown.formalDefinition}
         </p>
       </div>
 
-      {/* Structured 4-Column / Grid Breakdown */}
+      {/* Grid Row for Sections 2 & 3 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Core Concepts */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-slate-800 shadow-xs space-y-2.5">
+        {/* 2. KEY USES / APPLICATIONS */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-slate-800 shadow-xs space-y-3">
           <div className="flex items-center gap-2 pb-2 border-b border-amber-100 dark:border-slate-800">
-            <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <div className="p-1.5 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+              <Briefcase className="w-4 h-4" />
+            </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
-              Core Concepts & Principles
+              2. Key Uses & Applications
             </h4>
           </div>
-          <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-            {breakdown.coreConcepts.map((item, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
-                <span>{item}</span>
+          <ul className="space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+            {displayKeyUses.map((useItem, idx) => (
+              <li key={idx} className="flex items-start gap-2.5">
+                <span className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
+                <span>{useItem}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Key Formulas or Rules */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-slate-800 shadow-xs space-y-2.5">
+        {/* 3. SOLVED EXAMPLES / REAL-WORLD EXAMPLE */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-slate-800 shadow-xs space-y-3">
           <div className="flex items-center gap-2 pb-2 border-b border-amber-100 dark:border-slate-800">
-            <Code2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <div className="p-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
+              <Calculator className="w-4 h-4" />
+            </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
-              Key Formulas & Laws / Rules
+              3. Solved Examples & Calculations
             </h4>
           </div>
-          <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-mono">
-            {breakdown.keyFormulasOrRules.map((item, idx) => (
-              <li key={idx} className="flex items-start gap-2 bg-indigo-50/50 dark:bg-indigo-950/40 p-2 rounded-xl border border-indigo-100 dark:border-indigo-900/50">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                <span className="font-medium">{item}</span>
-              </li>
+          <div className="space-y-3">
+            {displayExamples.map((ex, idx) => (
+              <div key={idx} className="p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 dark:text-emerald-300">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>{ex.title}</span>
+                </div>
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {ex.explanation}
+                </p>
+                {ex.calculationOrSteps && (
+                  <div className="bg-white/90 dark:bg-slate-950 p-2 rounded-lg border border-emerald-200/60 dark:border-slate-800 text-[11px] font-mono text-emerald-800 dark:text-emerald-300">
+                    {ex.calculationOrSteps}
+                  </div>
+                )}
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
+      </div>
 
-        {/* Real-World Examples */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-slate-800 shadow-xs space-y-2.5">
-          <div className="flex items-center gap-2 pb-2 border-b border-amber-100 dark:border-slate-800">
-            <Globe className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
-              Real-World Applications & Examples
-            </h4>
-          </div>
-          <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-            {breakdown.realWorldExamples.map((item, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+      {/* 4. QUICK SUMMARY (1-LINE RECAP) */}
+      <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs flex items-center gap-3">
+        <div className="p-2.5 rounded-xl bg-white/20 text-white shrink-0">
+          <Zap className="w-5 h-5 fill-white" />
         </div>
-
-        {/* Common Exam Points */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-slate-800 shadow-xs space-y-2.5">
-          <div className="flex items-center gap-2 pb-2 border-b border-amber-100 dark:border-slate-800">
-            <Award className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
-              Common Exam Points & Traps
-            </h4>
+        <div className="space-y-0.5">
+          <div className="text-[10px] font-black uppercase tracking-widest text-amber-100">
+            4. Quick Revision Recap (1-Line Summary)
           </div>
-          <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-            {breakdown.commonExamPoints.map((item, idx) => (
-              <li key={idx} className="flex items-start gap-2 bg-rose-50/50 dark:bg-rose-950/30 p-2 rounded-xl border border-rose-100 dark:border-rose-900/40">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+          <p className="text-xs sm:text-sm font-bold leading-snug">
+            {displayQuickSummary}
+          </p>
         </div>
       </div>
     </div>
   );
 };
+

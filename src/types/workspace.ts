@@ -83,12 +83,21 @@ export interface RevisionSheet {
   generatedAt: string;
 }
 
+export interface SolvedExampleItem {
+  title: string;
+  explanation: string;
+  calculationOrSteps?: string;
+}
+
 export interface TopicDefinitionBreakdown {
-  formalDefinition: string;
-  coreConcepts: string[];
-  keyFormulasOrRules: string[];
-  realWorldExamples: string[];
-  commonExamPoints: string[];
+  formalDefinition: string; // 1. Definition
+  keyUses: string[]; // 2. Key Uses / Applications (2-3 bullet points)
+  solvedExamples: SolvedExampleItem[]; // 3. Solved Examples / Real-world Examples (1-2 concrete examples)
+  quickSummary: string; // 4. Quick Summary (1-line recap)
+  coreConcepts?: string[];
+  keyFormulasOrRules?: string[];
+  realWorldExamples?: string[];
+  commonExamPoints?: string[];
   generatedAt?: string;
 }
 

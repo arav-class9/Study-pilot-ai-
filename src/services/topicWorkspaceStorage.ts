@@ -175,6 +175,44 @@ export function getAllTopicWorkspaces(): TopicWorkspaceItem[] {
       chapter: 'Tissues',
     });
 
+    initialTopic.definitionBreakdown = {
+      formalDefinition: 'Connective tissue is a fundamental animal tissue composed of cells embedded within an abundant extracellular matrix, serving to connect, bind, support, and anchor organs and tissues throughout the body.',
+      keyUses: [
+        'Structural Framework: Connects muscles to bones (tendons) and bones to bones (ligaments) at joints.',
+        'Internal Transport & Defense: Delivers oxygen, nutrients, and immune cells throughout organs via blood and lymph.',
+        'Thermal Insulation & Cushioning: Stores energy and protects delicate internal organs via adipose tissue.',
+      ],
+      solvedExamples: [
+        {
+          title: 'Example 1: Tendon vs. Ligament Attachment',
+          explanation: 'When walking, skeletal muscles contract and pull on tough tendons to move bones, while elastic ligaments hold bones securely aligned at knee and ankle joints.',
+          calculationOrSteps: 'Key Rule: Tendon = Muscle-to-Bone (High tensile strength) | Ligament = Bone-to-Bone (High elasticity)',
+        },
+        {
+          title: 'Example 2: Bone Matrix Mineral Composition',
+          explanation: 'Mammalian bone cells (osteocytes) reside inside a rigid extracellular matrix hardened by inorganic mineral salts.',
+          calculationOrSteps: 'Composition: ~65% Calcium & Phosphorus inorganic salts + ~35% organic collagen fibers.',
+        },
+      ],
+      quickSummary: 'Connective tissue binds, anchors, and supports body structures using specialized cells in an extracellular matrix.',
+      coreConcepts: [
+        'Abundant extracellular matrix composed of ground substance and protein fibers.',
+        'Includes Loose (Areolar, Adipose), Dense (Tendons, Ligaments), Fluid (Blood), and Skeletal (Bone, Cartilage).',
+      ],
+      keyFormulasOrRules: [
+        'Rule 1: Tendons join Muscle to Bone.',
+        'Rule 2: Ligaments join Bone to Bone.',
+      ],
+      realWorldExamples: [
+        'Achilles tendon connecting calf muscles to the heel bone.',
+        'Blubber layer under whale skin for thermal insulation.',
+      ],
+      commonExamPoints: [
+        'Differentiate between tendon and ligament based on elasticity and function.',
+        'Identify blood plasma as the non-cellular fluid matrix.',
+      ],
+    };
+
     initialTopic.notes.aiGeneratedText = `# Connective Tissue Overview
 Connective tissue is one of the four main types of animal tissue. It supports, connects, or separates different types of tissues and organs in the body.
 

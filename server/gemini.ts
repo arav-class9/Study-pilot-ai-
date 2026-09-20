@@ -2,9 +2,21 @@ import { GoogleGenAI } from '@google/genai';
 
 let aiClient: GoogleGenAI | null = null;
 
+export function getApiKey(): string {
+  return (
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    process.env.VITE_GEMINI_API_KEY ||
+    process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
+    process.env.API_KEY ||
+    process.env.GEMINI_KEY ||
+    ''
+  );
+}
+
 export function getGeminiClient(): GoogleGenAI {
   if (!aiClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = getApiKey();
     if (!apiKey) {
       console.warn('GEMINI_API_KEY environment variable is not set. AI features will fallback to smart offline logic if unavailable.');
     }
@@ -33,9 +45,9 @@ export interface GenerateContentRetryOptions {
  * 429 rate limits, and transient network errors with multi-model fallback and backoff.
  */
 export async function generateContentWithRetry(options: GenerateContentRetryOptions): Promise<{ text: string }> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = getApiKey();
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY environment variable is missing.');
+    throw new Error('GEMINI_API_KEY environment variable is missing in Vercel setup. Please add GEMINI_API_KEY in Vercel Environment Variables.');
   }
 
   const ai = getGeminiClient();
