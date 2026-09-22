@@ -28,6 +28,8 @@ interface FocusContextType {
   setMode: (mode: PomodoroMode) => void;
   setSelectedSubject: (sub: SubjectId) => void;
   setCustomDuration: (mode: PomodoroMode, seconds: number) => void;
+  setCustomMinutes: (minutes: number) => void;
+  adjustTime: (minutesDelta: number) => void;
 
   // Ambient Audio
   ambientSound: AmbientSoundType;
@@ -182,6 +184,32 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       return updated;
     });
+  };
+
+  const setCustomMinutes = (minutes: number) => {
+    const totalSeconds = Math.max(60, Math.min(360 * 60, Math.round(minutes * 60)));
+    setCustomDurations((prev) => ({ ...prev, [mode]: totalSeconds }));
+    if (!isRunning) {
+      setTimeLeft(totalSeconds);
+      endTimeRef.current = null;
+    }
+  };
+
+  const adjustTime = (minutesDelta: number) => {
+    if (!isRunning) {
+      const currentMins = Math.round(timeLeft / 60);
+      const newMins = Math.max(1, currentMins + minutesDelta);
+      const newSeconds = newMins * 60;
+      setTimeLeft(newSeconds);
+      setCustomDurations((prev) => ({ ...prev, [mode]: newSeconds }));
+      endTimeRef.current = null;
+    } else {
+      const newRemaining = Math.max(10, timeLeft + minutesDelta * 60);
+      setTimeLeft(newRemaining);
+      if (endTimeRef.current) {
+        endTimeRef.current = Date.now() + newRemaining * 1000;
+      }
+    }
   };
 
   // Timer Tick handler
@@ -404,6 +432,8 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setMode,
         setSelectedSubject,
         setCustomDuration,
+        setCustomMinutes,
+        adjustTime,
         ambientSound,
         ambientVolume,
         isAmbientPlaying,

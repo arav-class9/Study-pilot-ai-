@@ -52,21 +52,21 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
 
   const ai = getGeminiClient();
   
-  const primaryModel = options.primaryModel || 'gemini-2.5-flash';
+  const primaryModel = options.primaryModel || 'gemini-3.8-flash';
   const fallbackModel = (options.fallbackModel && options.fallbackModel !== primaryModel) 
     ? options.fallbackModel 
     : 'gemini-flash-latest';
-  const maxRetries = options.maxRetries ?? 1;
+  const maxRetries = options.maxRetries ?? 2;
 
   // Build unique sequence of models to try in order of preference
   const modelsToTry = Array.from(
     new Set([
       primaryModel,
       fallbackModel,
-      'gemini-2.5-flash',
+      'gemini-3.8-flash',
+      'gemini-3.6-flash',
+      'gemini-3.1-flash-lite',
       'gemini-flash-latest',
-      'gemini-2.5-flash',
-      'gemini-2.5-pro',
     ].filter(Boolean))
   );
 
@@ -107,15 +107,21 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
 
         console.warn(`[Gemini API] Attempt ${attempt + 1}/${maxRetries + 1} for model ${model}:`, errorMessage);
 
-        // If high demand (503) or quota (429), switch immediately to the next available fallback model
+        // Add backoff delay before switching model or retrying to clear temporary demand spikes
+        if (isTransient || isQuotaExhausted) {
+          const delayMs = 600 + Math.random() * 600;
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+
+        // If high demand (503) or quota (429), switch to next available fallback model if attempts exhausted
         if ((isTransient || isQuotaExhausted) && mIdx < modelsToTry.length - 1) {
-          console.warn(`[Gemini API] Switching from ${model} to next model ${modelsToTry[mIdx + 1]}...`);
-          break; // Break inner loop to try next model immediately
+          console.warn(`[Gemini API] Switching from ${model} to fallback model ${modelsToTry[mIdx + 1]}...`);
+          break; // Break inner loop to try next model
         }
 
         if (attempt < maxRetries && (isQuotaExhausted || isTransient)) {
           const delayMs = (attempt + 1) * 800 + Math.random() * 400;
-          console.warn(`[Gemini API] Retrying in ${Math.round(delayMs)}ms...`);
+          console.warn(`[Gemini API] Retrying ${model} in ${Math.round(delayMs)}ms...`);
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         } else {
           break;

@@ -1,5 +1,6 @@
 import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
+import { STUDYPILOT_MASTER_TUTOR_PROMPT } from './tutorPrompt.js';
 
 export interface NotesChatInput {
   question: string;
@@ -11,8 +12,11 @@ export interface NotesChatInput {
 
 export async function chatWithNotes(input: NotesChatInput) {
   const systemInstruction = `You are StudyPilot AI, an expert CBSE/NCERT and K-12 academic study assistant.
+
+${STUDYPILOT_MASTER_TUTOR_PROMPT}
+
 You are helping a student chat with their study notes for Chapter: "${input.chapterName}" (${input.subject}, Class ${input.classLevel || '10'}).
-Your task is to answer the student's specific question strictly and accurately based on the provided study notes content below. If the answer is not directly in the notes, use your expert academic knowledge to supplement while explaining clearly. Keep your tone encouraging, pedagogical, and clear. Use bullet points or LaTeX equations where helpful.
+Answer the student's question directly in the FIRST 1-2 sentences. Keep explanations clear, structured, and student-friendly. Use LaTeX for math/science equations.
 
 STUDY NOTES CONTENT:
 ${input.notesContent}`;
@@ -26,8 +30,8 @@ Please answer the question based on the study notes provided. Return a JSON resp
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: promptText,
       config: {
         systemInstruction,

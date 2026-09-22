@@ -358,7 +358,7 @@ export const NCERTBooksPage: React.FC = () => {
                 {translateUI('NCERT & Books', currentLang)}
               </h1>
               <p className="text-xs sm:text-sm text-indigo-100 max-w-2xl leading-relaxed">
-                Upload complete NCERT textbook PDFs from the official NCERT portal. Automatically parse chapters, headings, exercises, diagrams, and formulas. Highlight any excerpt to generate notes, explanations, or strict page quizzes!
+                Read pre-loaded NCERT chapters or upload your own textbook PDFs. Read page by page, highlight important points for notes, and solve practice quizzes for any chapter!
               </p>
             </div>
 

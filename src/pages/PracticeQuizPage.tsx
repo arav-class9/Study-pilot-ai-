@@ -1013,3 +1013,5 @@ export const PracticeQuizPage: React.FC = () => {
     </div>
   );
 };
+
+export default PracticeQuizPage;

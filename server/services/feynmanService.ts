@@ -1,5 +1,6 @@
 import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
+import { STUDYPILOT_MASTER_TUTOR_PROMPT } from './tutorPrompt.js';
 
 export interface FeynmanInput {
   topic: string;
@@ -16,14 +17,17 @@ export interface FeynmanEvaluation {
 }
 
 export async function evaluateFeynmanExplanation(input: FeynmanInput): Promise<FeynmanEvaluation> {
-  const systemInstruction = `You are an expert Physics/Chemistry/Math/Biology Professor applying the Feynman Technique.
-The student is trying to explain the topic: "${input.topic}" (${input.subject}) in their own simple words as if teaching a 10-year-old child without complex unearned jargon.
-Analyze their explanation and return a JSON response with:
-1. "clarityScore": number from 0 to 100.
-2. "jargonCheck": feedback on whether they used heavy memorized jargon without understanding.
-3. "missingGaps": array of 2-3 conceptual gaps or incorrect assumptions.
-4. "simplifiedAnalogy": a brilliant, intuitive everyday analogy to cement their understanding.
-5. "feedback": encouraging and constructive professor feedback.`;
+  const systemInstruction = `You are StudyPilot AI's Feynman Tutor and Professor.
+
+${STUDYPILOT_MASTER_TUTOR_PROMPT}
+
+The student is explaining the topic: "${input.topic}" (${input.subject}) in their own simple words as if teaching a child.
+Evaluate their explanation constructicely:
+1. "clarityScore": 0 to 100.
+2. "jargonCheck": feedback on whether they relied on memorized jargon without real conceptual understanding.
+3. "missingGaps": array of 2-3 conceptual gaps or missing core points.
+4. "simplifiedAnalogy": an intuitive everyday analogy that makes the concept click instantly.
+5. "feedback": encouraging, friendly, and student-friendly tutor feedback that gives the direct answer and key takeaway first.`;
 
   const promptText = `Topic: "${input.topic}" (${input.subject})
 Student's Simple Explanation: "${input.studentExplanation}"
@@ -32,8 +36,8 @@ Evaluate this explanation using the Feynman Technique and return JSON.`;
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: promptText,
       config: {
         systemInstruction,

@@ -30,7 +30,6 @@ import { motion } from 'motion/react';
 import { HandwrittenSolutionTab } from '../components/tutor/HandwrittenSolutionTab';
 import { TextbookPhotoTab } from '../components/tutor/TextbookPhotoTab';
 import { VivaFeynmanTab } from '../components/tutor/VivaFeynmanTab';
-import { FormulaSolver } from '../components/FormulaSolver';
 import { CitationInjector, CitationListPanel } from '../components/tutor/CitationInjector';
 import { CitationBadge } from '../components/tutor/CitationBadge';
 import { Calculator, BookOpen, FileCode } from 'lucide-react';
@@ -49,7 +48,7 @@ export const AITutorPage: React.FC = () => {
     language,
   } = useApp();
 
-  const [activeTutorTab, setActiveTutorTab] = useState<'doubt' | 'formula_solver' | 'handwritten' | 'textbook_photo' | 'viva_feynman'>('doubt');
+  const [activeTutorTab, setActiveTutorTab] = useState<'doubt' | 'handwritten' | 'textbook_photo' | 'viva_feynman'>('doubt');
   const [questionText, setQuestionText] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>(globalSubject || 'science');
   const [selectedClass, setSelectedClass] = useState<ClassLevel>((globalClass || user?.classLevel || '10') as ClassLevel);
@@ -245,11 +244,11 @@ export const AITutorPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">{translateUI('AI Tutor', currentLang)}</h1>
               <span className="bg-indigo-100 text-indigo-700 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full">
-                Step-by-Step Coach
+                Step-by-Step Helper
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-500">
-              Type or scan any academic problem to get pedagogical explanations &amp; formulas.
+              Ask any question, solve math &amp; physics numericals step-by-step, or scan textbook photos.
             </p>
           </div>
         </div>
@@ -304,19 +303,7 @@ export const AITutorPage: React.FC = () => {
           }`}
         >
           <Bot className="w-4 h-4" />
-          <span>Doubt Solver</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTutorTab('formula_solver')}
-          className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center space-x-2 whitespace-nowrap transition-all cursor-pointer ${
-            activeTutorTab === 'formula_solver'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-          }`}
-        >
-          <Calculator className="w-4 h-4" />
-          <span>Formula &amp; Numerical Solver 📐</span>
+          <span>AI Doubt &amp; Formula Solver</span>
         </button>
 
         <button
@@ -340,7 +327,7 @@ export const AITutorPage: React.FC = () => {
           }`}
         >
           <Camera className="w-4 h-4" />
-          <span>Textbook Photo &rarr; Learning</span>
+          <span>Textbook Scanner</span>
         </button>
 
         <button
@@ -355,34 +342,6 @@ export const AITutorPage: React.FC = () => {
           <span>Viva Voce &amp; Feynman Mode</span>
         </button>
       </div>
-
-      {activeTutorTab === 'formula_solver' && (
-        <FormulaSolver
-          defaultSubject={selectedSubject === 'math' ? 'mathematics' : selectedSubject}
-          defaultClassLevel={selectedClass}
-          onSaveToNotes={(sol) => {
-            saveNote({
-              id: `note-formula-${Date.now()}`,
-              userId: user.uid,
-              title: `${sol.problemText.slice(0, 45)}... — Solved Formula`,
-              subjectId: (selectedSubject?.toLowerCase() || 'science') as SubjectId,
-              chapterName: 'Formula Solutions',
-              topicName: 'Formula Solver',
-              detailLevel: 'detailed',
-              content: `### Problem\n${sol.problemText}\n\n### Step-by-Step Derivation\n${sol.steps.map((s, i) => `**Step ${i + 1}**: ${s}`).join('\n\n')}\n\n**Final Answer**: ${sol.finalAnswer}`,
-              definitions: [],
-              keyFormulas: sol.keyFormulas || [],
-              commonMistakes: sol.commonPitfalls || [],
-              examTips: ['Memorize intermediate derivation steps for board examinations.'],
-              quickRevisionPoints: [sol.finalAnswer],
-              isFavorite: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            });
-            toast.success('Formula derivation saved to your Study Notes!');
-          }}
-        />
-      )}
 
       {activeTutorTab === 'handwritten' && (
         <HandwrittenSolutionTab currentClass={selectedClass} currentSubject={selectedSubject} />
@@ -773,6 +732,37 @@ export const AITutorPage: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {/* Quick Follow-Up Action Chips */}
+            <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl p-4 space-y-2.5">
+              <div className="flex items-center gap-2 text-indigo-900 font-extrabold text-xs uppercase tracking-wider">
+                <Sparkles className="w-4 h-4 text-indigo-600" />
+                <span>Ask AI Tutor a Follow-up:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  `Explain ${solution.concept} with a simple real-life everyday analogy.`,
+                  `What are the high-yield NCERT exam questions on ${solution.concept}?`,
+                  `Give me 3 practice multiple choice questions (MCQs) on ${solution.concept} with explanations.`,
+                  `What are the most common student mistakes or formula traps in ${solution.concept}?`
+                ].map((followUpText, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setQuestionText(followUpText);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      setTimeout(() => {
+                        handleSolve();
+                      }, 200);
+                    }}
+                    className="text-xs bg-white hover:bg-indigo-600 hover:text-white text-indigo-950 font-medium px-3 py-2 rounded-xl border border-indigo-200 shadow-xs transition-all cursor-pointer text-left"
+                  >
+                    💡 {followUpText}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </motion.div>
       )}
@@ -781,3 +771,5 @@ export const AITutorPage: React.FC = () => {
     </div>
   );
 };
+
+export default AITutorPage;

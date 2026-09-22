@@ -1,5 +1,6 @@
 import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { Type } from '@google/genai';
+import { STUDYPILOT_MASTER_TUTOR_PROMPT } from './tutorPrompt.js';
 
 // 1. Pomodoro Day-by-Day Schedule
 export interface GeneratePomodoroScheduleInput {
@@ -44,7 +45,7 @@ Rules:
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
       fallbackModel: 'gemini-flash-latest',
       contents: promptText,
       config: {
@@ -164,13 +165,16 @@ export async function generateFeynmanBreakdown(input: GenerateFeynmanBreakdownIn
   const subject = input.subject || 'General Science / Math';
   const classLevel = input.classLevel || '10';
 
-  const systemInstruction = `You are Richard Feynman tutoring a curious Class 9-10 student.
-Break down the concept completely without unnecessary academic jargon:
-1. Use clear, plain everyday language that a 14-year-old instantly understands.
+  const systemInstruction = `You are Richard Feynman tutoring a curious student on StudyPilot AI.
+
+${STUDYPILOT_MASTER_TUTOR_PROMPT}
+
+Break down the concept cleanly and directly:
+1. GIVE THE DIRECT DEFINITION AND ANSWER IN THE VERY FIRST 1-2 SENTENCES of simpleExplanation. No generic AI intros.
 2. Provide at least two vivid, relatable everyday analogies or physical real-world demonstrations.
 3. List 3-4 golden "Aha! Rules of Thumb" (Core Takeaways).
 4. Identify 2 common misconceptions or traps students fall into.
-5. Create an interactive 3-question mini-quiz that tests TRUE conceptual intuition (cause and effect, mental models), NOT rote memorization.
+5. Create an interactive 3-question mini-quiz that tests TRUE conceptual intuition, NOT rote memorization.
 Return structured JSON only.`;
 
   const promptText = `Explain this concept:
@@ -182,7 +186,7 @@ Ensure the 3-question mini-quiz has 4 distinct options each, with a clear single
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
       fallbackModel: 'gemini-flash-latest',
       contents: promptText,
       config: {
@@ -395,7 +399,7 @@ Make sure there are exactly 10 cards, ordered from 1 (easiest) to 10 (hardest).`
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
       fallbackModel: 'gemini-flash-latest',
       contents: promptText,
       config: {
@@ -490,7 +494,7 @@ Structure:
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
       fallbackModel: 'gemini-flash-latest',
       contents: promptText,
       config: {
@@ -698,7 +702,7 @@ Provide complete grading, mistake explanations, weak subtopics diagnosis, and ta
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
       fallbackModel: 'gemini-flash-latest',
       contents: promptText,
       config: {
@@ -935,7 +939,7 @@ Rebuild the schedule to maximize marks, prioritizing difficult high-weight topic
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
       fallbackModel: 'gemini-flash-latest',
       contents: promptText,
       config: {

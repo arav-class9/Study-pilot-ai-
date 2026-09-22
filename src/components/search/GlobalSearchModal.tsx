@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, X, BookOpen, FileText, CheckCircle2, AlertTriangle, ArrowRight, CornerDownLeft, Loader2 } from 'lucide-react';
+import { Search, X, BookOpen, FileText, CheckCircle2, AlertTriangle, ArrowRight, CornerDownLeft, Loader2, Sparkles, Cpu } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { GlobalSearchResult } from '../../types';
 import { searchCurriculumApi } from '../../services/aiClient';
+import { DeepResearchModal } from './DeepResearchModal';
 
 interface GlobalSearchModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<GlobalSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isDeepResearchOpen, setIsDeepResearchOpen] = useState(false);
   const { notes, setActiveTab, setSelectedChapter } = useApp();
 
   useEffect(() => {
@@ -103,6 +105,27 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           </kbd>
         </div>
 
+        {/* Deep Research Engine Launcher Bar */}
+        <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 px-5 py-3 text-white flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Cpu className="w-4 h-4 text-indigo-300 animate-pulse" />
+            <span className="text-xs font-bold text-indigo-100">
+              Need multi-step AI web search, claim verification & teacher notes?
+            </span>
+          </div>
+
+          <button
+            id="launch-deep-research-from-modal"
+            onClick={() => {
+              setIsDeepResearchOpen(true);
+            }}
+            className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-400 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>Launch Deep Research</span>
+          </button>
+        </div>
+
         {/* Results List */}
         <div className="p-3 max-h-96 overflow-y-auto divide-y divide-slate-100">
           {query.trim() === '' ? (
@@ -166,6 +189,12 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           </span>
         </div>
       </div>
+
+      <DeepResearchModal
+        isOpen={isDeepResearchOpen}
+        onClose={() => setIsDeepResearchOpen(false)}
+        initialQuery={query}
+      />
     </div>
   );
 };

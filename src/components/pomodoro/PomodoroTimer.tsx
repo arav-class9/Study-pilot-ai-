@@ -21,6 +21,9 @@ import {
   BookOpen,
   ListTodo,
   Music,
+  Plus,
+  Minus,
+  Sliders,
 } from 'lucide-react';
 import { SubjectId, PomodoroMode } from '../../types';
 
@@ -39,6 +42,8 @@ export const PomodoroTimer: React.FC = () => {
     setMode,
     setSelectedSubject,
     setCustomDuration,
+    setCustomMinutes,
+    adjustTime,
     soundChimeEnabled,
     setSoundChimeEnabled,
     openZen,
@@ -47,6 +52,8 @@ export const PomodoroTimer: React.FC = () => {
   } = useFocus();
 
   const [activeTab, setActiveTab] = useState<'timer' | 'sounds' | 'tasks'>('timer');
+  const [customInputVal, setCustomInputVal] = useState<string>('');
+  const [isEditingCustom, setIsEditingCustom] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const subjectList: { id: SubjectId; label: string }[] = useMemo(
@@ -191,7 +198,7 @@ export const PomodoroTimer: React.FC = () => {
       </div>
 
       {/* Main Timer Display */}
-      <div className="flex items-center justify-between bg-slate-950/60 p-2.5 rounded-xl border border-slate-700/60 mb-2.5">
+      <div className="flex items-center justify-between bg-slate-950/60 p-2.5 rounded-xl border border-slate-700/60 mb-2">
         <div className="space-y-0.5">
           <div className="flex items-center gap-1.5">
             <ModeIcon className={`w-3 h-3 ${currentModeInfo.color}`} />
@@ -199,8 +206,27 @@ export const PomodoroTimer: React.FC = () => {
               {currentModeInfo.name}
             </span>
           </div>
-          <div className="text-2xl font-mono font-black tracking-tight text-white">
-            {formatTime(timeLeft)}
+          <div className="flex items-center gap-2">
+            <div className="text-2xl font-mono font-black tracking-tight text-white">
+              {formatTime(timeLeft)}
+            </div>
+            {/* Quick Adjust Buttons */}
+            <div className="flex items-center gap-0.5 ml-1">
+              <button
+                onClick={() => adjustTime(-5)}
+                title="Subtract 5 mins"
+                className="px-1.5 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
+              >
+                -5m
+              </button>
+              <button
+                onClick={() => adjustTime(5)}
+                title="Add 5 mins"
+                className="px-1.5 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
+              >
+                +5m
+              </button>
+            </div>
           </div>
         </div>
 
@@ -292,20 +318,55 @@ export const PomodoroTimer: React.FC = () => {
             </select>
           </div>
 
-          {/* Quick Custom Time presets */}
+          {/* Custom Duration Input & Presets */}
           <div>
+            <span className="block text-[10px] font-bold uppercase text-slate-400 mb-1 flex items-center gap-1">
+              <Sliders className="w-3 h-3 text-indigo-400" />
+              <span>Set Custom Time (Minutes):</span>
+            </span>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const mins = parseInt(customInputVal, 10);
+                if (!isNaN(mins) && mins > 0) {
+                  setCustomMinutes(mins);
+                  setCustomInputVal('');
+                }
+              }}
+              className="flex items-center gap-1.5 mb-2"
+            >
+              <input
+                type="number"
+                min="1"
+                max="360"
+                placeholder={`Current: ${Math.round(timeLeft / 60)} min`}
+                value={customInputVal}
+                onChange={(e) => setCustomInputVal(e.target.value)}
+                className="flex-1 bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-mono"
+              />
+              <button
+                type="submit"
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-xs whitespace-nowrap"
+              >
+                Set
+              </button>
+            </form>
+
             <span className="block text-[9px] font-bold uppercase text-slate-400 mb-1">
               Quick Focus Presets:
             </span>
             <div className="grid grid-cols-4 gap-1">
-              {[15, 25, 30, 45].map((mins) => (
+              {[10, 15, 20, 25, 30, 45, 60, 90].map((mins) => (
                 <button
                   key={mins}
                   onClick={() => {
-                    setCustomDuration('focus', mins * 60);
-                    setMode('focus');
+                    setCustomMinutes(mins);
                   }}
-                  className="py-1 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[10px] font-bold text-center transition-colors cursor-pointer"
+                  className={`py-1 rounded-lg text-[10px] font-bold text-center transition-colors cursor-pointer ${
+                    Math.round(timeLeft / 60) === mins
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white'
+                  }`}
                 >
                   {mins}m
                 </button>

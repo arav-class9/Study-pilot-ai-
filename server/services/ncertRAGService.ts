@@ -1,4 +1,5 @@
 import { getGeminiClient, generateContentWithRetry, safeJsonParse } from '../gemini.js';
+import { STUDYPILOT_MASTER_TUTOR_PROMPT } from './tutorPrompt.js';
 
 export interface RAGTextbookChunk {
   pageNumber: number;
@@ -115,13 +116,15 @@ export async function answerWithTextbookRAG(
       : 'Language: Clear, structured Academic English aligned with NCERT textbook standards.';
 
   const systemInstruction = `You are the Lead NCERT Retrieval-Augmented Tutor (RAG Engine) for StudyPilot AI.
-Your goal is to answer the student's question STRICTLY GROUNDED in the provided NCERT textbook excerpts.
 
-CRITICAL GROUNDING RULES:
-1. Every major fact, definition, or formula MUST be traceable to the supplied textbook context.
-2. If the answer is directly in the textbook context, quote the exact phrase and cite the exact Page Number.
-3. If information is not in the text, clearly state what the NCERT textbook mentions and avoid hallucinating unverified extra details.
-4. ${languageDirective}
+${STUDYPILOT_MASTER_TUTOR_PROMPT}
+
+CRITICAL GROUNDING & TUTORING RULES:
+1. GIVE THE DIRECT ANSWER FIRST: State the core direct answer in the very first 1-2 sentences of "answer". No generic AI intros.
+2. Every major fact, definition, or formula MUST be traceable to the supplied textbook context.
+3. If the answer is directly in the textbook context, quote the exact phrase and cite the exact Page Number.
+4. If information is not in the text, clearly state what the NCERT textbook mentions and avoid hallucinating unverified extra details.
+5. ${languageDirective}
 5. Format your output strictly as a JSON object matching this schema:
 {
   "id": "rag_${Date.now()}",

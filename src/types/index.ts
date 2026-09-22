@@ -114,6 +114,8 @@ export interface UserProfile {
   selectedSubject?: string;
   parentLinkedCode?: string;
   createdAt: string;
+  isOnboarded?: boolean;
+  hasSeenWalkthrough?: boolean;
 }
 
 // 1. Personalized Student Learning Profile
@@ -565,6 +567,29 @@ export interface AppNotification {
   actionData?: any;
 }
 
+export interface GroundedSource {
+  title: string;
+  domain: string;
+  url: string;
+  sourceType?: string;
+  authorityScore?: number;
+  retrievedAt?: string;
+}
+
+export interface NoteResearchMetadata {
+  totalSourcesAnalyzed: number;
+  searchQueriesUsed: string[];
+  crossCheckStatus: string;
+  ncertAligned: boolean;
+  domainType: string;
+}
+
+export interface NotePracticeQuestion {
+  question: string;
+  answer: string;
+  difficulty?: string;
+}
+
 export interface StudyNote {
   id: string;
   userId: string;
@@ -574,11 +599,19 @@ export interface StudyNote {
   topicName: string;
   detailLevel: NoteDetailLevel;
   content: string;
-  definitions: { term: string; definition: string }[];
+  overview?: string;
+  simpleDefinition?: string;
+  keyPoints?: string[];
+  definitions: { term: string; definition: string; isNcertCore?: boolean }[];
   keyFormulas?: string[];
+  examples?: string[];
   commonMistakes?: string[];
   examTips?: string[];
   quickRevisionPoints?: string[];
+  practiceQuestions?: NotePracticeQuestion[];
+  ncertComparison?: { ncertPoints: string[]; additionalPoints: string[] };
+  sources?: GroundedSource[];
+  researchMetadata?: NoteResearchMetadata;
   isFavorite: boolean;
   source?: SourceMetadata;
   createdAt: string;

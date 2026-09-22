@@ -4,6 +4,8 @@ import sharp from 'sharp';
 import { Type, Schema } from '@google/genai';
 import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
 import { authenticateAndEnforceQuota, AuthenticatedQuotaRequest } from '../middleware/quotaAuth.js';
+import { executeDeepResearch, DeepResearchInput } from '../services/deepResearchEngine.js';
+import { STUDYPILOT_MASTER_TUTOR_PROMPT } from '../services/tutorPrompt.js';
 
 export const aiRouterExtended = Router();
 
@@ -137,12 +139,13 @@ Ensure every step is pedagogically clear and complete.`;
       contents.push({ text: promptInstruction });
 
       const response = await generateContentWithRetry({
-        primaryModel: 'gemini-2.5-flash',
+        primaryModel: 'gemini-3.8-flash',
         fallbackModel: 'gemini-flash-latest',
         contents,
         config: {
-          systemInstruction:
-            'You are an expert STEM educator, mathematician, and NCERT / CBSE curriculum authority. You solve mathematical, physical, and scientific problems with mathematical rigor, clear LaTeX typesetting, and zero hallucinations. Always return valid JSON matching the exact schema.',
+          systemInstruction: `You are an expert STEM educator, mathematician, and NCERT / CBSE curriculum authority.
+${STUDYPILOT_MASTER_TUTOR_PROMPT}
+State the direct final answer and core formula first in the very first step. Solve step-by-step with clear LaTeX typesetting and zero hallucinations. Always return valid JSON matching the exact schema.`,
           responseMimeType: 'application/json',
           responseSchema: formulaSolutionSchema,
           temperature: 0.2,
@@ -166,3 +169,49 @@ Ensure every step is pedagogically clear and complete.`;
     }
   }
 );
+
+/**
+ * AI Deep Research Engine Endpoint
+ * POST /api/ai/deep-research
+ */
+aiRouterExtended.post(
+  '/deep-research',
+  authenticateAndEnforceQuota,
+  async (req: AuthenticatedQuotaRequest, res: Response): Promise<void> => {
+    try {
+      const { query, classLevel, subject, depth, language } = req.body || {};
+
+      if (!query || typeof query !== 'string' || query.trim().length === 0) {
+        res.status(400).json({
+          success: false,
+          error: 'Research query is required.',
+        });
+        return;
+      }
+
+      const input: DeepResearchInput = {
+        query: query.trim(),
+        classLevel: classLevel || '10',
+        subject: subject || 'General Science',
+        depth: depth || 'deep',
+        language: language || 'en',
+      };
+
+      const result = await executeDeepResearch(input);
+
+      res.json({
+        success: true,
+        data: result,
+        remainingQuota: req.remainingQuota,
+        tier: req.userTier,
+      });
+    } catch (error: any) {
+      console.error('[DEEP RESEARCH API ERROR]:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to complete AI deep research.',
+      });
+    }
+  }
+);
+

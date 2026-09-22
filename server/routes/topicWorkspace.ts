@@ -91,7 +91,7 @@ Return clean JSON conforming strictly to the schema.`;
         responseMimeType: 'application/json',
         responseSchema: definitionSchema,
       },
-      primaryModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
       fallbackModel: 'gemini-flash-latest',
     });
 
@@ -191,7 +191,7 @@ Write clean, highly accurate, engaging study notes now.`;
 
     const response = await generateContentWithRetry({
       contents: prompt,
-      primaryModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
       fallbackModel: 'gemini-flash-latest',
     });
 
@@ -279,7 +279,7 @@ Return clean JSON conforming to the schema.`;
         responseMimeType: 'application/json',
         responseSchema: explanationSchema,
       },
-      primaryModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
     });
 
     const parsed = safeJsonParse(response.text, {
@@ -363,7 +363,7 @@ Return clean JSON with "questions" array conforming strictly to schema.`;
         responseMimeType: 'application/json',
         responseSchema: questionBankSchema,
       },
-      primaryModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
     });
 
     const parsed = safeJsonParse(response.text, { questions: [] });
@@ -423,7 +423,7 @@ Return clean JSON conforming to the schema.`;
         responseMimeType: 'application/json',
         responseSchema: revisionSchema,
       },
-      primaryModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
     });
 
     const parsed = safeJsonParse(response.text, {

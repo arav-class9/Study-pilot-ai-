@@ -131,7 +131,7 @@ export async function runAIEvaluationBenchmark(options?: { skipLiveNetworkCall?:
   } else {
     try {
       const response = await generateContentWithRetry({
-        primaryModel: 'gemini-2.5-flash',
+        primaryModel: 'gemini-3.8-flash',
         fallbackModel: 'gemini-flash-latest',
         contents: 'Give the chemical formula for rust in a simple JSON object: {"formula": "Fe2O3.xH2O"}.',
         config: {

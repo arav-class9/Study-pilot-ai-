@@ -207,4 +207,56 @@ export class DatabaseService {
       console.warn('saveConversation offline error', e.message);
     }
   }
+
+  // Notes
+  static async saveNote(userId: string, note: any) {
+    const ref = doc(collection(db, 'notes'));
+    const id = note.id || ref.id;
+    try {
+      await setDoc(doc(db, 'notes', id), { ...note, id, userId, updatedAt: serverTimestamp() }, { merge: true });
+    } catch (e: any) {
+      console.warn('saveNote offline error', e.message);
+    }
+  }
+
+  static async getNotes(userId: string) {
+    const q = query(collection(db, 'notes'), where('userId', '==', userId));
+    try {
+      const snap = await getDocs(q);
+      return snap.docs.map(d => d.data());
+    } catch (e: any) {
+      console.warn('getNotes offline error', e.message);
+      return [];
+    }
+  }
+
+  static async deleteNote(userId: string, noteId: string) {
+    try {
+      await deleteDoc(doc(db, 'notes', noteId));
+    } catch (e: any) {
+      console.warn('deleteNote offline error', e.message);
+    }
+  }
+
+  // Notifications
+  static async saveNotification(userId: string, notif: any) {
+    const ref = doc(collection(db, 'notifications'));
+    const id = notif.id || ref.id;
+    try {
+      await setDoc(doc(db, 'notifications', id), { ...notif, id, userId, timestamp: serverTimestamp() }, { merge: true });
+    } catch (e: any) {
+      console.warn('saveNotification offline error', e.message);
+    }
+  }
+
+  static async getNotifications(userId: string) {
+    const q = query(collection(db, 'notifications'), where('userId', '==', userId));
+    try {
+      const snap = await getDocs(q);
+      return snap.docs.map(d => d.data());
+    } catch (e: any) {
+      console.warn('getNotifications offline error', e.message);
+      return [];
+    }
+  }
 }

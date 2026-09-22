@@ -289,6 +289,8 @@ export async function generateAINotes(params: {
   chapter: string;
   topic?: string;
   detailLevel: NoteDetailLevel;
+  uploadedMaterial?: string;
+  forceFreshSearch?: boolean;
 }): Promise<Partial<StudyNote>> {
   return await callBackendAI<Partial<StudyNote>>('/api/ai/notes', {
     method: 'POST',

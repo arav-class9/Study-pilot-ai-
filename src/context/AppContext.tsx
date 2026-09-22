@@ -297,8 +297,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         DatabaseService.getQuizAttempts(firebaseUser.uid),
         DatabaseService.getMistakes(firebaseUser.uid),
         DatabaseService.getRevisionItems(firebaseUser.uid),
+        DatabaseService.getNotes(firebaseUser.uid),
+        DatabaseService.getExamAttempts(firebaseUser.uid),
+        DatabaseService.getNotifications(firebaseUser.uid),
       ])
-        .then(async ([dbProfile, attempts, userMistakes, userRevisionItems]) => {
+        .then(async ([dbProfile, attempts, userMistakes, userRevisionItems, userNotes, userExams, userNotifs]) => {
           if (!isMounted) return;
 
           if (dbProfile) {
@@ -312,6 +315,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               ? dbProfile.level
               : Math.max(1, Math.floor(totalXP / 400) + 1);
             const streak = typeof dbProfile.streak === 'number' ? dbProfile.streak : 0;
+
+            const userIsOnboarded = dbProfile.isOnboarded ?? true;
+            const userHasSeenWalkthrough = dbProfile.hasSeenWalkthrough ?? true;
 
             const existingProfile: UserProfile = {
               uid: firebaseUser.uid,
@@ -346,9 +352,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               subscriptionPlan: dbProfile.subscriptionPlan || 'free',
               role: dbProfile.role || 'student',
               createdAt: dbProfile.createdAt || new Date().toISOString(),
+              isOnboarded: userIsOnboarded,
+              hasSeenWalkthrough: userHasSeenWalkthrough,
             };
 
             setUser(existingProfile);
+
+            if (userIsOnboarded) {
+              setIsOnboarded(true);
+              safeSetStorage('studypilot_onboarded', 'true');
+            } else {
+              setIsOnboarded(false);
+              safeSetStorage('studypilot_onboarded', 'false');
+            }
+
+            if (userHasSeenWalkthrough) {
+              safeSetStorage('studypilot_walkthrough_seen', 'true');
+            } else {
+              safeRemoveStorage('studypilot_walkthrough_seen');
+            }
 
             if (Array.isArray(attempts)) {
               setQuizAttempts(attempts as QuizAttempt[]);
@@ -358,6 +380,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
             if (Array.isArray(userRevisionItems) && userRevisionItems.length > 0) {
               setRevisionQueue(userRevisionItems as RevisionQueueItem[]);
+            }
+            if (Array.isArray(userNotes) && userNotes.length > 0) {
+              setNotesList(userNotes as StudyNote[]);
+            }
+            if (Array.isArray(userExams) && userExams.length > 0) {
+              setExamAttempts(userExams as ExamAttempt[]);
+            }
+            if (Array.isArray(userNotifs) && userNotifs.length > 0) {
+              setNotifications(userNotifs as AppNotification[]);
             }
           } else {
             // New user: initialize profile with explicit zero-value fields
@@ -394,11 +425,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               subscriptionPlan: 'free',
               role: 'student',
               createdAt: new Date().toISOString(),
+              isOnboarded: false,
+              hasSeenWalkthrough: false,
             };
 
             await DatabaseService.createInitialUserProfile(firebaseUser.uid, firebaseUser);
 
             setUser(newProfile);
+            setIsOnboarded(false);
+            safeSetStorage('studypilot_onboarded', 'false');
+            safeRemoveStorage('studypilot_walkthrough_seen');
 
             // Fresh user has no prior activity: reset all state lists to empty
             setTopicProgressList([]);
@@ -1012,22 +1048,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const saveNote = (note: StudyNote) => {
     setNotesList((prev) => [note, ...prev]);
     addXP(40, 'Study Sheet Generated');
+    if (firebaseUser) {
+      DatabaseService.saveNote(firebaseUser.uid, note);
+    }
   };
 
   const updateNote = (id: string, updated: Partial<StudyNote>) => {
-    setNotesList((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, ...updated, updatedAt: new Date().toISOString() } : n))
-    );
+    setNotesList((prev) => {
+      const newList = prev.map((n) => (n.id === id ? { ...n, ...updated, updatedAt: new Date().toISOString() } : n));
+      const target = newList.find((n) => n.id === id);
+      if (target && firebaseUser) {
+        DatabaseService.saveNote(firebaseUser.uid, target);
+      }
+      return newList;
+    });
   };
 
   const deleteNote = (id: string) => {
     setNotesList((prev) => prev.filter((n) => n.id !== id));
+    if (firebaseUser) {
+      DatabaseService.deleteNote(firebaseUser.uid, id);
+    }
   };
 
   const toggleFavoriteNote = (id: string) => {
-    setNotesList((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isFavorite: !n.isFavorite } : n))
-    );
+    setNotesList((prev) => {
+      const newList = prev.map((n) => (n.id === id ? { ...n, isFavorite: !n.isFavorite } : n));
+      const target = newList.find((n) => n.id === id);
+      if (target && firebaseUser) {
+        DatabaseService.saveNote(firebaseUser.uid, target);
+      }
+      return newList;
+    });
   };
 
   const toggleTaskCompletion = (taskId: string) => {
@@ -1090,18 +1142,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       resolved: false,
     };
     setMistakes((prev) => [newMistake, ...prev]);
+    if (firebaseUser) {
+      DatabaseService.saveMistake(firebaseUser.uid, newMistake);
+    }
   };
 
   const resolveMistake = (id: string) => {
-    setMistakes((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, resolved: true, resolvedAt: new Date().toISOString() } : m))
-    );
+    setMistakes((prev) => {
+      const newList = prev.map((m) => (m.id === id ? { ...m, resolved: true, resolvedAt: new Date().toISOString() } : m));
+      const target = newList.find((m) => m.id === id);
+      if (target && firebaseUser) {
+        DatabaseService.saveMistake(firebaseUser.uid, target);
+      }
+      return newList;
+    });
     addXP(25, 'Mistake Mastered in Drill');
   };
 
   const completeRevisionItem = (id: string, performanceScore: number) => {
-    setRevisionQueue((prev) =>
-      prev.map((item) => {
+    setRevisionQueue((prev) => {
+      const newList = prev.map((item) => {
         if (item.id === id) {
           const nextDays = calculateNextInterval(item.intervalDays, performanceScore);
           const nextDate = new Date(Date.now() + nextDays * 86400000).toISOString().split('T')[0];
@@ -1113,22 +1173,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             reviewCount: item.reviewCount + 1,
             masteryScore: Math.round(item.masteryScore * 0.3 + performanceScore * 0.7),
             forgettingRisk: computeForgettingRisk(nextDate),
-            status: 'scheduled',
+            status: 'scheduled' as const,
           };
         }
         return item;
-      })
-    );
+      });
+      const target = newList.find((i) => i.id === id);
+      if (target && firebaseUser) {
+        DatabaseService.saveRevisionItem(firebaseUser.uid, target);
+      }
+      return newList;
+    });
     addXP(30, 'Spaced Repetition Completed');
   };
 
   const saveExamAttempt = (attempt: ExamAttempt) => {
     setExamAttempts((prev) => [attempt, ...prev]);
     addXP(100, `Completed ${attempt.examTitle}`);
+    if (firebaseUser) {
+      DatabaseService.saveExamAttempt(firebaseUser.uid, attempt);
+    }
   };
 
   const markNotificationRead = (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    setNotifications((prev) => {
+      const newList = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
+      const target = newList.find((n) => n.id === id);
+      if (target && firebaseUser) {
+        DatabaseService.saveNotification(firebaseUser.uid, target);
+      }
+      return newList;
+    });
   };
 
   const addNotification = (notifData: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => {
@@ -1139,6 +1214,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       read: false,
     };
     setNotifications((prev) => [newN, ...prev]);
+    if (firebaseUser) {
+      DatabaseService.saveNotification(firebaseUser.uid, newN);
+    }
   };
 
   const { signInWithGoogle, logout: authLogout } = useAuth();

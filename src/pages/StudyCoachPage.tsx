@@ -113,8 +113,7 @@ export const StudyCoachPage: React.FC<StudyCoachPageProps> = ({ initialTab = 'ov
               Study Coach Dashboard
             </h1>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
-              Your comprehensive learning companion for Class 9–10 board preparation. Manage daily Pomodoro schedules,
-              simplify tough concepts with Feynman breakdowns, drill active recall, and triage schedules when behind.
+              Your personal study helper. Stay focused with study timers, explain tough topics simply, review flashcards, and keep your study plan organized.
             </p>
           </div>
 

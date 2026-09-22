@@ -31,6 +31,15 @@ import {
   Compass,
   Mic,
   Lightbulb,
+  Globe,
+  ExternalLink,
+  ShieldCheck,
+  RotateCw,
+  CheckCircle2,
+  HelpCircle,
+  AlertTriangle,
+  Award,
+  FileCheck,
 } from 'lucide-react';
 import { VoiceTutorPlayer } from '../components/voice/VoiceTutorPlayer';
 import { SubjectDiscussionChat } from '../components/common/SubjectDiscussionChat';
@@ -113,6 +122,7 @@ export const LearnPage: React.FC = () => {
   const [genTopic, setGenTopic] = useState('');
   const [genDetailLevel, setGenDetailLevel] = useState<NoteDetailLevel>('detailed');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [researchStep, setResearchStep] = useState<number>(0);
   const [activeNoteViewer, setActiveNoteViewer] = useState<StudyNote | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -157,6 +167,13 @@ export const LearnPage: React.FC = () => {
     if (!checkAndConsumeUsage('notesGenerated')) return;
 
     setIsGenerating(true);
+    setResearchStep(1);
+
+    const stepTimer1 = setTimeout(() => setResearchStep(2), 1200);
+    const stepTimer2 = setTimeout(() => setResearchStep(3), 2800);
+    const stepTimer3 = setTimeout(() => setResearchStep(4), 4500);
+    const stepTimer4 = setTimeout(() => setResearchStep(5), 6500);
+
     try {
       const subjectName = availableSubjects.find((s) => s.id === genSubject)?.name || 'Science';
       const result = await generateAINotes({
@@ -175,12 +192,20 @@ export const LearnPage: React.FC = () => {
         chapterName: genChapter,
         topicName: genTopic || 'Complete Chapter',
         detailLevel: genDetailLevel,
+        overview: result.overview,
+        simpleDefinition: result.simpleDefinition,
         content: result.content || '',
+        keyPoints: result.keyPoints || [],
         definitions: result.definitions || [],
         keyFormulas: result.keyFormulas || [],
+        examples: result.examples || [],
         commonMistakes: result.commonMistakes || [],
         examTips: result.examTips || [],
         quickRevisionPoints: result.quickRevisionPoints || [],
+        practiceQuestions: result.practiceQuestions || [],
+        ncertComparison: result.ncertComparison,
+        sources: result.sources || [],
+        researchMetadata: result.researchMetadata,
         isFavorite: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -190,11 +215,72 @@ export const LearnPage: React.FC = () => {
       addXP(50, `Generated ${genChapter} Revision Notes`);
       setActiveNoteViewer(newNote);
       setActiveSubTab('my_notes');
+      toast.success('Research completed! Notes saved to workspace.');
     } catch (err) {
-      console.error('Failed to generate notes:', err);
+      console.error('Failed to generate research notes:', err);
       toast.error('Failed to generate study notes. Please try again.');
     } finally {
+      clearTimeout(stepTimer1);
+      clearTimeout(stepTimer2);
+      clearTimeout(stepTimer3);
+      clearTimeout(stepTimer4);
       setIsGenerating(false);
+      setResearchStep(0);
+    }
+  };
+
+  const handleRegenerateNote = async (note: StudyNote) => {
+    setIsGenerating(true);
+    setResearchStep(1);
+
+    const stepTimer1 = setTimeout(() => setResearchStep(2), 1200);
+    const stepTimer2 = setTimeout(() => setResearchStep(3), 2800);
+    const stepTimer3 = setTimeout(() => setResearchStep(4), 4500);
+    const stepTimer4 = setTimeout(() => setResearchStep(5), 6500);
+
+    try {
+      const subjectName = availableSubjects.find((s) => s.id === note.subjectId)?.name || 'Science';
+      const result = await generateAINotes({
+        subject: subjectName,
+        classLevel,
+        chapter: note.chapterName,
+        topic: note.topicName !== 'Complete Chapter' ? note.topicName : undefined,
+        detailLevel: note.detailLevel,
+        forceFreshSearch: true,
+      });
+
+      const updatedNote: StudyNote = {
+        ...note,
+        title: result.title || note.title,
+        overview: result.overview || note.overview,
+        simpleDefinition: result.simpleDefinition || note.simpleDefinition,
+        content: result.content || note.content,
+        keyPoints: result.keyPoints || note.keyPoints,
+        definitions: result.definitions || note.definitions,
+        keyFormulas: result.keyFormulas || note.keyFormulas,
+        examples: result.examples || note.examples,
+        commonMistakes: result.commonMistakes || note.commonMistakes,
+        examTips: result.examTips || note.examTips,
+        quickRevisionPoints: result.quickRevisionPoints || note.quickRevisionPoints,
+        practiceQuestions: result.practiceQuestions || note.practiceQuestions,
+        sources: result.sources || note.sources,
+        researchMetadata: result.researchMetadata || note.researchMetadata,
+        updatedAt: new Date().toISOString(),
+      };
+
+      saveNote(updatedNote);
+      setActiveNoteViewer(updatedNote);
+      toast.success('Regenerated notes with fresh global web research!');
+    } catch (err) {
+      console.error('Failed to regenerate notes:', err);
+      toast.error('Failed to regenerate research notes. Please try again.');
+    } finally {
+      clearTimeout(stepTimer1);
+      clearTimeout(stepTimer2);
+      clearTimeout(stepTimer3);
+      clearTimeout(stepTimer4);
+      setIsGenerating(false);
+      setResearchStep(0);
     }
   };
 
@@ -528,12 +614,18 @@ export const LearnPage: React.FC = () => {
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6 max-w-3xl mx-auto">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <Sparkles className="w-6 h-6" />
+              <Globe className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-900">AI Notes Generator</h2>
-              <p className="text-xs text-slate-500">
-                Transform any syllabus chapter into structured revision sheets with definitions, formulas & common traps.
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-black text-slate-900">AI Notes Generator</h2>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                  <span>Global Web Research</span>
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Every topic undergoes real-time multi-source web research, fact verification, and NCERT alignment before notes are created.
               </p>
             </div>
           </div>
@@ -561,7 +653,7 @@ export const LearnPage: React.FC = () => {
                   type="text"
                   value={genChapter}
                   onChange={(e) => setGenChapter(e.target.value)}
-                  placeholder="e.g. Quantum Physics, Electricity, World War 2..."
+                  placeholder="e.g. Muscular Tissue, Photosynthesis, Newton's Laws..."
                   className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-bold bg-slate-50"
                 />
               </div>
@@ -575,7 +667,7 @@ export const LearnPage: React.FC = () => {
                 type="text"
                 value={genTopic}
                 onChange={(e) => setGenTopic(e.target.value)}
-                placeholder="e.g. Advanced theories, historical impact, or specific formulas..."
+                placeholder="e.g. Types of muscular tissue, dark reaction equation, exam traps..."
                 className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-bold bg-slate-50"
               />
             </div>
@@ -604,6 +696,53 @@ export const LearnPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Research Active Stepper Indicator */}
+            {isGenerating && (
+              <div className="p-5 rounded-2xl bg-indigo-50/80 border border-indigo-200/80 space-y-4 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
+                    <span className="font-extrabold text-sm text-indigo-950">Generating AI Study Notes</span>
+                  </div>
+                  <span className="text-xs font-bold text-indigo-700 bg-indigo-100 px-2.5 py-0.5 rounded-full">
+                    Step {Math.min(researchStep, 5)} of 5
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="w-full bg-indigo-200/60 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-indigo-600 h-full transition-all duration-500 ease-out"
+                      style={{ width: `${(Math.min(researchStep, 5) / 5) * 100}%` }}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 text-xs text-slate-700 font-medium pt-1">
+                    <div className={`flex items-center gap-2 ${researchStep >= 1 ? 'text-indigo-950 font-bold' : 'text-slate-400'}`}>
+                      <CheckCircle2 className={`w-4 h-4 ${researchStep >= 1 ? 'text-emerald-600' : 'text-slate-300'}`} />
+                      <span>Understanding topic & searching NCERT textbooks...</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${researchStep >= 2 ? 'text-indigo-950 font-bold' : 'text-slate-400'}`}>
+                      <CheckCircle2 className={`w-4 h-4 ${researchStep >= 2 ? 'text-emerald-600' : 'text-slate-300'}`} />
+                      <span>Gathering trusted study sources & key definitions...</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${researchStep >= 3 ? 'text-indigo-950 font-bold' : 'text-slate-400'}`}>
+                      <CheckCircle2 className={`w-4 h-4 ${researchStep >= 3 ? 'text-emerald-600' : 'text-slate-300'}`} />
+                      <span>Organizing important concepts, formulas & examples...</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${researchStep >= 4 ? 'text-indigo-950 font-bold' : 'text-slate-400'}`}>
+                      <CheckCircle2 className={`w-4 h-4 ${researchStep >= 4 ? 'text-emerald-600' : 'text-slate-300'}`} />
+                      <span>Checking accuracy & high-yield exam points...</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${researchStep >= 5 ? 'text-indigo-950 font-bold' : 'text-slate-400'}`}>
+                      <CheckCircle2 className={`w-4 h-4 ${researchStep >= 5 ? 'text-emerald-600' : 'text-slate-300'}`} />
+                      <span>Preparing your clear study sheet...</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <button
               onClick={handleGenerate}
               disabled={isGenerating || !genChapter.trim()}
@@ -612,12 +751,12 @@ export const LearnPage: React.FC = () => {
               {isGenerating ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Generating Comprehensive Study Sheet...</span>
+                  <span>Researching Topic & Generating Notes...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  <span>Generate Revision Sheet (+50 XP)</span>
+                  <span>Research Topic & Generate Notes (+50 XP)</span>
                 </>
               )}
             </button>
@@ -630,7 +769,7 @@ export const LearnPage: React.FC = () => {
         <div className="space-y-6">
           {activeNoteViewer ? (
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
-              <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
                 <button
                   onClick={() => setActiveNoteViewer(null)}
                   className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
@@ -638,7 +777,16 @@ export const LearnPage: React.FC = () => {
                   ← Back to Notes List
                 </button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => handleRegenerateNote(activeNoteViewer)}
+                    disabled={isGenerating}
+                    className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                    title="Rerun multi-source web research & regenerate notes"
+                  >
+                    <RotateCw className={`w-3.5 h-3.5 text-emerald-600 ${isGenerating ? 'animate-spin' : ''}`} />
+                    <span>Regenerate (Fresh Web Research)</span>
+                  </button>
                   <button
                     onClick={() => setShowMindmapModal(true)}
                     className="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
@@ -691,27 +839,245 @@ export const LearnPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Note Header & Badges */}
               <div className="space-y-3">
-                <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase">
-                  {activeNoteViewer.subjectId} • {activeNoteViewer.chapterName}
-                </span>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase">
+                    {activeNoteViewer.subjectId} • Class {classLevel} • {activeNoteViewer.chapterName}
+                  </span>
+                  {activeNoteViewer.researchMetadata && (
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1">
+                      <Globe className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>✓ Global Research Verified • {activeNoteViewer.researchMetadata.totalSourcesAnalyzed} Sources Analyzed</span>
+                    </span>
+                  )}
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
                   {activeNoteViewer.title}
                 </h1>
               </div>
 
-              <div className="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed text-slate-700 space-y-4 whitespace-pre-line">
+              {/* Simple Definition & Topic Overview Card */}
+              {(activeNoteViewer.simpleDefinition || activeNoteViewer.overview) && (
+                <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-blue-50/50 to-slate-50 border border-indigo-100/80 space-y-3">
+                  {activeNoteViewer.simpleDefinition && (
+                    <div>
+                      <span className="text-[10px] font-black uppercase text-indigo-700 tracking-wider">Simple Definition</span>
+                      <p className="text-sm font-semibold text-slate-800 mt-0.5">{activeNoteViewer.simpleDefinition}</p>
+                    </div>
+                  )}
+                  {activeNoteViewer.overview && (
+                    <div>
+                      <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Executive Overview</span>
+                      <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{activeNoteViewer.overview}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Key Points Takeaways */}
+              {activeNoteViewer.keyPoints && activeNoteViewer.keyPoints.length > 0 && (
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                  <h3 className="font-extrabold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    <span>Core Key Concepts & Takeaways</span>
+                  </h3>
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-700">
+                    {activeNoteViewer.keyPoints.map((kp, idx) => (
+                      <li key={idx} className="flex items-start gap-2 bg-white p-2.5 rounded-xl border border-slate-100">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>{kp}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Main Content Notes */}
+              <div className="prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed text-slate-800 space-y-4 whitespace-pre-line bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs">
                 {activeNoteViewer.content}
               </div>
 
+              {/* Essential Terminology & Definitions */}
+              {activeNoteViewer.definitions && activeNoteViewer.definitions.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="font-extrabold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-indigo-600" />
+                    <span>Essential Terminology & Definitions</span>
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {activeNoteViewer.definitions.map((def, idx) => (
+                      <div key={idx} className="p-3.5 bg-indigo-50/40 rounded-2xl border border-indigo-100/60 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-xs text-indigo-950">{def.term}</span>
+                          {def.isNcertCore && (
+                            <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">NCERT Core</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">{def.definition}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Key Formulas & Identities */}
               {activeNoteViewer.keyFormulas && activeNoteViewer.keyFormulas.length > 0 && (
-                <div className="p-4 bg-indigo-50/60 rounded-2xl border border-indigo-100 space-y-2">
-                  <h4 className="font-black text-xs text-indigo-900 uppercase">Key Formulas & Identities</h4>
-                  <ul className="list-disc list-inside text-xs text-indigo-950 space-y-1">
+                <div className="p-5 bg-indigo-900 text-white rounded-2xl space-y-3 shadow-sm">
+                  <h3 className="font-black text-xs uppercase tracking-wider text-indigo-200 flex items-center gap-2">
+                    <span>📐 Formulas, Equations & Structural Frameworks</span>
+                  </h3>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                     {activeNoteViewer.keyFormulas.map((f, idx) => (
-                      <li key={idx} className="font-mono">{f}</li>
+                      <li key={idx} className="font-mono bg-indigo-950/80 p-3 rounded-xl border border-indigo-700/50 text-indigo-100">
+                        {f}
+                      </li>
                     ))}
                   </ul>
+                </div>
+              )}
+
+              {/* Practical Examples */}
+              {activeNoteViewer.examples && activeNoteViewer.examples.length > 0 && (
+                <div className="p-5 bg-emerald-50/70 rounded-2xl border border-emerald-100 space-y-3">
+                  <h3 className="font-black text-xs uppercase tracking-wider text-emerald-900 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-emerald-600" />
+                    <span>Real-World & Textbook Examples</span>
+                  </h3>
+                  <ul className="list-disc list-inside text-xs text-emerald-950 space-y-1.5 leading-relaxed">
+                    {activeNoteViewer.examples.map((ex, idx) => (
+                      <li key={idx}>{ex}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Common Misconceptions / Traps */}
+              {activeNoteViewer.commonMistakes && activeNoteViewer.commonMistakes.length > 0 && (
+                <div className="p-5 bg-rose-50/70 rounded-2xl border border-rose-100 space-y-3">
+                  <h3 className="font-black text-xs uppercase tracking-wider text-rose-900 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-rose-600" />
+                    <span>Common Student Traps & Misconceptions</span>
+                  </h3>
+                  <ul className="list-disc list-inside text-xs text-rose-950 space-y-1.5 leading-relaxed">
+                    {activeNoteViewer.commonMistakes.map((cm, idx) => (
+                      <li key={idx}>{cm}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Exam Tips */}
+              {activeNoteViewer.examTips && activeNoteViewer.examTips.length > 0 && (
+                <div className="p-5 bg-violet-50/70 rounded-2xl border border-violet-100 space-y-3">
+                  <h3 className="font-black text-xs uppercase tracking-wider text-violet-900 flex items-center gap-2">
+                    <Award className="w-4 h-4 text-violet-600" />
+                    <span>High-Yield Exam Focus & Scoring Advice</span>
+                  </h3>
+                  <ul className="list-disc list-inside text-xs text-violet-950 space-y-1.5 leading-relaxed">
+                    {activeNoteViewer.examTips.map((et, idx) => (
+                      <li key={idx}>{et}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Quick Revision Cheatsheet */}
+              {activeNoteViewer.quickRevisionPoints && activeNoteViewer.quickRevisionPoints.length > 0 && (
+                <div className="p-5 bg-amber-50/70 rounded-2xl border border-amber-200/80 space-y-3">
+                  <h3 className="font-black text-xs uppercase tracking-wider text-amber-900 flex items-center gap-2">
+                    <FileCheck className="w-4 h-4 text-amber-600" />
+                    <span>Quick Revision Cheatsheet</span>
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-amber-950">
+                    {activeNoteViewer.quickRevisionPoints.map((qrp, idx) => (
+                      <div key={idx} className="bg-white/80 p-2.5 rounded-xl border border-amber-200/50 flex items-start gap-2">
+                        <span className="font-bold text-amber-600">•</span>
+                        <span>{qrp}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Practice Questions */}
+              {activeNoteViewer.practiceQuestions && activeNoteViewer.practiceQuestions.length > 0 && (
+                <div className="space-y-3 pt-2 border-t border-slate-100">
+                  <h3 className="font-extrabold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    <HelpCircle className="w-4 h-4 text-indigo-600" />
+                    <span>Self-Assessment & Practice Questions</span>
+                  </h3>
+                  <div className="space-y-3">
+                    {activeNoteViewer.practiceQuestions.map((pq, idx) => (
+                      <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-bold text-slate-900">Q{idx + 1}: {pq.question}</span>
+                          {pq.difficulty && (
+                            <span className="text-[10px] font-bold uppercase text-slate-500 bg-slate-200 px-2 py-0.5 rounded">
+                              {pq.difficulty}
+                            </span>
+                          )}
+                        </div>
+                        <details className="text-xs cursor-pointer group">
+                          <summary className="font-bold text-indigo-600 group-hover:underline">Show Solution / Answer</summary>
+                          <p className="mt-2 text-slate-700 bg-white p-3 rounded-xl border border-slate-200 leading-relaxed">
+                            {pq.answer}
+                          </p>
+                        </details>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sources & References Section */}
+              {activeNoteViewer.sources && activeNoteViewer.sources.length > 0 && (
+                <div className="p-5 bg-slate-900 text-white rounded-3xl space-y-4 mt-6">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-emerald-400" />
+                      <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-100">
+                        Verified Global Web Research Sources ({activeNoteViewer.sources.length})
+                      </h3>
+                    </div>
+                    {activeNoteViewer.researchMetadata?.crossCheckStatus && (
+                      <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-800/50">
+                        {activeNoteViewer.researchMetadata.crossCheckStatus}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {activeNoteViewer.sources.map((src, idx) => (
+                      <a
+                        key={idx}
+                        href={src.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 bg-slate-800/80 hover:bg-slate-800 rounded-2xl border border-slate-700/60 transition-all flex items-start justify-between gap-3 group"
+                      >
+                        <div className="space-y-1 overflow-hidden">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-black uppercase text-indigo-400 bg-indigo-950 px-2 py-0.5 rounded border border-indigo-800/50">
+                              {src.sourceType || 'Web Source'}
+                            </span>
+                            {src.authorityScore && (
+                              <span className="text-[9px] text-emerald-400 font-bold">
+                                Score: {src.authorityScore}/100
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-bold text-xs text-slate-100 truncate group-hover:text-indigo-300 transition-colors">
+                            {src.title}
+                          </div>
+                          <div className="text-[11px] text-slate-400 truncate">
+                            {src.domain}
+                          </div>
+                        </div>
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-white shrink-0 mt-1 transition-colors" />
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -800,3 +1166,5 @@ export const LearnPage: React.FC = () => {
     </div>
   );
 };
+
+export default LearnPage;

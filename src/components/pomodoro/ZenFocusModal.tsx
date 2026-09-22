@@ -36,6 +36,8 @@ export const ZenFocusModal: React.FC = () => {
     toggleTimer,
     resetTimer,
     setMode,
+    setCustomMinutes,
+    adjustTime,
     selectedSubject,
     progressPercent,
     completedSessions,
@@ -43,6 +45,8 @@ export const ZenFocusModal: React.FC = () => {
   } = useFocus();
 
   const [activeTab, setActiveTab] = useState<'timer' | 'tasks' | 'sounds'>('timer');
+  const [showCustomInput, setShowCustomInput] = useState<boolean>(false);
+  const [customMins, setCustomMins] = useState<string>('');
   const [quoteIndex, setQuoteIndex] = useState(0);
 
   // Rotate quotes every 60 seconds
@@ -185,6 +189,36 @@ export const ZenFocusModal: React.FC = () => {
             <span className="text-5xl sm:text-6xl font-mono font-black tracking-tight text-white drop-shadow-md">
               {formatTime(timeLeft)}
             </span>
+            <div className="flex items-center gap-1 text-xs font-bold">
+              <button
+                onClick={() => adjustTime(-5)}
+                className="px-2 py-0.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                title="Subtract 5 mins"
+              >
+                -5m
+              </button>
+              <button
+                onClick={() => adjustTime(-1)}
+                className="px-2 py-0.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                title="Subtract 1 min"
+              >
+                -1m
+              </button>
+              <button
+                onClick={() => adjustTime(1)}
+                className="px-2 py-0.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                title="Add 1 min"
+              >
+                +1m
+              </button>
+              <button
+                onClick={() => adjustTime(5)}
+                className="px-2 py-0.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                title="Add 5 mins"
+              >
+                +5m
+              </button>
+            </div>
             <div className="flex items-center gap-1.5 text-xs text-slate-400 font-bold uppercase tracking-wider">
               {isRunning ? (
                 <span className="flex items-center gap-1.5 text-emerald-400">
@@ -192,11 +226,56 @@ export const ZenFocusModal: React.FC = () => {
                   In Flow State
                 </span>
               ) : (
-                <span>Paused</span>
+                <button
+                  onClick={() => setShowCustomInput(!showCustomInput)}
+                  className="text-indigo-400 hover:text-indigo-300 underline font-semibold cursor-pointer"
+                >
+                  Set Custom Time
+                </button>
               )}
             </div>
           </div>
         </div>
+
+        {/* Custom Duration Input Popover in Zen Mode */}
+        {showCustomInput && !isRunning && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const m = parseInt(customMins, 10);
+              if (!isNaN(m) && m > 0) {
+                setCustomMinutes(m);
+                setShowCustomInput(false);
+                setCustomMins('');
+              }
+            }}
+            className="mt-4 flex items-center gap-2 bg-slate-900 border border-indigo-500/50 p-2 rounded-2xl shadow-xl animate-fadeIn"
+          >
+            <input
+              type="number"
+              min="1"
+              max="360"
+              placeholder="Enter minutes (e.g. 40)"
+              value={customMins}
+              onChange={(e) => setCustomMins(e.target.value)}
+              className="bg-slate-950 border border-slate-700 text-white text-sm rounded-xl px-3 py-1.5 focus:outline-none focus:border-indigo-400 font-mono w-48"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl cursor-pointer"
+            >
+              Apply
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCustomInput(false)}
+              className="px-2 py-1.5 text-slate-400 hover:text-white text-xs cursor-pointer"
+            >
+              Cancel
+            </button>
+          </form>
+        )}
 
         {/* Main Floating Action Controls */}
         <div className="flex items-center gap-4 mt-8">

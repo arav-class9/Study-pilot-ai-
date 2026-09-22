@@ -290,3 +290,5 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
     </div>
   );
 };
+
+export default TopicWorkspaceView;

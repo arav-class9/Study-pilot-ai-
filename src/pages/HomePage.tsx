@@ -19,7 +19,9 @@ import {
   ArrowRight,
   Users,
   Layers,
-  Share2
+  Share2,
+  Search,
+  Cpu
 } from 'lucide-react';
 import robotImage from '../assets/images/cute_robot_reading_1789570270647.jpg';
 
@@ -27,6 +29,7 @@ import { SM2SpacedRepetitionModal } from '../components/repetition/SM2SpacedRepe
 import { InteractiveDiagramExplainerModal } from '../components/ai/InteractiveDiagramExplainerModal';
 import { PeerStudyRoomModal } from '../components/workspace/PeerStudyRoomModal';
 import { ClassroomLMSExportModal } from '../components/teacher/ClassroomLMSExportModal';
+import { DeepResearchModal } from '../components/search/DeepResearchModal';
 
 export const HomePage: React.FC = () => {
   const { setActiveTab, learningProfile, language } = useApp();
@@ -38,6 +41,7 @@ export const HomePage: React.FC = () => {
   const [isDiagramOpen, setIsDiagramOpen] = React.useState(false);
   const [isPeerRoomOpen, setIsPeerRoomOpen] = React.useState(false);
   const [isLMSExportOpen, setIsLMSExportOpen] = React.useState(false);
+  const [isDeepResearchOpen, setIsDeepResearchOpen] = React.useState(false);
   
   // Calculate dynamic progress based on user's mastery score
   const progressPercentage = typeof learningProfile?.masteryScore === "number" ? learningProfile.masteryScore : 65;
@@ -47,22 +51,22 @@ export const HomePage: React.FC = () => {
     { icon: BookOpen, title: 'NCERT Integrated', desc: 'All NCERT books &\nchapters', color: 'text-emerald-600', bg: 'bg-emerald-100' },
     { icon: ClipboardList, title: 'Smart Quizzes', desc: 'Test your knowledge\n& track progress', color: 'text-orange-500', bg: 'bg-orange-100' },
     { icon: BarChart3, title: 'Track Progress', desc: 'See your growth\nwith detailed reports', color: 'text-blue-500', bg: 'bg-blue-100' },
-    { icon: Star, title: '24/7 Support', desc: 'Help whenever\nyou need it', color: 'text-indigo-600', bg: 'bg-indigo-100' }
+    { icon: Sparkles, title: 'Revision Sheets', desc: 'Instant key formulas\n& quick revision', color: 'text-indigo-600', bg: 'bg-indigo-100' }
   ];
 
   const exploreFeatures = [
     { 
       id: 'workspace', 
-      title: 'Topic Learning Workspace', 
-      desc: 'Modern cardboard notebook with AI notes, Feynman self-explanation, active recall & question bank.', 
+      title: 'Topic Workspace', 
+      desc: 'All-in-one notebook with AI notes, easy explanations & practice questions.', 
       icon: BookOpen,
       iconColor: 'text-amber-600',
       iconBg: 'bg-amber-100'
     },
     { 
       id: 'coach', 
-      title: 'Study Coach & Pomodoro', 
-      desc: 'Pomodoro schedule, Feynman breakdowns, active recall, diagnostics & triage.', 
+      title: 'Study Coach & Timer', 
+      desc: 'Focus timer, study tips, active recall & step-by-step guidance.', 
       icon: Sparkles,
       iconColor: 'text-indigo-600',
       iconBg: 'bg-indigo-100'
@@ -70,15 +74,15 @@ export const HomePage: React.FC = () => {
     { 
       id: 'ncert', 
       title: 'NCERT Books', 
-      desc: 'Read, study and get summaries from all NCERT books.', 
+      desc: 'Read, study and search all NCERT textbooks easily.', 
       icon: BookOpen,
       iconColor: 'text-blue-600',
       iconBg: 'bg-blue-100'
     },
     { 
       id: 'practice', 
-      title: 'Create Quiz', 
-      desc: 'Generate quizzes from any chapter or topic.', 
+      title: 'Practice & Quizzes', 
+      desc: 'Generate custom quizzes & test your chapter understanding.', 
       icon: ClipboardList,
       iconColor: 'text-purple-600',
       iconBg: 'bg-purple-100'
@@ -86,7 +90,7 @@ export const HomePage: React.FC = () => {
     { 
       id: 'tutor', 
       title: 'AI Doubt Solver', 
-      desc: 'Ask anything, get instant explanations.', 
+      desc: 'Ask any question or upload a picture for instant step-by-step help.', 
       icon: Sparkles,
       iconColor: 'text-emerald-600',
       iconBg: 'bg-emerald-100'
@@ -94,23 +98,23 @@ export const HomePage: React.FC = () => {
     { 
       id: 'plan', 
       title: 'Study Planner', 
-      desc: 'Plan your study and stay on track.', 
+      desc: 'Create daily study schedules and stay on track.', 
       icon: Lightbulb,
       iconColor: 'text-amber-500',
       iconBg: 'bg-amber-100'
     },
     { 
       id: 'notes', 
-      title: 'Notes & Summary', 
-      desc: 'Get crisp notes and key points.', 
+      title: 'AI Study Notes', 
+      desc: 'Get quick revision sheets, key formulas and definitions.', 
       icon: FileText,
       iconColor: 'text-rose-500',
       iconBg: 'bg-rose-100'
     },
     { 
-      id: 'practice', 
-      title: 'Practice Tests', 
-      desc: 'Improve with chapter-wise and full-length tests.', 
+      id: 'radar', 
+      title: 'Weakness Radar', 
+      desc: 'Analyze weak concepts and get personalized revision drills.', 
       icon: Target,
       iconColor: 'text-indigo-600',
       iconBg: 'bg-indigo-100'
@@ -142,23 +146,71 @@ export const HomePage: React.FC = () => {
               Get personalized study plans, instant doubt solutions, AI-powered quizzes and more — all in one place.
             </p>
             
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <button 
                 onClick={() => setActiveTab('workspace')}
-                className="bg-gradient-to-r from-amber-600 via-indigo-600 to-purple-600 hover:from-amber-700 hover:to-purple-700 text-white font-bold px-7 py-3.5 rounded-full flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-transform hover:-translate-y-0.5 cursor-pointer"
+                className="bg-gradient-to-r from-amber-600 via-indigo-600 to-purple-600 hover:from-amber-700 hover:to-purple-700 text-white font-bold px-6 py-3 rounded-full flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-transform hover:-translate-y-0.5 cursor-pointer text-sm"
               >
-                <BookOpen className="w-5 h-5" />
+                <BookOpen className="w-4 h-4" />
                 <span>{translateUI('Topic Workspace', currentLang)}</span>
-                <ArrowRight className="w-4 h-4 ml-1" />
+                <ArrowRight className="w-4 h-4 ml-0.5" />
               </button>
 
               <button 
                 onClick={() => setActiveTab('tutor')}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-7 py-3.5 rounded-full flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-transform hover:-translate-y-0.5 cursor-pointer"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-6 py-3 rounded-full flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-transform hover:-translate-y-0.5 cursor-pointer text-sm"
               >
-                <Rocket className="w-5 h-5" />
-                <span>{translateUI('AI Tutor', currentLang)}</span>
+                <Rocket className="w-4 h-4" />
+                <span>{translateUI('Ask AI Tutor', currentLang)}</span>
               </button>
+
+              <button 
+                onClick={() => setActiveTab('coach')}
+                className="bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold px-5 py-3 rounded-full flex items-center gap-2 transition-transform hover:-translate-y-0.5 cursor-pointer text-sm"
+              >
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>Focus Timer</span>
+              </button>
+            </div>
+
+            {/* Quick Ask AI Tutor Input Box */}
+            <div className="mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-800">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const target = e.currentTarget.elements.namedItem('quickDoubt') as HTMLInputElement;
+                  if (target && target.value.trim()) {
+                    const query = target.value.trim();
+                    // Navigate to AI Tutor with query
+                    setActiveTab('tutor');
+                    setTimeout(() => {
+                      const input = document.getElementById('doubt-question-input') as HTMLTextAreaElement;
+                      if (input) {
+                        input.value = query;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                        const solveBtn = document.getElementById('solve-doubt-btn') as HTMLButtonElement;
+                        if (solveBtn) solveBtn.click();
+                      }
+                    }, 100);
+                  }
+                }}
+                className="relative flex items-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl p-1.5 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 transition-all"
+              >
+                <Search className="w-5 h-5 text-indigo-500 ml-3 mr-2 shrink-0" />
+                <input
+                  name="quickDoubt"
+                  type="text"
+                  placeholder="Ask AI Tutor anything (e.g. What is Photosynthesis? Solve x² - 5x + 6 = 0)..."
+                  className="w-full text-xs sm:text-sm bg-transparent border-none text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors cursor-pointer shrink-0 flex items-center gap-1"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Solve</span>
+                </button>
+              </form>
             </div>
           </div>
 
@@ -219,16 +271,45 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* GSoC Innovation Suite Section */}
+      {/* AI Search Assistant Banner */}
+      <section className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-indigo-500/20 to-transparent pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/30 border border-indigo-400/40 rounded-full text-xs font-black text-indigo-200">
+              <Cpu className="w-4 h-4 text-amber-300 animate-pulse" />
+              <span>Smart AI Search & Research</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              AI Web Search & Study Assistant
+            </h2>
+            <p className="text-xs sm:text-sm text-indigo-100/90 leading-relaxed font-medium">
+              Search any textbook topic or exam question. Get clear, verified notes from trusted NCERT and educational sources with zero confusion.
+            </p>
+          </div>
+
+          <button
+            id="homepage-open-deep-research-btn"
+            onClick={() => setIsDeepResearchOpen(true)}
+            className="px-6 py-3.5 bg-gradient-to-r from-amber-500 to-indigo-500 hover:from-amber-400 hover:to-indigo-400 text-white font-extrabold text-sm rounded-2xl shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+          >
+            <Sparkles className="w-5 h-5 text-amber-200" />
+            <span>Search & Research Topic</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </section>
+
+      {/* Interactive Study Tools Section */}
       <section className="space-y-4 pt-4">
         <div className="flex items-center justify-between">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-extrabold text-[10px] uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>GSoC Open Source Innovation Suite</span>
+              <span>Smart Study Boosters</span>
             </div>
             <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">
-              Advanced Neural Study Tools
+              Interactive Learning Tools
             </h2>
           </div>
         </div>
@@ -242,10 +323,10 @@ export const HomePage: React.FC = () => {
               <Brain className="w-5 h-5" />
             </div>
             <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">
-              SuperMemo SM-2 Engine
+              Flashcards & Memory Cards
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              Adaptive spaced repetition with memory retention decay curves.
+              Review important points right at the best time so you remember longer.
             </p>
           </button>
 
@@ -257,10 +338,10 @@ export const HomePage: React.FC = () => {
               <Layers className="w-5 h-5" />
             </div>
             <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">
-              Diagram Vision Canvas
+              Diagram & Picture Helper
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              Interactive textbook diagram & math bounding box explainer.
+              Select or upload textbook diagrams and math problems to get labeled breakdowns.
             </p>
           </button>
 
@@ -272,10 +353,10 @@ export const HomePage: React.FC = () => {
               <Users className="w-5 h-5" />
             </div>
             <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">
-              Peer Room & Live Battles
+              Study Room & Friend Quiz
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              Real-time room code study, live chat, and AI quiz battles.
+              Join a study room with room code, chat with classmates, and challenge friends.
             </p>
           </button>
 
@@ -287,10 +368,10 @@ export const HomePage: React.FC = () => {
               <Share2 className="w-5 h-5" />
             </div>
             <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">
-              Classroom LMS Export
+              Share Progress & Reports
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              Google Classroom & LTI 1.3 educational analytics export.
+              Easily download or share study notes and assignment scores with your teacher.
             </p>
           </button>
         </div>
@@ -390,6 +471,7 @@ export const HomePage: React.FC = () => {
       <InteractiveDiagramExplainerModal isOpen={isDiagramOpen} onClose={() => setIsDiagramOpen(false)} />
       <PeerStudyRoomModal isOpen={isPeerRoomOpen} onClose={() => setIsPeerRoomOpen(false)} />
       <ClassroomLMSExportModal isOpen={isLMSExportOpen} onClose={() => setIsLMSExportOpen(false)} />
+      <DeepResearchModal isOpen={isDeepResearchOpen} onClose={() => setIsDeepResearchOpen(false)} />
     </div>
   );
 };

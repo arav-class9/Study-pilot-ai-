@@ -18,14 +18,14 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 
 export const WalkthroughModal: React.FC = () => {
-  const { setActiveTab } = useApp();
+  const { setActiveTab, updateProfile, user } = useApp();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState<number>(0);
 
   useEffect(() => {
     const hasSeen = localStorage.getItem('studypilot_walkthrough_seen');
     const onboarded = localStorage.getItem('studypilot_onboarded');
-    if (!hasSeen && onboarded === 'true') {
+    if (!hasSeen && onboarded === 'true' && !user.hasSeenWalkthrough) {
       setIsOpen(true);
     }
 
@@ -38,7 +38,7 @@ export const WalkthroughModal: React.FC = () => {
     return () => {
       window.removeEventListener('open-study-tour', handleOpenTour);
     };
-  }, []);
+  }, [user.hasSeenWalkthrough]);
 
   const steps = [
     {
@@ -111,6 +111,7 @@ export const WalkthroughModal: React.FC = () => {
 
   const handleFinish = () => {
     localStorage.setItem('studypilot_walkthrough_seen', 'true');
+    updateProfile({ hasSeenWalkthrough: true, isOnboarded: true });
     setIsOpen(false);
     setActiveTab('home');
   };

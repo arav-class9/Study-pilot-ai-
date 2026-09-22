@@ -261,6 +261,28 @@ export const AuthPage: React.FC = () => {
                 )}
               </div>
 
+              {/* Instant 1-Click Guest Entry Banner */}
+              <button
+                type="button"
+                onClick={handleGuestSignIn}
+                disabled={loading}
+                className="w-full mb-6 p-3.5 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 hover:border-emerald-500 rounded-2xl flex items-center justify-between gap-3 text-left transition-all hover:shadow-md cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shrink-0 group-hover:scale-105 transition-transform shadow-xs">
+                    ⚡
+                  </div>
+                  <div>
+                    <div className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                      <span>1-Click Fast Guest Entry</span>
+                      <span className="text-[10px] bg-emerald-600 text-white font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider">Instant</span>
+                    </div>
+                    <div className="text-xs text-slate-600 font-medium">Try all features instantly without registering</div>
+                  </div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-emerald-600 group-hover:translate-x-1 transition-transform shrink-0" />
+              </button>
+
               <form className="space-y-5" onSubmit={handleSubmit}>
                 {rateLimit.isLockedOut && isLogin && (
                   <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-2xl text-xs font-semibold flex items-center gap-3 shadow-sm">

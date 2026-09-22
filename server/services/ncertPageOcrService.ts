@@ -106,8 +106,8 @@ Transcribe faithfully and extract key elements strictly from this provided excer
   let responseText = '';
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents,
       config: {
         systemInstruction,

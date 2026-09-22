@@ -150,29 +150,31 @@ apiRouter.post('/quiz', async (req: Request, res: Response) => {
   }
 });
 
-// 3. Master Notes Generator
+// 3. Master Notes Generator (Global Web Research Pipeline)
 apiRouter.post('/notes', async (req: Request, res: Response) => {
   try {
-    const { subject, classLevel, chapter, topic, detailLevel } = req.body;
+    const { subject, classLevel, chapter, topic, detailLevel, uploadedMaterial, forceFreshSearch } = req.body;
     if (!chapter || String(chapter).trim().length === 0) {
-      return res.status(400).json({ success: false, error: 'Chapter name is required to generate notes.' });
+      return res.status(400).json({ success: false, error: 'Topic or Chapter name is required to generate notes.' });
     }
 
-    const safeDetailLevel = ['short', 'medium', 'detailed', 'exam_revision'].includes(detailLevel)
+    const safeDetailLevel = ['short', 'medium', 'detailed', 'exam_revision', 'quick_summary'].includes(detailLevel)
       ? detailLevel
-      : 'medium';
+      : 'detailed';
 
     const result = await generateNotes({
       subject: subject || 'Science',
       classLevel: String(classLevel || '10'),
       chapter: String(chapter).trim(),
       topic,
-      detailLevel: safeDetailLevel,
+      detailLevel: safeDetailLevel as any,
+      uploadedMaterial: uploadedMaterial ? String(uploadedMaterial) : undefined,
+      forceFreshSearch: Boolean(forceFreshSearch),
     });
     res.json({ success: true, data: result });
   } catch (error: any) {
     console.error('API /notes error:', error);
-    res.status(500).json({ success: false, error: error.message || 'Failed to generate notes' });
+    res.status(500).json({ success: false, error: error.message || 'Failed to generate research notes' });
   }
 });
 

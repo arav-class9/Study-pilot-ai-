@@ -4,6 +4,7 @@ import { AppProvider, useApp } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FocusProvider } from './context/FocusContext';
 import { Navbar } from './components/layout/Navbar';
+import { Sidebar } from './components/layout/Sidebar';
 import { BottomNav } from './components/layout/BottomNav';
 
 
@@ -19,23 +20,35 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 // Pages
 import { HomePage } from './pages/HomePage';
-const AITutorPage = React.lazy(() => import('./pages/AITutorPage').then(module => ({ default: module.AITutorPage })));
-const LearnPage = React.lazy(() => import('./pages/LearnPage').then(module => ({ default: module.LearnPage })));
-const PracticeQuizPage = React.lazy(() => import('./pages/PracticeQuizPage').then(module => ({ default: module.PracticeQuizPage })));
-const WeaknessRadarPage = React.lazy(() => import('./pages/WeaknessRadarPage').then(module => ({ default: module.WeaknessRadarPage })));
-const StudyPlanPage = React.lazy(() => import('./pages/StudyPlanPage').then(module => ({ default: module.StudyPlanPage })));
-const TimetableStudyPage = React.lazy(() => import('./pages/TimetableStudyPage').then(module => ({ default: module.TimetableStudyPage })));
-const ProgressPage = React.lazy(() => import('./pages/ProgressPage').then(module => ({ default: module.ProgressPage })));
-const ProfilePage = React.lazy(() => import('./pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
-const AdminPage = React.lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })));
-const MistakesPage = React.lazy(() => import('./pages/MistakesPage').then(module => ({ default: module.MistakesPage })));
-const ExamPage = React.lazy(() => import('./pages/ExamPage').then(module => ({ default: module.ExamPage })));
-const ParentDashboardPage = React.lazy(() => import('./pages/ParentDashboardPage').then(module => ({ default: module.ParentDashboardPage })));
-const TeacherDashboardPage = React.lazy(() => import('./pages/TeacherDashboardPage').then(module => ({ default: module.TeacherDashboardPage })));
-const NCERTBooksPage = React.lazy(() => import('./pages/NCERTBooksPage').then(module => ({ default: module.NCERTBooksPage })));
-const StudyCoachPage = React.lazy(() => import('./pages/StudyCoachPage').then(module => ({ default: module.StudyCoachPage })));
-const TopicWorkspaceView = React.lazy(() => import('./components/workspace/TopicWorkspaceView').then(module => ({ default: module.TopicWorkspaceView })));
 import { AuthPage } from './pages/AuthPage';
+
+function safeLazy<P = {}>(factory: () => Promise<any>, exportName: string): React.LazyExoticComponent<React.ComponentType<P>> {
+  return React.lazy(async () => {
+    const module = await factory();
+    const Component = module[exportName] || module.default;
+    if (!Component) {
+      throw new Error(`Component "${exportName}" not found in lazy module.`);
+    }
+    return { default: Component };
+  });
+}
+
+const AITutorPage = safeLazy(() => import('./pages/AITutorPage'), 'AITutorPage');
+const LearnPage = safeLazy(() => import('./pages/LearnPage'), 'LearnPage');
+const PracticeQuizPage = safeLazy(() => import('./pages/PracticeQuizPage'), 'PracticeQuizPage');
+const WeaknessRadarPage = safeLazy(() => import('./pages/WeaknessRadarPage'), 'WeaknessRadarPage');
+const StudyPlanPage = safeLazy(() => import('./pages/StudyPlanPage'), 'StudyPlanPage');
+const TimetableStudyPage = safeLazy(() => import('./pages/TimetableStudyPage'), 'TimetableStudyPage');
+const ProgressPage = safeLazy(() => import('./pages/ProgressPage'), 'ProgressPage');
+const ProfilePage = safeLazy(() => import('./pages/ProfilePage'), 'ProfilePage');
+const AdminPage = safeLazy(() => import('./pages/AdminPage'), 'AdminPage');
+const MistakesPage = safeLazy(() => import('./pages/MistakesPage'), 'MistakesPage');
+const ExamPage = safeLazy(() => import('./pages/ExamPage'), 'ExamPage');
+const ParentDashboardPage = safeLazy(() => import('./pages/ParentDashboardPage'), 'ParentDashboardPage');
+const TeacherDashboardPage = safeLazy(() => import('./pages/TeacherDashboardPage'), 'TeacherDashboardPage');
+const NCERTBooksPage = safeLazy(() => import('./pages/NCERTBooksPage'), 'NCERTBooksPage');
+const StudyCoachPage = safeLazy<{ initialTab?: string }>(() => import('./pages/StudyCoachPage'), 'StudyCoachPage');
+const TopicWorkspaceView = safeLazy<{ onBackToDashboard?: () => void }>(() => import('./components/workspace/TopicWorkspaceView'), 'TopicWorkspaceView');
 
 import { Toaster } from 'react-hot-toast';
 
@@ -183,6 +196,7 @@ const AppContent: React.FC = () => {
       />
       <Navbar />
       <div className={`flex-1 flex w-full mx-auto ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'max-w-full' : 'max-w-7xl'}`}>
+        {!['workspace', 'topic-workspace', 'topic'].includes(activeTab) && <Sidebar />}
         <main className={`flex-1 overflow-y-auto w-full ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'p-0 pb-20 md:pb-6' : 'p-4 sm:p-6 lg:p-8 pb-24 md:pb-8 max-w-7xl mx-auto'}`}>
           <ErrorBoundary sectionName={activeTab.toUpperCase()}>
             {renderContent()}
