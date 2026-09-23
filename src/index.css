@@ -8,7 +8,7 @@ html {
   overflow-x: hidden;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 body {
@@ -21,7 +21,7 @@ body {
   overflow-y: auto;
   box-sizing: border-box;
   -webkit-overflow-scrolling: touch;
-  touch-action: manipulation;
+  touch-action: pan-y pinch-zoom;
 }
 
 #root {
@@ -61,18 +61,10 @@ body {
   box-sizing: border-box;
 }
 
-/* Hardware Acceleration for High-Frequency Scroll Containers (GPU Compositing) */
-.hardware-accelerated,
-.gpu-accelerated,
-main,
-.overflow-y-auto,
-.overflow-x-auto,
-.overflow-auto,
-[data-scroll-container] {
+/* Hardware Acceleration for Specific UI Elements */
+.gpu-accelerated {
   transform: translateZ(0);
-  -webkit-transform: translateZ(0);
   backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 
 /* Custom scrollbars and sleek UI adjustments */

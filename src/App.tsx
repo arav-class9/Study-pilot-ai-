@@ -89,8 +89,19 @@ const AppContent: React.FC = () => {
       if (window.location.pathname !== targetPath) {
         navigate(targetPath);
       }
+      // Reset scroll position to top on tab change with default native scroll
+      if (typeof window !== 'undefined') {
+        window.scrollTo(0, 0);
+      }
     }
   }, [activeTab, navigate]);
+
+  // Scroll to top on route change
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
+  }, [currentRoute.path]);
 
   if (loading) {
     return (

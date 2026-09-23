@@ -35,7 +35,7 @@ export const OfflineIndicator: React.FC = () => {
 
   if (justReconnected) {
     return (
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-xl animate-fade-in">
+      <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-2xl bg-emerald-600/95 backdrop-blur-md px-4 py-2 text-xs font-bold text-white shadow-xl animate-in fade-in slide-in-from-top-3 max-w-[90vw]">
         <Wifi className="w-4 h-4" />
         <span>Back online — Connected to StudyPilot cloud sync</span>
       </div>
@@ -43,8 +43,8 @@ export const OfflineIndicator: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2.5 rounded-2xl bg-slate-900 border border-slate-800 px-4 py-2.5 text-xs font-bold text-white shadow-2xl animate-fade-in">
-      <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+    <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-2xl bg-slate-900/95 border border-slate-800 backdrop-blur-md px-4 py-2 text-xs font-bold text-white shadow-2xl animate-in fade-in slide-in-from-top-3 max-w-[90vw]">
+      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
       <WifiOff className="w-4 h-4 text-amber-400" />
       <span>Offline Mode — Cached NCERT pages &amp; notes available</span>
     </div>

@@ -110,19 +110,19 @@ export const NotesChatWidget: React.FC<NotesChatWidgetProps> = ({ notesList, act
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-5 py-3.5 rounded-full shadow-xl flex items-center gap-2.5 font-bold text-xs sm:text-sm transition-all hover:scale-105 cursor-pointer border border-indigo-400/30"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+76px)] right-4 md:bottom-6 md:right-6 z-40 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-4 py-3 rounded-full shadow-xl flex items-center gap-2 font-bold text-xs sm:text-sm transition-all hover:scale-105 cursor-pointer border border-indigo-400/30"
           title="Chat with your Notes"
         >
-          <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-            <Sparkles className="w-3.5 h-3.5 text-white animate-pulse" />
+          <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+            <Sparkles className="w-3 h-3 text-white animate-pulse" />
           </div>
-          <span>Chat with your Notes</span>
+          <span className="hidden sm:inline">Chat with Notes</span>
         </button>
       )}
 
       {/* Chat Drawer / Modal */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col h-[520px] overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
+        <div className="fixed inset-x-2 bottom-[calc(env(safe-area-inset-bottom,0px)+72px)] md:inset-x-auto md:bottom-6 md:right-6 z-50 w-auto md:w-full md:max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col h-[500px] max-h-[80vh] overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
           {/* Header */}
           <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
             <div className="flex items-center gap-2.5">

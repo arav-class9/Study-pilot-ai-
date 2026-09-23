@@ -1159,7 +1159,7 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
       {isSpeaking && (
         <div
           id="ncert-audio-player-bar"
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 dark:bg-slate-850/95 text-white backdrop-blur-md px-4 py-2.5 rounded-full shadow-2xl border border-slate-700/80 flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-200"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+76px)] md:bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 dark:bg-slate-850/95 text-white backdrop-blur-md px-4 py-2.5 rounded-full shadow-2xl border border-slate-700/80 flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-200 max-w-[90vw]"
         >
           <div className="flex items-center gap-2 pr-2 border-r border-slate-700">
             <span className="relative flex h-2.5 w-2.5">
