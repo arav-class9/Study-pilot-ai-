@@ -4,8 +4,8 @@ import {
   CLASS_9_SCIENCE_CH1_PAGES,
   CLASS_10_SCIENCE_CH2_PAGES,
   CLASS_12_PHYSICS_CH1_PAGES,
-} from '../../src/data/ncertBooksData.js';
-import { fetchOrGenerateNCERTPageContent } from './ncertPageContentService.js';
+} from '../../src/data/ncertBooksData.ts';
+import { fetchOrGenerateNCERTPageContent } from './ncertPageContentService.ts';
 
 export interface ResolvedNCERTPage {
   pageNumber: number;

@@ -331,39 +331,45 @@ export const PracticeQuizPage: React.FC = () => {
   const isAnswered = userSelected !== undefined;
 
   return (
-    <div id="practice-quiz-page" className="space-y-6 pb-20 md:pb-8 max-w-6xl mx-auto">
+    <div id="practice-quiz-page" className="space-y-8 pb-20 md:pb-8 max-w-5xl mx-auto px-4 sm:px-6">
       {/* 1. QUIZ SETUP & CURRICULUM EXPLORER */}
       {quizState === 'idle' && (
-        <div className="space-y-6">
-          {/* Header Banner */}
-          <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-sm relative overflow-hidden">
-            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="space-y-2 max-w-2xl">
-                <div className="inline-flex items-center gap-2 bg-indigo-500/20 border border-indigo-400/30 px-3 py-1 rounded-full text-xs font-semibold text-indigo-300">
-                  <Brain className="w-3.5 h-3.5" />
-                  <span>Curriculum-Aligned Adaptive Practice</span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-                  {translateUI('Quiz', (language as SupportedLanguage) || 'en')} 🎯
-                </h1>
-                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                  Select your Board, Class, and Subject to practice authentic textbook chapters with step-by-step verified explanations.
-                </p>
-              </div>
+        <div className="space-y-8">
+          {/* Header Banner - Apple Design Specification */}
+          <div className="text-center pt-8 pb-4 space-y-3">
+            <p className="text-[12px] font-semibold uppercase tracking-widest text-[#7a7a7a]">
+              Quiz &amp; Practice
+            </p>
+            <h1 className="sp-display-lg tracking-tight text-[#1d1d1f] dark:text-white">
+              Calibrate your understanding with AI-generated test questions.
+            </h1>
+            <p className="sp-lead text-[#7a7a7a] max-w-2xl mx-auto">
+              Test your grasp on NCERT textbook chapters, evaluate conceptual gaps, and solve verified problems.
+            </p>
 
-              {activeChapterObj && (
-                <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 sm:p-5 shrink-0 flex flex-col items-start gap-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-200">
-                    Active Selection
-                  </span>
-                  <div className="font-extrabold text-white text-base max-w-xs truncate">
-                    {activeChapterObj.name}
-                  </div>
-                  <span className="text-xs text-indigo-200">
-                    Class {selectedClass} • {selectedBoard} • {availableSubjects.find((s) => s.id === selectedSubject)?.name}
-                  </span>
-                </div>
-              )}
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
+              <button
+                id="start-quiz-now-btn"
+                onClick={() => {
+                  setQuizMode('practice');
+                  handleStartQuiz();
+                }}
+                disabled={!activeChapterObj}
+                className="bg-[#0066cc] hover:bg-[#0071e3] text-white px-7 py-3 rounded-full text-[15px] font-normal transition-all cursor-pointer disabled:opacity-40"
+              >
+                START PRACTICE
+              </button>
+
+              <button
+                onClick={() => {
+                  setQuizMode('timed');
+                  handleStartQuiz();
+                }}
+                disabled={!activeChapterObj}
+                className="bg-transparent text-[#0066cc] dark:text-[#2997ff] border border-[#0066cc] dark:border-[#2997ff] hover:bg-[#0066cc]/5 px-7 py-3 rounded-full text-[15px] font-normal transition-all cursor-pointer disabled:opacity-40"
+              >
+                TIMED EXAM
+              </button>
             </div>
           </div>
 
@@ -706,14 +712,14 @@ export const PracticeQuizPage: React.FC = () => {
 
       {/* 3. ACTIVE QUIZ SESSION */}
       {quizState === 'active' && currentQ && (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-3xl mx-auto">
           {/* Top Progress & Stats Bar */}
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="bg-white dark:bg-[#202022] rounded-[18px] p-4 sm:p-5 border border-[#e0e0e0] dark:border-[#38383a] flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-xl">
+              <span className="text-[13px] font-semibold text-[#0066cc] dark:text-[#2997ff] bg-[#0066cc]/10 px-3 py-1 rounded-full">
                 Question {currentIdx + 1} of {questions.length}
               </span>
-              <span className="text-xs text-slate-600 font-bold hidden sm:inline-block">
+              <span className="text-[13px] text-[#7a7a7a] font-normal hidden sm:inline-block">
                 {activeChapterObj?.name}
               </span>
             </div>
@@ -721,80 +727,80 @@ export const PracticeQuizPage: React.FC = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={toggleReviewFlag}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                className={`px-4 py-1.5 rounded-full text-[13px] font-normal flex items-center gap-1.5 border transition-all cursor-pointer ${
                   markedForReview[currentIdx]
                     ? 'bg-amber-50 text-amber-700 border-amber-300'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    : 'bg-transparent text-[#7a7a7a] border-[#e0e0e0] dark:border-[#38383a] hover:text-[#1d1d1f] dark:hover:text-white'
                 }`}
               >
                 {markedForReview[currentIdx] ? (
                   <BookmarkCheck className="w-3.5 h-3.5 text-amber-600" />
                 ) : (
-                  <Bookmark className="w-3.5 h-3.5 text-slate-400" />
+                  <Bookmark className="w-3.5 h-3.5 text-[#7a7a7a]" />
                 )}
                 <span>{markedForReview[currentIdx] ? 'Marked' : 'Review Later'}</span>
               </button>
 
-              <div className="flex items-center gap-1.5 bg-slate-100 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-black">
-                <Clock className="w-3.5 h-3.5 text-slate-500" />
+              <div className="flex items-center gap-1.5 bg-[#f5f5f7] dark:bg-[#2a2a2c] text-[#1d1d1f] dark:text-white px-3.5 py-1.5 rounded-full text-[13px] font-mono">
+                <Clock className="w-3.5 h-3.5 text-[#7a7a7a]" />
                 <span>{formatTimer(timerSeconds)}</span>
               </div>
             </div>
           </div>
 
-          {/* Progress Bar */}
-          <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+          {/* Simple Clean Progress Bar */}
+          <div className="w-full bg-[#e0e0e0] dark:bg-[#333336] h-1.5 rounded-full overflow-hidden">
             <div
-              className="bg-indigo-600 h-full transition-all duration-300"
+              className="bg-[#0066cc] h-full transition-all duration-300 rounded-full"
               style={{ width: `${((currentIdx + 1) / questions.length) * 100}%` }}
             />
           </div>
 
           {/* Question Card */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
+          <div className="bg-white dark:bg-[#202022] rounded-[18px] p-6 sm:p-10 border border-[#e0e0e0] dark:border-[#38383a] space-y-6">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-[12px] font-semibold uppercase tracking-wider text-[#7a7a7a]">
                 {currentQ.concept || currentQ.topic || 'Concept Question'}
               </span>
-              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700">
+              <span className="text-[11px] font-normal uppercase px-2.5 py-0.5 rounded-full bg-[#f5f5f7] dark:bg-[#2a2a2c] text-[#7a7a7a] border border-[#e0e0e0] dark:border-[#38383a]">
                 {currentQ.difficulty || difficulty}
               </span>
             </div>
 
-            <h2 className="text-base sm:text-xl font-bold text-slate-900 leading-relaxed">
+            <h2 className="text-[22px] sm:text-[26px] font-semibold text-[#1d1d1f] dark:text-white leading-snug tracking-tight">
               {currentQ.question}
             </h2>
 
-            {/* Options List */}
-            <div className="space-y-3">
+            {/* Clean Option Cards */}
+            <div className="space-y-3 pt-2">
               {currentQ.options.map((opt, oIdx) => {
                 const isSelected = userSelected === oIdx;
                 const isCorrect = oIdx === currentQ.correctAnswerIndex;
                 const showInstantResult = quizMode === 'practice' && isAnswered;
 
-                let btnClass = 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50 text-slate-800';
+                let btnClass = 'bg-white dark:bg-[#252527] border-[#e0e0e0] dark:border-[#38383a] hover:border-[#0066cc] text-[#1d1d1f] dark:text-[#f5f5f7]';
 
                 if (showInstantResult) {
                   if (isCorrect) {
-                    btnClass = 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-500/20';
+                    btnClass = 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500 text-emerald-900 dark:text-emerald-300';
                   } else if (isSelected && !isCorrect) {
-                    btnClass = 'bg-rose-50 border-rose-500 text-rose-900 ring-2 ring-rose-500/20';
+                    btnClass = 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-500 text-rose-900 dark:text-rose-300';
                   }
                 } else if (isSelected) {
-                  btnClass = 'bg-indigo-50 border-indigo-600 text-indigo-900 ring-2 ring-indigo-500/20';
+                  btnClass = 'bg-[#0066cc]/5 dark:bg-[#0066cc]/15 border-[#0066cc] text-[#0066cc] dark:text-[#2997ff] font-medium';
                 }
 
                 return (
                   <button
                     key={oIdx}
                     onClick={() => handleSelectOption(oIdx)}
-                    className={`w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer ${btnClass}`}
+                    className={`w-full text-left p-4 sm:p-5 rounded-[14px] border transition-all flex items-center justify-between gap-4 cursor-pointer ${btnClass}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
+                    <div className="flex items-center gap-3.5">
+                      <span className="w-6 h-6 rounded-full bg-[#f5f5f7] dark:bg-[#333336] text-[#1d1d1f] dark:text-white font-medium text-[12px] flex items-center justify-center shrink-0">
                         {String.fromCharCode(65 + oIdx)}
                       </span>
-                      <span className="text-xs sm:text-sm font-semibold">{opt}</span>
+                      <span className="text-[15px] leading-relaxed">{opt}</span>
                     </div>
 
                     {showInstantResult && (
@@ -813,44 +819,44 @@ export const PracticeQuizPage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`p-5 rounded-2xl border space-y-2.5 ${
+                className={`p-5 rounded-[14px] border space-y-2.5 ${
                   userSelected === currentQ.correctAnswerIndex
-                    ? 'bg-emerald-50/60 border-emerald-200 text-emerald-950'
-                    : 'bg-rose-50/60 border-rose-200 text-rose-950'
+                    ? 'bg-[#f5f5f7] dark:bg-[#272729] border-[#e0e0e0] dark:border-[#38383a] text-[#1d1d1f] dark:text-[#f5f5f7]'
+                    : 'bg-[#f5f5f7] dark:bg-[#272729] border-[#e0e0e0] dark:border-[#38383a] text-[#1d1d1f] dark:text-[#f5f5f7]'
                 }`}
               >
-                <div className="flex items-center gap-2 font-black text-xs uppercase tracking-wide">
+                <div className="flex items-center gap-2 font-semibold text-[13px] text-[#0066cc] dark:text-[#2997ff]">
                   <HelpCircle className="w-4 h-4" />
                   <span>
                     {userSelected === currentQ.correctAnswerIndex ? 'Correct Explanation' : 'Solution Breakdown'}
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm leading-relaxed text-slate-700">
+                <p className="text-[14px] leading-relaxed text-[#515154] dark:text-[#a1a1a6]">
                   {currentQ.explanation}
                 </p>
                 {currentQ.hint && (
-                  <p className="text-xs font-semibold text-slate-600 bg-white/60 p-2.5 rounded-xl">
-                    💡 Concept Key: {currentQ.hint}
+                  <p className="text-[13px] text-[#7a7a7a] pt-1">
+                    Concept Key: {currentQ.hint}
                   </p>
                 )}
               </motion.div>
             )}
 
-            {/* Navigation Controls */}
-            <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
+            {/* Bottom Navigation Bar */}
+            <div className="flex items-center justify-between gap-3 pt-6 border-t border-[#e0e0e0] dark:border-[#2a2a2c]">
               <button
                 onClick={handlePrev}
                 disabled={currentIdx === 0}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-30 cursor-pointer"
+                className="px-5 py-2.5 rounded-full border border-[#e0e0e0] dark:border-[#38383a] text-[14px] font-normal text-[#1d1d1f] dark:text-white hover:bg-[#f5f5f7] dark:hover:bg-[#2a2a2c] disabled:opacity-30 cursor-pointer"
               >
                 Previous
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 {currentIdx < questions.length - 1 ? (
                   <button
                     onClick={handleNext}
-                    className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer"
+                    className="px-6 py-2.5 rounded-full bg-[#0066cc] hover:bg-[#0071e3] text-white text-[14px] font-normal flex items-center gap-1.5 cursor-pointer transition-all"
                   >
                     <span>Next Question</span>
                     <ArrowRight className="w-4 h-4" />
@@ -858,10 +864,9 @@ export const PracticeQuizPage: React.FC = () => {
                 ) : (
                   <button
                     onClick={finishQuiz}
-                    className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer"
+                    className="px-7 py-2.5 rounded-full bg-[#0066cc] hover:bg-[#0071e3] text-white text-[14px] font-normal cursor-pointer transition-all"
                   >
-                    <span>Finish Quiz</span>
-                    <Trophy className="w-4 h-4" />
+                    Submit Quiz
                   </button>
                 )}
               </div>

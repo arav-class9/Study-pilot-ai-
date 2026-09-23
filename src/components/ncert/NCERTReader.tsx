@@ -571,23 +571,10 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
                 id="ncert-search-book-btn"
                 onClick={() => setSearchModalOpen(true)}
                 className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg flex items-center space-x-1.5 transition-colors cursor-pointer"
-                title="Search topics, headings & diagrams"
+                title="Search topics & headings in this book"
               >
                 <Search className="w-3.5 h-3.5 text-indigo-500" />
-                <span className="hidden lg:inline">Search Book</span>
-              </button>
-            )}
-
-            {/* Upload PDF */}
-            {onOpenUploadPDF && (
-              <button
-                id="ncert-upload-pdf-btn"
-                onClick={onOpenUploadPDF}
-                className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 rounded-lg flex items-center space-x-1.5 transition-colors cursor-pointer"
-                title="Upload Complete NCERT PDF from official portal"
-              >
-                <Upload className="w-3.5 h-3.5 text-indigo-600" />
-                <span className="hidden sm:inline">Upload Full PDF</span>
+                <span className="hidden lg:inline">Search</span>
               </button>
             )}
 
@@ -595,68 +582,22 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
             <button
               id="ncert-page-learning-btn"
               onClick={() => setPageLearningModalOpen(true)}
-              className="px-2.5 sm:px-3 py-1.5 text-xs font-bold text-white bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer"
-              title="Open Complete Page Learning Hub (Explanation, Summary, Questions, Flashcards)"
+              className="px-2.5 sm:px-3 py-1.5 text-xs font-bold text-white bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg shadow-xs flex items-center space-x-1.5 transition-all cursor-pointer"
+              title="Open Page Learning Hub (Explanation, Summary, Questions & Flashcards)"
             >
               <Brain className="w-3.5 h-3.5 text-amber-300" />
-              <span>Page Learning Hub</span>
+              <span>Learning Hub</span>
             </button>
 
-            {/* Weak Topics */}
-            <button
-              id="ncert-weak-topics-btn"
-              onClick={() => setWeakTopicsModalOpen(true)}
-              className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 rounded-lg flex items-center space-x-1.5 transition-colors cursor-pointer"
-              title="View Weak Topics with Source Page Citations"
-            >
-              <TrendingDown className="w-3.5 h-3.5 text-amber-600" />
-              <span className="hidden md:inline">Weak Topics</span>
-            </button>
-
-            {/* Flashcards */}
-            <button
-              id="ncert-flashcards-btn"
-              onClick={() => setFlashcardsModalOpen(true)}
-              className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800 rounded-lg flex items-center space-x-1.5 transition-colors cursor-pointer"
-              title="Drill Active Recall Flashcards for this Page"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-              <span className="hidden md:inline">Flashcards</span>
-            </button>
-
-            {/* Formulas & Equations */}
+            {/* Formulas & Definitions */}
             <button
               id="ncert-formula-sheet-btn"
               onClick={() => setFormulaModalOpen(true)}
-              className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center space-x-1.5 transition-colors cursor-pointer"
-              title="Formulas, Chemical Equations & Definitions Cheat Sheet"
+              className="px-2.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center space-x-1.5 transition-colors cursor-pointer"
+              title="Formulas, Equations & Definitions"
             >
               <Calculator className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span className="hidden md:inline">Formulas</span>
-            </button>
-
-            {/* Full-Book or Chapter Assessment */}
-            {uploadedBook && (
-              <button
-                id="ncert-fullbook-test-btn"
-                onClick={() => setTestModalOpen(true)}
-                className="px-2.5 sm:px-3 py-1.5 text-xs font-bold text-white bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-lg shadow-xs flex items-center space-x-1.5 transition-all cursor-pointer"
-                title="Take Full-Book or Chapter Mock Test"
-              >
-                <Award className="w-3.5 h-3.5 fill-white text-transparent" />
-                <span className="hidden sm:inline">Full-Book Test</span>
-              </button>
-            )}
-
-            {/* Summarize Page */}
-            <button
-              id="ncert-summarize-page-btn"
-              onClick={() => setSummaryModalOpen(true)}
-              className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center space-x-1.5 transition-colors cursor-pointer"
-              title="Generate summary and key takeaways for this page"
-            >
-              <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              <span className="hidden md:inline">Summarize Page</span>
+              <span className="hidden sm:inline">Formulas</span>
             </button>
 
             {/* Ask AI Tutor */}

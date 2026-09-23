@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { adminAuth } from './firebaseAdmin.js';
-export { authenticateAndEnforceQuota, PLAN_LIMITS } from './middleware/quotaAuth.js';
-export type { AuthenticatedQuotaRequest } from './middleware/quotaAuth.js';
+import { adminAuth } from './firebaseAdmin.ts';
+export { authenticateAndEnforceQuota, PLAN_LIMITS } from './middleware/quotaAuth.ts';
+export type { AuthenticatedQuotaRequest } from './middleware/quotaAuth.ts';
 
 export interface AuthenticatedRequest extends Request {
   user?: any;

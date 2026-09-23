@@ -1,8 +1,8 @@
-import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.ts';
 import { Type } from '@google/genai';
-import { verifyNumericalSolution } from './verification.js';
-import { executeWithSafetyLayer } from './safety/aiQualityLayer.js';
-import { STUDYPILOT_MASTER_TUTOR_PROMPT } from './tutorPrompt.js';
+import { verifyNumericalSolution } from './verification.ts';
+import { executeWithSafetyLayer } from './safety/aiQualityLayer.ts';
+import { STUDYPILOT_MASTER_TUTOR_PROMPT } from './tutorPrompt.ts';
 
 export interface DoubtInput {
   questionText?: string;
@@ -74,8 +74,8 @@ Provide a structured, step-by-step educational solution for the student in valid
     });
 
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: { parts: contents },
       config: {
         systemInstruction,

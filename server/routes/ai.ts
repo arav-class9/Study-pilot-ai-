@@ -2,10 +2,10 @@ import { Router, Response } from 'express';
 import multer from 'multer';
 import sharp from 'sharp';
 import { Type, Schema } from '@google/genai';
-import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
-import { authenticateAndEnforceQuota, AuthenticatedQuotaRequest } from '../middleware/quotaAuth.js';
-import { executeDeepResearch, DeepResearchInput } from '../services/deepResearchEngine.js';
-import { STUDYPILOT_MASTER_TUTOR_PROMPT } from '../services/tutorPrompt.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.ts';
+import { authenticateAndEnforceQuota, AuthenticatedQuotaRequest } from '../middleware/quotaAuth.ts';
+import { executeDeepResearch, DeepResearchInput } from '../services/deepResearchEngine.ts';
+import { STUDYPILOT_MASTER_TUTOR_PROMPT } from '../services/tutorPrompt.ts';
 
 export const aiRouterExtended = Router();
 
@@ -139,8 +139,8 @@ Ensure every step is pedagogically clear and complete.`;
       contents.push({ text: promptInstruction });
 
       const response = await generateContentWithRetry({
-        primaryModel: 'gemini-3.8-flash',
-        fallbackModel: 'gemini-flash-latest',
+        primaryModel: 'gemini-2.5-flash',
+        fallbackModel: 'gemini-2.5-flash-lite',
         contents,
         config: {
           systemInstruction: `You are an expert STEM educator, mathematician, and NCERT / CBSE curriculum authority.

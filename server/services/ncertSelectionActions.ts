@@ -1,6 +1,6 @@
-import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.ts';
 import { Type } from '@google/genai';
-import { NCERTPageQuizValidationError, validateNCERTPageQuestion } from './ncertPageQuizService.js';
+import { NCERTPageQuizValidationError, validateNCERTPageQuestion } from './ncertPageQuizService.ts';
 
 export interface ProcessSelectionActionInput {
   actionType: 'notes' | 'explain' | 'quiz';
@@ -57,8 +57,8 @@ Generate structured revision notes strictly from this excerpt.`;
 
     try {
       const response = await generateContentWithRetry({
-        primaryModel: 'gemini-3.8-flash',
-        fallbackModel: 'gemini-3.8-flash',
+        primaryModel: 'gemini-2.5-flash',
+        fallbackModel: 'gemini-2.5-flash',
         contents: prompt,
         config: {
           systemInstruction,
@@ -140,8 +140,8 @@ Explain this excerpt simply and pedagogically.`;
 
     try {
       const response = await generateContentWithRetry({
-        primaryModel: 'gemini-3.8-flash',
-        fallbackModel: 'gemini-3.8-flash',
+        primaryModel: 'gemini-2.5-flash',
+        fallbackModel: 'gemini-2.5-flash',
         contents: prompt,
         config: {
           systemInstruction,
@@ -213,8 +213,8 @@ Create 2-3 rigorous questions strictly testing the concepts in this excerpt.`;
   let rawQuestions: any[] = [];
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         systemInstruction,

@@ -1,5 +1,5 @@
-import { getGeminiClient, generateContentWithRetry, safeJsonParse } from '../gemini.js';
-import { STUDYPILOT_MASTER_TUTOR_PROMPT } from './tutorPrompt.js';
+import { getGeminiClient, generateContentWithRetry, safeJsonParse } from '../gemini.ts';
+import { STUDYPILOT_MASTER_TUTOR_PROMPT } from './tutorPrompt.ts';
 
 export interface RAGTextbookChunk {
   pageNumber: number;

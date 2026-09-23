@@ -1,28 +1,28 @@
 import { Router, Request, Response } from 'express';
-import { requireAuth } from './middleware.js';
-import { solveDoubt } from './services/doubtSolver.js';
-import { generateQuiz } from './services/quizGenerator.js';
-import { generateNotes } from './services/notesGenerator.js';
-import { generateWeaknessRecoveryPlan } from './services/weaknessRecovery.js';
-import { generateStudyPlan } from './services/studyPlanner.js';
-import { analyzeMistake } from './services/mistakeAnalysis.js';
-import { generateExamPaper } from './services/examGenerator.js';
-import { checkHandwrittenSolution } from './services/handwrittenChecker.js';
-import { generateStudyRecommendation } from './services/recommendationEngine.js';
-import { runAIEvaluationBenchmark } from './services/aiEvaluation.js';
-import { searchCurriculumAndNotes } from './services/searchService.js';
-import { chatWithNotes } from './services/notesChat.js';
-import { generateChapterMindmap } from './services/mindmapService.js';
-import { conductVivaVoiceTurn } from './services/vivaVoiceService.js';
-import { evaluateFeynmanExplanation } from './services/feynmanService.js';
-import { generateNCERTPageQuiz, NCERTPageQuizValidationError } from './services/ncertPageQuizService.js';
-import { fetchOrGenerateNCERTPageContent } from './services/ncertPageContentService.js';
-import { processUploadedBookPage, NCERTOcrValidationError } from './services/ncertPageOcrService.js';
-import { processNCERTSelectionAction } from './services/ncertSelectionActions.js';
-import { generateFullBookTest } from './services/ncertFullBookTestService.js';
-import { generateTeacherWorksheet } from './services/teacherToolsService.js';
-import { answerWithTextbookRAG } from './services/ncertRAGService.js';
-import { evaluateCustomAIResponse } from './services/aiEvaluation.js';
+import { requireAuth } from './middleware.ts';
+import { solveDoubt } from './services/doubtSolver.ts';
+import { generateQuiz } from './services/quizGenerator.ts';
+import { generateNotes } from './services/notesGenerator.ts';
+import { generateWeaknessRecoveryPlan } from './services/weaknessRecovery.ts';
+import { generateStudyPlan } from './services/studyPlanner.ts';
+import { analyzeMistake } from './services/mistakeAnalysis.ts';
+import { generateExamPaper } from './services/examGenerator.ts';
+import { checkHandwrittenSolution } from './services/handwrittenChecker.ts';
+import { generateStudyRecommendation } from './services/recommendationEngine.ts';
+import { runAIEvaluationBenchmark } from './services/aiEvaluation.ts';
+import { searchCurriculumAndNotes } from './services/searchService.ts';
+import { chatWithNotes } from './services/notesChat.ts';
+import { generateChapterMindmap } from './services/mindmapService.ts';
+import { conductVivaVoiceTurn } from './services/vivaVoiceService.ts';
+import { evaluateFeynmanExplanation } from './services/feynmanService.ts';
+import { generateNCERTPageQuiz, NCERTPageQuizValidationError } from './services/ncertPageQuizService.ts';
+import { fetchOrGenerateNCERTPageContent } from './services/ncertPageContentService.ts';
+import { processUploadedBookPage, NCERTOcrValidationError } from './services/ncertPageOcrService.ts';
+import { processNCERTSelectionAction } from './services/ncertSelectionActions.ts';
+import { generateFullBookTest } from './services/ncertFullBookTestService.ts';
+import { generateTeacherWorksheet } from './services/teacherToolsService.ts';
+import { answerWithTextbookRAG } from './services/ncertRAGService.ts';
+import { evaluateCustomAIResponse } from './services/aiEvaluation.ts';
 import {
   generatePomodoroSchedule,
   generateFeynmanBreakdown,
@@ -31,10 +31,10 @@ import {
   generateDiagnosticPracticeExam,
   gradeDiagnosticExam,
   rescheduleStudyTriage,
-} from './services/studyCoachService.js';
-import { serverCache } from './cache.js';
-import { aiRouterExtended } from './routes/ai.js';
-import { topicWorkspaceRouter } from './routes/topicWorkspace.js';
+} from './services/studyCoachService.ts';
+import { serverCache } from './cache.ts';
+import { aiRouterExtended } from './routes/ai.ts';
+import { topicWorkspaceRouter } from './routes/topicWorkspace.ts';
 import {
   validateNonEmptyString,
   validateOptionalString,
@@ -43,7 +43,7 @@ import {
   validateEnum,
   validateArray,
   validateObject,
-} from './middleware/validation.js';
+} from './middleware/validation.ts';
 
 export const apiRouter = Router();
 

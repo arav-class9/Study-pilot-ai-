@@ -19,7 +19,7 @@ import { TopicProgressTracker } from './TopicProgressTracker';
 import { RevisionGenerator } from './RevisionGenerator';
 import { TopicListDrawer } from './TopicListDrawer';
 import { CreateTopicModal } from './CreateTopicModal';
-import { BookOpen, Plus, ArrowLeft } from 'lucide-react';
+import { BookOpen, Plus } from 'lucide-react';
 
 interface TopicWorkspaceViewProps {
   onBackToDashboard?: () => void;
@@ -37,6 +37,9 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isGeneratingNotes, setIsGeneratingNotes] = useState(false);
+  const [showLeftSidebar, setShowLeftSidebar] = useState(false);
+  const [showRightTools, setShowRightTools] = useState(false);
+  const [showDefinitionBlock, setShowDefinitionBlock] = useState(false);
 
   // Load topics on mount
   useEffect(() => {
@@ -162,20 +165,6 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
 
   return (
     <div className="min-h-screen bg-[#F7F4EE] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-amber-200 selection:text-amber-900">
-      {/* Optional Top Return Bar */}
-      {onBackToDashboard && (
-        <div className="bg-amber-900 text-amber-100 px-4 py-2 text-xs font-bold flex items-center justify-between">
-          <button
-            onClick={onBackToDashboard}
-            className="hover:underline flex items-center gap-1 text-amber-200"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to StudyPilot Dashboard</span>
-          </button>
-          <span className="text-[11px] font-mono opacity-80">Topic Learning Workspace</span>
-        </div>
-      )}
-
       {/* Notebook Header & Navigation Bar */}
       <TopicHeader
         topic={currentTopic}
@@ -184,6 +173,10 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
         onBookmarkToggle={handleBookmarkToggle}
         onOpenTopicDrawer={() => setIsDrawerOpen(true)}
         onCreateNewTopic={() => setIsCreateModalOpen(true)}
+        showLeftSidebar={showLeftSidebar}
+        onToggleLeftSidebar={() => setShowLeftSidebar((prev) => !prev)}
+        showRightTools={showRightTools}
+        onToggleRightTools={() => setShowRightTools((prev) => !prev)}
         onContinueLearning={() => {
           if (!currentTopic.notes.aiGeneratedText) setActiveSection('notes');
           else if (!currentTopic.selfExplanation.checkResult) setActiveSection('explain');
@@ -192,28 +185,52 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
         }}
       />
 
-      {/* Responsive Multi-Column Layout Container */}
+      {/* Responsive Layout Container */}
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 flex flex-col lg:flex-row gap-6">
-        {/* Left Sidebar (Desktop > 1024px) */}
-        <LeftTopicSidebar
-          topics={topics}
-          currentTopic={currentTopic}
-          onSelectTopic={(id) => {
-            const selected = topics.find((t) => t.id === id);
-            if (selected) setCurrentTopic(selected);
-          }}
-          onCreateNewTopic={() => setIsCreateModalOpen(true)}
-          onDeleteTopic={handleDeleteTopic}
-          onBookmarkToggle={handleBookmarkToggle}
-        />
+        {/* Left Sidebar (Collapsible, default closed for full reading space) */}
+        {showLeftSidebar && (
+          <div className="animate-in slide-in-from-left-4 duration-200">
+            <LeftTopicSidebar
+              topics={topics}
+              currentTopic={currentTopic}
+              onSelectTopic={(id) => {
+                const selected = topics.find((t) => t.id === id);
+                if (selected) setCurrentTopic(selected);
+              }}
+              onCreateNewTopic={() => setIsCreateModalOpen(true)}
+              onDeleteTopic={handleDeleteTopic}
+              onBookmarkToggle={handleBookmarkToggle}
+            />
+          </div>
+        )}
 
         {/* Central Main Workspace Panel */}
-        <main className="flex-1 min-w-0 space-y-6">
-          {/* Top Formal Topic Definition & Breakdown Card (Always Rendered on Selection) */}
-          <TopicDefinitionBlock
-            topic={currentTopic}
-            onUpdateTopic={handleUpdateTopic}
-          />
+        <main className={`flex-1 min-w-0 space-y-6 ${!showLeftSidebar && !showRightTools ? 'max-w-5xl mx-auto' : ''}`}>
+          {/* Sleek 1-line Concept Bar */}
+          <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-amber-50/80 dark:bg-slate-900 border border-amber-200/60 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 shadow-xs">
+            <div className="flex items-center gap-2 truncate">
+              <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 animate-pulse" />
+              <span className="font-semibold truncate">
+                {currentTopic.definitionBreakdown?.quickSummary || `Topic: ${currentTopic.topicName} • ${currentTopic.subject}`}
+              </span>
+            </div>
+            <button
+              onClick={() => setShowDefinitionBlock((prev) => !prev)}
+              className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline shrink-0 ml-3 cursor-pointer"
+            >
+              {showDefinitionBlock ? 'Hide Breakdown' : 'Formal Definition & Examples'}
+            </button>
+          </div>
+
+          {/* Collapsible Formal Definition Breakdown Card */}
+          {showDefinitionBlock && (
+            <div className="animate-in fade-in duration-200">
+              <TopicDefinitionBlock
+                topic={currentTopic}
+                onUpdateTopic={handleUpdateTopic}
+              />
+            </div>
+          )}
 
           {/* Active Workspace View Section */}
           {activeSection === 'learn' && (
@@ -257,14 +274,18 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
           )}
         </main>
 
-        {/* Right Docked Panel (Desktop > 1024px) */}
-        <RightDockedPanel
-          topic={currentTopic}
-          activeNoteType={currentTopic.notes.noteType || 'detailed'}
-          isGeneratingNotes={isGeneratingNotes}
-          onGenerateNotes={handleGenerateNotesFromRightPanel}
-          onNavigateSection={setActiveSection}
-        />
+        {/* Right Docked Panel (Collapsible, default closed) */}
+        {showRightTools && (
+          <div className="animate-in slide-in-from-right-4 duration-200">
+            <RightDockedPanel
+              topic={currentTopic}
+              activeNoteType={currentTopic.notes.noteType || 'detailed'}
+              isGeneratingNotes={isGeneratingNotes}
+              onGenerateNotes={handleGenerateNotesFromRightPanel}
+              onNavigateSection={setActiveSection}
+            />
+          </div>
+        )}
       </div>
 
       {/* Mobile Topic Selection Drawer (<1024px) */}

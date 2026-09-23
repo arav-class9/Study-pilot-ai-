@@ -1,6 +1,6 @@
-import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.ts';
 import { Type } from '@google/genai';
-import { validateNCERTPageQuestion, NCERTPageQuizValidationError } from './ncertPageQuizService.js';
+import { validateNCERTPageQuestion, NCERTPageQuizValidationError } from './ncertPageQuizService.ts';
 
 export interface PageExcerpt {
   pageNumber: number;
@@ -60,8 +60,8 @@ Generate exactly ${targetCount} authentic questions strictly from these pages. E
   let rawQuestions: any[] = [];
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         systemInstruction,

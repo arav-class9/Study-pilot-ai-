@@ -1,5 +1,5 @@
-import { getGeminiClient, generateContentWithRetry, safeJsonParse } from '../gemini.js';
-import { verifyNumericalSolution, verifyMCQQuestion } from './verification.js';
+import { getGeminiClient, generateContentWithRetry, safeJsonParse } from '../gemini.ts';
+import { verifyNumericalSolution, verifyMCQQuestion } from './verification.ts';
 
 export interface EvaluationBenchmarkReport {
   timestamp: string;
@@ -131,8 +131,8 @@ export async function runAIEvaluationBenchmark(options?: { skipLiveNetworkCall?:
   } else {
     try {
       const response = await generateContentWithRetry({
-        primaryModel: 'gemini-3.8-flash',
-        fallbackModel: 'gemini-flash-latest',
+        primaryModel: 'gemini-2.5-flash',
+        fallbackModel: 'gemini-2.5-flash-lite',
         contents: 'Give the chemical formula for rust in a simple JSON object: {"formula": "Fe2O3.xH2O"}.',
         config: {
           responseMimeType: 'application/json',

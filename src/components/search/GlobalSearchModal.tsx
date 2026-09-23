@@ -72,45 +72,44 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   return (
     <div
       id="global-search-modal-backdrop"
-      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-start justify-center pt-20 px-4"
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center pt-16 sm:pt-24 px-4"
       onClick={onClose}
     >
       <div
         id="global-search-modal-container"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="w-full max-w-2xl bg-white dark:bg-[#1d1d1f] text-[#1d1d1f] dark:text-[#f5f5f7] rounded-[18px] border border-[#e0e0e0] dark:border-[#38383a] overflow-hidden animate-in fade-in duration-150 sp-product-shadow"
       >
-        {/* Search Input Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-slate-50/50">
-          <Search className="w-5 h-5 text-indigo-600 shrink-0" />
-          <input
-            id="global-search-input"
-            autoFocus
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search chapters, topics, notes, formulas, mistakes..."
-            className="w-full bg-transparent text-sm sm:text-base font-medium text-slate-900 placeholder:text-slate-400 focus:outline-hidden"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery('')}
-              className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-          <kbd className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-xs">
-            ESC
-          </kbd>
+        {/* Apple-spec Pill Search Input Header */}
+        <div className="p-4 sm:p-5 border-b border-[#e0e0e0] dark:border-[#2a2a2c] bg-white dark:bg-[#1d1d1f]">
+          <div className="relative flex items-center">
+            <Search className="w-5 h-5 text-[#7a7a7a] absolute left-4" />
+            <input
+              id="global-search-input"
+              autoFocus
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search chapters, topics, notes, formulas, or questions..."
+              className="w-full h-12 pl-12 pr-12 rounded-full bg-[#f5f5f7] dark:bg-[#272729] text-[#1d1d1f] dark:text-white placeholder-[#7a7a7a] text-[16px] border border-[#e0e0e0] dark:border-[#38383a] focus:outline-none focus:ring-2 focus:ring-[#0071e3]"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute right-4 p-1 text-[#7a7a7a] hover:text-[#1d1d1f] dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Deep Research Engine Launcher Bar */}
-        <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 px-5 py-3 text-white flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Cpu className="w-4 h-4 text-indigo-300 animate-pulse" />
-            <span className="text-xs font-bold text-indigo-100">
-              Need multi-step AI web search, claim verification & teacher notes?
+        {/* Deep Research Engine Launcher Bar (Minimal dark utility) */}
+        <div className="bg-[#1d1d1f] dark:bg-[#161617] px-6 py-3 text-white flex items-center justify-between border-b border-[#2a2a2c]">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#0066cc]"></span>
+            <span className="text-[13px] text-[#cccccc]">
+              AI Research &amp; Multi-source grounding
             </span>
           </div>
 
@@ -119,15 +118,15 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
             onClick={() => {
               setIsDeepResearchOpen(true);
             }}
-            className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-400 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-1.5 bg-[#0066cc] hover:bg-[#0071e3] text-white text-[13px] font-normal rounded-full transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Launch Deep Research</span>
+            <span>Deep Research</span>
+            <span aria-hidden="true">&rarr;</span>
           </button>
         </div>
 
         {/* Results List */}
-        <div className="p-3 max-h-96 overflow-y-auto divide-y divide-slate-100">
+        <div className="p-4 max-h-[420px] overflow-y-auto divide-y divide-[#e0e0e0] dark:divide-[#2a2a2c]">
           {query.trim() === '' ? (
             <div className="py-8 text-center text-slate-400 space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">

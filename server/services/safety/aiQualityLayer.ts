@@ -1,4 +1,4 @@
-import { VerificationResult, verifyMCQQuestion, verifyNumericalSolution } from '../verification.js';
+import { VerificationResult, verifyMCQQuestion, verifyNumericalSolution } from '../verification.ts';
 
 export interface AISafetyRequest {
   actionName: string;

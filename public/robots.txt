@@ -1,0 +1,33 @@
+# StudyPilot AI - Production Robots Configuration
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /features
+Allow: /ai-study-planner
+Allow: /ai-notes
+Allow: /ai-quiz-generator
+Allow: /ncert
+Allow: /ncert/*
+Allow: /class/*
+Allow: /topic/*
+
+# Protect Private Dashboards, Auth, and Student Data
+Disallow: /dashboard
+Disallow: /workspace
+Disallow: /auth
+Disallow: /login
+Disallow: /signup
+Disallow: /settings
+Disallow: /profile
+Disallow: /admin
+Disallow: /parent
+Disallow: /teacher
+Disallow: /progress
+Disallow: /mistakes
+Disallow: /timetable
+Disallow: /radar
+Disallow: /api/
+Disallow: /search
+
+# Dynamic Sitemap Reference
+Sitemap: https://studypilot-ai-8.vercel.app/sitemap.xml

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { adminAuth, adminDb, FieldValue } from '../firebaseAdmin.js';
+import { adminAuth, adminDb, FieldValue } from '../firebaseAdmin.ts';
 
 export interface AuthenticatedQuotaRequest extends Request {
   user?: any;

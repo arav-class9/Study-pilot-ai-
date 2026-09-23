@@ -6,6 +6,8 @@ import { FocusProvider } from './context/FocusContext';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
 import { BottomNav } from './components/layout/BottomNav';
+import { AndroidFloatingActionButton } from './components/layout/AndroidFloatingActionButton';
+import { useAndroidNavigation } from './hooks/useAndroidNavigation';
 
 
 import { OnboardingModal } from './components/onboarding/OnboardingModal';
@@ -21,6 +23,15 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 // Pages
 import { HomePage } from './pages/HomePage';
 import { AuthPage } from './pages/AuthPage';
+import { PublicHomePage } from './pages/public/PublicHomePage';
+import { AboutPage } from './pages/public/AboutPage';
+import { FeaturesPage } from './pages/public/FeaturesPage';
+import { FeatureLanderPage } from './pages/public/FeatureLanderPage';
+import { PublicNCERTPage } from './pages/public/PublicNCERTPage';
+import { PublicTopicPage } from './pages/public/PublicTopicPage';
+import { NotFoundPage } from './pages/public/NotFoundPage';
+import { SEODiagnosticBar } from './components/seo/SEODiagnosticBar';
+import { useSEORouter } from './hooks/useSEORouter';
 
 function safeLazy<P = {}>(factory: () => Promise<any>, exportName: string): React.LazyExoticComponent<React.ComponentType<P>> {
   return React.lazy(async () => {
@@ -54,10 +65,32 @@ import { Toaster } from 'react-hot-toast';
 
 const AppContent: React.FC = () => {
   const { activeTab, setActiveTab, isDarkMode } = useApp();
-  const { user, loading } = useAuth();
+  const { user, loading, signInGuest } = useAuth();
+  const { currentRoute, navigate } = useSEORouter();
 
-  const touchStartX = React.useRef<number>(0);
-  const touchStartY = React.useRef<number>(0);
+  // Android Native Gesture & Hardware Back Button Integration
+  useAndroidNavigation({ activeTab, setActiveTab });
+
+  // Sync tab navigation with route if route is tab
+  React.useEffect(() => {
+    if (currentRoute.type === 'tab' && currentRoute.params.tabName) {
+      if (currentRoute.params.tabName !== activeTab) {
+        setActiveTab(currentRoute.params.tabName);
+      }
+    }
+  }, [currentRoute, activeTab, setActiveTab]);
+
+  // Sync route when activeTab changes
+  const prevTabRef = React.useRef(activeTab);
+  React.useEffect(() => {
+    if (prevTabRef.current !== activeTab) {
+      prevTabRef.current = activeTab;
+      const targetPath = activeTab === 'home' ? '/' : `/${activeTab}`;
+      if (window.location.pathname !== targetPath) {
+        navigate(targetPath);
+      }
+    }
+  }, [activeTab, navigate]);
 
   if (loading) {
     return (
@@ -90,6 +123,122 @@ const AppContent: React.FC = () => {
     );
   }
 
+  // Handle explicitly unauthenticated access to private tabs
+  const privateTabs = ['profile', 'mistakes', 'progress', 'timetable', 'admin', 'parent', 'teacher', 'auth'];
+  if (!user && currentRoute.type === 'tab' && privateTabs.includes(currentRoute.params.tabName || '')) {
+    return <AuthPage />;
+  }
+
+  // 1. Render Public Informational & NCERT SEO Pages
+  const renderPublicPage = () => {
+    switch (currentRoute.type) {
+      case 'about':
+        return <AboutPage onNavigate={navigate} />;
+      case 'features':
+        return <FeaturesPage onNavigate={navigate} />;
+      case 'ai-planner':
+        return <FeatureLanderPage feature="planner" onNavigate={navigate} />;
+      case 'ai-notes':
+        return <FeatureLanderPage feature="notes" onNavigate={navigate} />;
+      case 'ai-quiz':
+        return <FeatureLanderPage feature="quiz" onNavigate={navigate} />;
+      case 'ncert-hub':
+        return (
+          <PublicNCERTPage
+            onNavigate={navigate}
+            onOpenReader={(ch) => {
+              setActiveTab('ncert');
+              navigate('/ncert');
+            }}
+          />
+        );
+      case 'ncert-class':
+        return (
+          <PublicNCERTPage
+            classLevel={currentRoute.params.classLevel}
+            onNavigate={navigate}
+            onOpenReader={(ch) => {
+              setActiveTab('ncert');
+              navigate('/ncert');
+            }}
+          />
+        );
+      case 'ncert-subject':
+        return (
+          <PublicNCERTPage
+            classLevel={currentRoute.params.classLevel}
+            subjectId={currentRoute.params.subjectId}
+            onNavigate={navigate}
+            onOpenReader={(ch) => {
+              setActiveTab('ncert');
+              navigate('/ncert');
+            }}
+          />
+        );
+      case 'ncert-chapter':
+        return (
+          <PublicNCERTPage
+            classLevel={currentRoute.params.classLevel}
+            subjectId={currentRoute.params.subjectId}
+            chapterSlug={currentRoute.params.chapterSlug}
+            onNavigate={navigate}
+            onOpenReader={(ch) => {
+              setActiveTab('ncert');
+              navigate('/ncert');
+            }}
+          />
+        );
+      case 'topic':
+        return (
+          <PublicTopicPage
+            topicSlug={currentRoute.params.topicSlug || 'newtons-laws-of-motion'}
+            onNavigate={navigate}
+            onLaunchTopicWorkspace={() => {
+              setActiveTab('topic-workspace');
+              navigate('/workspace');
+            }}
+          />
+        );
+      case '404':
+        return <NotFoundPage onNavigate={navigate} />;
+      case 'home':
+        if (!user) {
+          return (
+            <PublicHomePage
+              onNavigate={navigate}
+              onGetStarted={() => {
+                signInGuest().catch(() => {});
+              }}
+            />
+          );
+        }
+        return null;
+      default:
+        return null;
+    }
+  };
+
+  const publicPageView = renderPublicPage();
+  if (publicPageView) {
+    return (
+      <div
+        className={`min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-300 ${
+          isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
+        }`}
+      >
+        <OfflineBanner />
+        <Toaster position="top-center" toastOptions={{ className: 'text-sm font-bold', style: { borderRadius: '16px' } }} />
+        <Navbar />
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <ErrorBoundary sectionName="PUBLIC_SEO_VIEW">
+            {publicPageView}
+          </ErrorBoundary>
+        </main>
+      </div>
+    );
+  }
+
+  // If user is not authenticated and is trying to access the app
   if (!user) {
     return <AuthPage />;
   }
@@ -157,33 +306,8 @@ const AppContent: React.FC = () => {
     );
   };
 
-  const primaryTabs = ['home', 'learn', 'practice', 'exam'];
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const diffX = touchStartX.current - e.changedTouches[0].clientX;
-    const diffY = touchStartY.current - e.changedTouches[0].clientY;
-
-    if (Math.abs(diffX) > 80 && Math.abs(diffX) > Math.abs(diffY)) {
-      const currentIndex = primaryTabs.indexOf(activeTab);
-      if (currentIndex !== -1) {
-        if (diffX > 0 && currentIndex < primaryTabs.length - 1) {
-          setActiveTab(primaryTabs[currentIndex + 1]);
-        } else if (diffX < 0 && currentIndex > 0) {
-          setActiveTab(primaryTabs[currentIndex - 1]);
-        }
-      }
-    }
-  };
-
   return (
     <div
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
       className={`min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-300 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}
     >
       <OfflineBanner />
@@ -197,12 +321,13 @@ const AppContent: React.FC = () => {
       <Navbar />
       <div className={`flex-1 flex w-full mx-auto ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'max-w-full' : 'max-w-7xl'}`}>
         {!['workspace', 'topic-workspace', 'topic'].includes(activeTab) && <Sidebar />}
-        <main className={`flex-1 overflow-y-auto w-full ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'p-0 pb-20 md:pb-6' : 'p-4 sm:p-6 lg:p-8 pb-24 md:pb-8 max-w-7xl mx-auto'}`}>
+        <main className={`flex-1 w-full hardware-accelerated ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'p-0 pb-[calc(env(safe-area-inset-bottom,0px)+72px)] md:pb-6' : 'p-4 sm:p-6 lg:p-8 pb-[calc(env(safe-area-inset-bottom,0px)+80px)] md:pb-8 max-w-7xl mx-auto'}`}>
           <ErrorBoundary sectionName={activeTab.toUpperCase()}>
             {renderContent()}
           </ErrorBoundary>
         </main>
       </div>
+      <AndroidFloatingActionButton />
       <BottomNav />
       
       <OnboardingModal />

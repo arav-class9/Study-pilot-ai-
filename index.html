@@ -2,16 +2,80 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>StudyPilot AI — NCERT School Books & Page-by-Page Interactive Quizzer</title>
     <meta name="description" content="AI-powered study coach featuring official NCERT school books organized by class, subject, chapter, and page, textbook page reader and photo uploader, instant page-by-page interactive quizzes, revision mode, and chapter analytics." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://studypilot-ai-8.vercel.app/" />
+    
+    <!-- Open Graph Social Share Tags -->
+    <meta property="og:site_name" content="StudyPilot AI" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://studypilot-ai-8.vercel.app/" />
     <meta property="og:title" content="StudyPilot AI — NCERT School Books & Page-by-Page Interactive Quizzer" />
     <meta property="og:description" content="AI-powered study coach featuring official NCERT school books organized by class, subject, chapter, and page, textbook page reader and photo uploader, instant page-by-page interactive quizzes, revision mode, and chapter analytics." />
-    <meta name="theme-color" content="#2563eb" />
+    <meta property="og:image" content="https://studypilot-ai-8.vercel.app/pwa-512x512.png" />
+
+    <!-- Twitter / X Card Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="StudyPilot AI — NCERT School Books & Page-by-Page Interactive Quizzer" />
+    <meta name="twitter:description" content="AI-powered study coach featuring official NCERT school books organized by class, subject, chapter, and page, textbook page reader and photo uploader, instant page-by-page interactive quizzes, revision mode, and chapter analytics." />
+    <meta name="twitter:image" content="https://studypilot-ai-8.vercel.app/pwa-512x512.png" />
+
+    <!-- Google Search Console Verification Placeholder -->
+    <meta name="google-site-verification" content="" />
+
+    <!-- Schema.org JSON-LD Structured Data -->
+    <script type="application/ld+json" id="studypilot-static-jsonld">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "@id": "https://studypilot-ai-8.vercel.app/#webapp",
+          "name": "StudyPilot AI",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "Android, Web",
+          "url": "https://studypilot-ai-8.vercel.app/",
+          "description": "AI-powered study coach and NCERT learning companion featuring page-by-page interactive readers, CBSE curriculum mapping, adaptive quizzes, and active recall study planners.",
+          "browserRequirements": "Requires JavaScript",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "INR",
+            "description": "Free access to NCERT textbook syllabus, formulas, and practice quizzes"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://studypilot-ai-8.vercel.app/#website",
+          "name": "StudyPilot AI",
+          "url": "https://studypilot-ai-8.vercel.app/",
+          "description": "AI-powered adaptive learning platform for NCERT, CBSE, and school students featuring intelligent curriculum mapping, page-by-page study tools, and spaced repetition quizzes.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://studypilot-ai-8.vercel.app/ncert?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "EducationalOrganization",
+          "@id": "https://studypilot-ai-8.vercel.app/#organization",
+          "name": "StudyPilot AI",
+          "url": "https://studypilot-ai-8.vercel.app/",
+          "logo": "https://studypilot-ai-8.vercel.app/icon.svg",
+          "description": "AI-powered adaptive learning platform for NCERT, CBSE, and school students."
+        }
+      ]
+    }
+    </script>
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#2563eb" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="StudyPilot AI" />
+    <meta name="format-detection" content="telephone=no" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64x64.png" />

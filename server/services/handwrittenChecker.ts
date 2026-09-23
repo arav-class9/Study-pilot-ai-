@@ -1,4 +1,4 @@
-import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.ts';
 import { Type } from '@google/genai';
 
 export interface CheckHandwritingInput {
@@ -35,8 +35,8 @@ Problem statement (if provided by student): ${input.problemStatement || 'Read an
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: [
         {
           inlineData: {

@@ -52,10 +52,10 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
 
   const ai = getGeminiClient();
   
-  const primaryModel = options.primaryModel || 'gemini-3.8-flash';
+  const primaryModel = options.primaryModel || 'gemini-2.5-flash';
   const fallbackModel = (options.fallbackModel && options.fallbackModel !== primaryModel) 
     ? options.fallbackModel 
-    : 'gemini-flash-latest';
+    : 'gemini-2.5-flash-lite';
   const maxRetries = options.maxRetries ?? 2;
 
   // Build unique sequence of models to try in order of preference
@@ -63,10 +63,9 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
     new Set([
       primaryModel,
       fallbackModel,
-      'gemini-3.8-flash',
-      'gemini-3.6-flash',
-      'gemini-3.1-flash-lite',
-      'gemini-flash-latest',
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite',
+      'gemini-2.5-pro',
     ].filter(Boolean))
   );
 

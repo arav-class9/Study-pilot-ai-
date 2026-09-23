@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
-import { apiRouter } from './server/routes.js';
+import { apiRouter } from './server/routes.ts';
 
 dotenv.config();
 
@@ -16,7 +16,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   // Resilience headers & CORS
   app.use((req: Request, res: Response, next: NextFunction) => {
@@ -43,6 +43,19 @@ async function startServer() {
   app.get('/health', healthHandler);
   app.get('/api/health', healthHandler);
   app.get('/api/ai/health', healthHandler);
+
+  // SEO Endpoints: Robots.txt & Dynamic XML Sitemap
+  app.get('/robots.txt', (req: Request, res: Response) => {
+    const robotsPath = path.join(process.cwd(), 'public', 'robots.txt');
+    res.type('text/plain');
+    res.sendFile(robotsPath);
+  });
+
+  app.get('/sitemap.xml', (req: Request, res: Response) => {
+    const sitemapPath = path.join(process.cwd(), 'public', 'sitemap.xml');
+    res.type('application/xml');
+    res.sendFile(sitemapPath);
+  });
 
   // Mount API router
   app.use('/api/ai', apiRouter);

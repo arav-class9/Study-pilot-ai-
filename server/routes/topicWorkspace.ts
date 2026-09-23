@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { Type, Schema } from '@google/genai';
-import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.ts';
 
 export const topicWorkspaceRouter = Router();
 
@@ -91,8 +91,8 @@ Return clean JSON conforming strictly to the schema.`;
         responseMimeType: 'application/json',
         responseSchema: definitionSchema,
       },
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-flash-latest',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash-lite',
     });
 
     const parsed = safeJsonParse(response.text, {
@@ -191,8 +191,8 @@ Write clean, highly accurate, engaging study notes now.`;
 
     const response = await generateContentWithRetry({
       contents: prompt,
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-flash-latest',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash-lite',
     });
 
     res.json({
@@ -279,7 +279,7 @@ Return clean JSON conforming to the schema.`;
         responseMimeType: 'application/json',
         responseSchema: explanationSchema,
       },
-      primaryModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
     });
 
     const parsed = safeJsonParse(response.text, {
@@ -363,7 +363,7 @@ Return clean JSON with "questions" array conforming strictly to schema.`;
         responseMimeType: 'application/json',
         responseSchema: questionBankSchema,
       },
-      primaryModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
     });
 
     const parsed = safeJsonParse(response.text, { questions: [] });
@@ -423,7 +423,7 @@ Return clean JSON conforming to the schema.`;
         responseMimeType: 'application/json',
         responseSchema: revisionSchema,
       },
-      primaryModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
     });
 
     const parsed = safeJsonParse(response.text, {

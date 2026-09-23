@@ -345,78 +345,58 @@ export const NCERTBooksPage: React.FC = () => {
   // Catalogue View: Browse by Class & Subject + Uploaded Books
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-16">
-      {/* Top Hero Banner */}
-      <section className="bg-linear-to-r from-indigo-700 via-indigo-600 to-purple-700 text-white pt-10 pb-12 px-4 sm:px-6 shadow-md">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-2">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/15 text-xs font-bold tracking-wide backdrop-blur-xs">
-                <BookOpen className="w-3.5 h-3.5 text-amber-300" />
-                <span>OFFICIAL NCERT TEXTBOOKS &amp; PDF PROCESSOR</span>
+      {/* Top Clean Header */}
+      <section className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 py-6 px-4 sm:px-6 shadow-2xs">
+        <div className="max-w-7xl mx-auto space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
+                <BookOpen className="w-5 h-5" />
               </div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-                {translateUI('NCERT & Books', currentLang)}
-              </h1>
-              <p className="text-xs sm:text-sm text-indigo-100 max-w-2xl leading-relaxed">
-                Read pre-loaded NCERT chapters or upload your own textbook PDFs. Read page by page, highlight important points for notes, and solve practice quizzes for any chapter!
-              </p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    {translateUI('NCERT & Books', currentLang)}
+                  </h1>
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                    Class {selectedClass}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  Official NCERT textbooks page-by-page with AI notes &amp; chapter quizzes
+                </p>
+              </div>
             </div>
 
-            {/* Quick Action Top CTAs */}
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <button
                 id="ncert-hero-upload-pdf-btn"
                 onClick={() => setPdfUploadModalOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold flex items-center space-x-2 shadow-md transition-all cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center space-x-2 shadow-sm transition-all cursor-pointer"
               >
                 <Upload className="w-4 h-4" />
-                <span>Upload NCERT PDF</span>
-              </button>
-
-              <button
-                id="ncert-hero-fullbook-test-btn"
-                onClick={() => {
-                  if (uploadedBooks.length > 0) {
-                    setActiveUploadedBook(uploadedBooks[0]);
-                    setFullBookTestModalOpen(true);
-                  } else {
-                    setPdfUploadModalOpen(true);
-                  }
-                }}
-                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold text-white flex items-center space-x-2 backdrop-blur-xs transition-colors cursor-pointer"
-              >
-                <Award className="w-4 h-4 text-amber-300" />
-                <span>Full-Book Test</span>
-              </button>
-
-              <button
-                id="ncert-hero-weak-topics-btn"
-                onClick={() => setWeakTopicsModalOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold text-white flex items-center space-x-2 backdrop-blur-xs transition-colors cursor-pointer"
-              >
-                <AlertTriangle className="w-4 h-4 text-amber-300" />
-                <span>Weak Topics</span>
+                <span>Upload PDF</span>
               </button>
             </div>
           </div>
 
           {/* Search Bar */}
-          <div className="relative max-w-2xl">
+          <div className="relative max-w-xl">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
             <input
               id="ncert-search-input"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search NCERT textbooks, chapters, chemical reactions, or theorems..."
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 text-xs sm:text-sm shadow-sm border border-white/20 focus:outline-hidden focus:ring-2 focus:ring-amber-300 font-medium"
+              placeholder="Search NCERT textbooks, chapters, topics, formulas..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 font-medium transition-all"
             />
           </div>
         </div>
       </section>
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
         {/* Uploaded & Official Indexed Books Carousel / Grid */}
         {uploadedBooks.length > 0 && (
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 p-5 shadow-sm space-y-3">

@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { HandwrittenSolutionTab } from '../components/tutor/HandwrittenSolutionTab';
+import { triggerHaptic } from '../utils/androidBridge';
 import { TextbookPhotoTab } from '../components/tutor/TextbookPhotoTab';
 import { VivaFeynmanTab } from '../components/tutor/VivaFeynmanTab';
 import { CitationInjector, CitationListPanel } from '../components/tutor/CitationInjector';
@@ -41,6 +42,7 @@ export const AITutorPage: React.FC = () => {
     saveNote,
     checkAndConsumeUsage,
     addXP,
+    setActiveTab,
     isDeepWork,
     toggleDeepWork,
     selectedSubjectId: globalSubject,
@@ -732,6 +734,84 @@ export const AITutorPage: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {/* Adaptive Concept Action Buttons (Requirement 6) */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3 shadow-xs">
+              <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-xs uppercase tracking-wider">
+                <Sparkles className="w-4 h-4 text-indigo-600" />
+                <span>Quick Concept Deepeners (Class {selectedClass}):</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuestionText(`Explain ${solution.concept} in simpler, everyday language for Class ${selectedClass} with an easy intuition and simple real-life analogy.`);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    setTimeout(() => handleSolve(), 150);
+                  }}
+                  className="px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 text-amber-900 dark:text-amber-200 text-xs font-bold border border-amber-200 dark:border-amber-800 text-center transition active:scale-95 cursor-pointer"
+                >
+                  💡 Explain simpler
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuestionText(`Explain ${solution.concept} deeper for Class ${selectedClass}, including rigorous derivation, mathematical equations, underlying scientific mechanisms, and board exam marking points.`);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    setTimeout(() => handleSolve(), 150);
+                  }}
+                  className="px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-900 dark:text-indigo-200 text-xs font-bold border border-indigo-200 dark:border-indigo-800 text-center transition active:scale-95 cursor-pointer"
+                >
+                  🔬 Explain deeper
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuestionText(`Give 2 step-by-step solved practical numerical/application examples for ${solution.concept} for Class ${selectedClass}.`);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    setTimeout(() => handleSolve(), 150);
+                  }}
+                  className="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-900 dark:text-emerald-200 text-xs font-bold border border-emerald-200 dark:border-emerald-800 text-center transition active:scale-95 cursor-pointer"
+                >
+                  📐 Give example
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    setActiveTab('practice');
+                  }}
+                  className="px-3 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 text-purple-900 dark:text-purple-200 text-xs font-bold border border-purple-200 dark:border-purple-800 text-center transition active:scale-95 cursor-pointer"
+                >
+                  🎯 Generate quiz
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    setActiveTab('flashcards');
+                  }}
+                  className="px-3 py-2 rounded-xl bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 text-sky-900 dark:text-sky-200 text-xs font-bold border border-sky-200 dark:border-sky-800 text-center transition active:scale-95 cursor-pointer"
+                >
+                  🗂️ Make flashcards
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('success');
+                    handleSaveToNotes();
+                  }}
+                  className="px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 text-rose-900 dark:text-rose-200 text-xs font-bold border border-rose-200 dark:border-rose-800 text-center transition active:scale-95 cursor-pointer"
+                >
+                  📝 Make revision notes
+                </button>
+              </div>
+            </div>
 
             {/* Quick Follow-Up Action Chips */}
             <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl p-4 space-y-2.5">

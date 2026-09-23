@@ -1,6 +1,6 @@
-import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.ts';
 import { Type } from '@google/genai';
-import { getPageContentForBook, ResolvedNCERTPage } from './ncertTextbookRepository.js';
+import { getPageContentForBook, ResolvedNCERTPage } from './ncertTextbookRepository.ts';
 
 export interface GeneratePageQuizInput {
   bookId?: string;
@@ -392,8 +392,8 @@ Generate EXACTLY ${targetCount} high-yield MCQs strictly from Page ${pageNum} ab
   let responseText = '';
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: promptText,
       config: {
         systemInstruction,

@@ -1,7 +1,7 @@
 import { Type, Schema } from '@google/genai';
-import { generateContentWithRetry, safeJsonParse } from '../gemini.js';
-import { serverCache } from '../cache.js';
-import { HIERARCHICAL_CURRICULUM } from '../../src/data/curriculumHierarchy.js';
+import { generateContentWithRetry, safeJsonParse } from '../gemini.ts';
+import { serverCache } from '../cache.ts';
+import { HIERARCHICAL_CURRICULUM } from '../../src/data/curriculumHierarchy.ts';
 
 export interface DeepResearchInput {
   query: string;
@@ -368,8 +368,8 @@ Output strictly valid JSON matching the specified schema.`;
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.1-pro-preview',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-pro',
       contents: [{ text: promptText }],
       config: {
         systemInstruction:
@@ -458,8 +458,8 @@ Output strictly valid JSON matching the specified schema.`;
 
     // Graceful Offline / Fallback Synthesis with Gemini without Search grounding tool if search tool fails or is restricted
     const fallbackResponse = await generateContentWithRetry({
-      primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      primaryModel: 'gemini-2.5-flash',
+      fallbackModel: 'gemini-2.5-flash',
       contents: [{ text: `${promptText}\n\nNote: Grounding tool temporarily unavailable. Generate comprehensive NCERT-aligned deep research notes based on expert internal knowledge.` }],
       config: {
         systemInstruction:

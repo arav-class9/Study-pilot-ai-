@@ -1,4 +1,4 @@
-import { HIERARCHICAL_CURRICULUM } from '../../src/data/curriculumHierarchy';
+import { HIERARCHICAL_CURRICULUM } from '../../src/data/curriculumHierarchy.ts';
 
 export interface SearchInput {
   query: string;

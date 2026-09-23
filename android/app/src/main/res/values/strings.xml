@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">StudyPilot AI</string>
+    <string name="exit_prompt">Press back again to exit StudyPilot AI</string>
+    <string name="network_error">Internet connection lost. Switched to offline mode.</string>
+</resources>

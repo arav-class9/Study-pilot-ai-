@@ -2,15 +2,77 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-html, body, #root {
+html {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Android Safe Area Inset Support */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+.pt-safe {
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+}
+
+.pb-safe {
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+.pb-safe-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 64px);
+}
+
+/* Android Touch Feedback */
+.android-touch-active:active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease-out;
 }
 
 *, *:before, *:after {
   box-sizing: border-box;
+}
+
+/* Hardware Acceleration for High-Frequency Scroll Containers (GPU Compositing) */
+.hardware-accelerated,
+.gpu-accelerated,
+main,
+.overflow-y-auto,
+.overflow-x-auto,
+.overflow-auto,
+[data-scroll-container] {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Custom scrollbars and sleek UI adjustments */

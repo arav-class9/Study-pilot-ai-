@@ -1,4 +1,4 @@
-import { getGeminiClient, generateContentWithRetry, safeJsonParse } from '../gemini.js';
+import { getGeminiClient, generateContentWithRetry, safeJsonParse } from '../gemini.ts';
 
 export interface TeacherWorksheetRequest {
   subject: string;

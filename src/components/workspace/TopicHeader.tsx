@@ -15,6 +15,8 @@ import {
   CheckCircle2,
   ArrowRight,
   Plus,
+  PanelLeft,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { TopicWorkspaceItem } from '../../types/workspace';
 
@@ -26,6 +28,10 @@ interface TopicHeaderProps {
   onOpenTopicDrawer: () => void;
   onCreateNewTopic: () => void;
   onContinueLearning: () => void;
+  showLeftSidebar?: boolean;
+  onToggleLeftSidebar?: () => void;
+  showRightTools?: boolean;
+  onToggleRightTools?: () => void;
 }
 
 export const TopicHeader: React.FC<TopicHeaderProps> = ({
@@ -35,7 +41,12 @@ export const TopicHeader: React.FC<TopicHeaderProps> = ({
   onBookmarkToggle,
   onOpenTopicDrawer,
   onCreateNewTopic,
-  onContinueLearning, }) => {
+  onContinueLearning,
+  showLeftSidebar = false,
+  onToggleLeftSidebar,
+  showRightTools = false,
+  onToggleRightTools,
+}) => {
   const mastery = topic.masteryScore || 10;
 
   const sections = [
@@ -53,14 +64,20 @@ export const TopicHeader: React.FC<TopicHeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
         {/* Breadcrumbs & Topic Title */}
         <div className="flex items-center gap-3 min-w-0">
-          <button
-            onClick={onOpenTopicDrawer}
-            className="p-2 rounded-xl bg-amber-100/80 dark:bg-slate-800 hover:bg-amber-200/80 dark:hover:bg-slate-700 text-amber-900 dark:text-amber-300 font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs"
-            title="Switch or Browse Topics"
-          >
-            <Layers className="w-4 h-4 text-amber-700 dark:text-amber-400" />
-            <span className="hidden sm:inline">My Topics</span>
-          </button>
+          {onToggleLeftSidebar && (
+            <button
+              onClick={onToggleLeftSidebar}
+              className={`p-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
+                showLeftSidebar
+                  ? 'bg-amber-600 text-white border-amber-600'
+                  : 'bg-amber-100/80 dark:bg-slate-800 hover:bg-amber-200/80 dark:hover:bg-slate-700 text-amber-900 dark:text-amber-300 border-amber-200/80 dark:border-slate-700'
+              }`}
+              title="Toggle Topics Sidebar"
+            >
+              <PanelLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Topics</span>
+            </button>
+          )}
 
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-800/80 dark:text-amber-400/80 uppercase tracking-wider truncate">
@@ -137,6 +154,22 @@ export const TopicHeader: React.FC<TopicHeaderProps> = ({
           >
             <Bookmark className="w-4 h-4" />
           </button>
+
+          {/* Toggle AI Tools Panel */}
+          {onToggleRightTools && (
+            <button
+              onClick={onToggleRightTools}
+              className={`p-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                showRightTools
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                  : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-amber-200/80 dark:border-slate-700 hover:bg-amber-50 dark:hover:bg-slate-750'
+              }`}
+              title="Toggle AI Tools & Study Settings"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              <span className="hidden sm:inline">AI Tools</span>
+            </button>
+          )}
 
           {/* Create New Topic Shortcut */}
           <button
