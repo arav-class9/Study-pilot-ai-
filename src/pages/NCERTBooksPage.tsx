@@ -23,6 +23,9 @@ import { NCERTWeakTopicsDashboard } from '../components/ncert/NCERTWeakTopicsDas
 import { NCERTRevisionDeck } from '../components/ncert/NCERTRevisionDeck';
 import { NCERTChapterAnalytics } from '../components/ncert/NCERTChapterAnalytics';
 import { NCERTBookStorage } from '../services/ncertBookStorage';
+import { NCERTBookCover } from '../components/ncert/NCERTBookCover';
+import { NCERTBookDetailView, BookDetailModel } from '../components/ncert/NCERTBookDetailView';
+import { NCERTAIToolsDrawer, AIToolActionType } from '../components/ncert/NCERTAIToolsDrawer';
 import {
   onCitationNavigation,
   getActiveCitationTarget,
@@ -52,34 +55,59 @@ import {
   BookMarked,
   Feather,
   ChevronLeft,
+  SlidersHorizontal,
+  Bookmark,
+  Bell,
+  Check,
+  Play,
+  Clock,
+  Flame,
 } from 'lucide-react';
+
+type FilterCategory = 'all' | 'ncert' | 'my_books' | 'uploaded' | 'recently_studied' | 'favorites';
 
 export const NCERTBooksPage: React.FC = () => {
   const { user, language } = useApp();
   const currentLang = (language as SupportedLanguage) || 'en';
   const defaultClass = (user?.classLevel && ['6', '7', '8', '9', '10', '11', '12'].includes(user.classLevel)
     ? user.classLevel
-    : '10') as NCERTClass;
+    : '9') as NCERTClass;
 
   const [selectedClass, setSelectedClass] = useState<NCERTClass>(defaultClass);
-  const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Auto-reset subject if current subject is not valid for new class
-  useEffect(() => {
-    const validSubjects = NCERT_SUBJECTS_CATALOG.filter((s) => s.classes.includes(selectedClass)).map(
-      (s) => s.id
-    );
-    if (selectedSubject !== 'all' && !validSubjects.includes(selectedSubject as any)) {
-      setSelectedSubject('all');
-    }
-  }, [selectedClass, selectedSubject]);
-
-  // Reader state
+  // Navigation states: Library (default), Detail View (Screen 2), or Reader (Screen 4 & 5)
+  const [selectedBookForDetail, setSelectedBookForDetail] = useState<BookDetailModel | null>(null);
   const [activeChapter, setActiveChapter] = useState<NCERTChapter | null>(null);
   const [activeUploadedBook, setActiveUploadedBook] = useState<NCERTUploadedBook | null>(null);
   const [readerPageNumber, setReaderPageNumber] = useState<number>(1);
   const [targetCitation, setTargetCitation] = useState<CitationNavigationTarget | null>(null);
+
+  // Favorites tracking
+  const [favoriteBookIds, setFavoriteBookIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('studypilot_fav_books');
+      return saved ? new Set(JSON.parse(saved)) : new Set(['book-9-science', 'book-9-math']);
+    } catch (e) {
+      return new Set(['book-9-science', 'book-9-math']);
+    }
+  });
+
+  const toggleFavoriteBook = (bookId: string) => {
+    setFavoriteBookIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(bookId)) {
+        next.delete(bookId);
+      } else {
+        next.add(bookId);
+      }
+      try {
+        localStorage.setItem('studypilot_fav_books', JSON.stringify(Array.from(next)));
+      } catch (e) {}
+      return next;
+    });
+  };
 
   // Uploaded Books collection
   const [uploadedBooks, setUploadedBooks] = useState<NCERTUploadedBook[]>([]);
@@ -96,6 +124,7 @@ export const NCERTBooksPage: React.FC = () => {
   const [revisionDeckOpen, setRevisionDeckOpen] = useState<boolean>(false);
   const [analyticsModalOpen, setAnalyticsModalOpen] = useState<boolean>(false);
   const [weakTopicsModalOpen, setWeakTopicsModalOpen] = useState<boolean>(false);
+  const [aiToolsDrawerOpen, setAiToolsDrawerOpen] = useState<boolean>(false);
 
   // Load uploaded books
   const refreshUploadedBooks = async () => {
@@ -146,7 +175,6 @@ export const NCERTBooksPage: React.FC = () => {
       }
     };
 
-    // Check if there's an existing target stored in memory
     const existing = getActiveCitationTarget();
     if (existing) {
       handleTarget(existing);
@@ -159,54 +187,153 @@ export const NCERTBooksPage: React.FC = () => {
     return () => unsubscribe();
   }, [selectedClass]);
 
-  // Filter chapters
-  const filteredChapters = useMemo(() => {
-    let chapters = getNCERTChaptersForClass(
-      selectedClass,
-      selectedSubject === 'all' ? undefined : selectedSubject
+  // Construct Book Models for the current selected class
+  const allBooksList = useMemo<BookDetailModel[]>(() => {
+    const list: BookDetailModel[] = [];
+
+    // Predefined curriculum books for this class
+    const subjectsForClass = NCERT_SUBJECTS_CATALOG.filter((s) =>
+      s.classes.includes(selectedClass)
     );
 
+    // Mock/stored sample progress percentages & last chapters matching the reference showcase
+    const sampleBookData: Record<string, { pct: number; lastChapter: string }> = {
+      science: { pct: 65, lastChapter: 'Ch 5 – The Fundamental Units of Life' },
+      math: { pct: 32, lastChapter: 'Ch 3 – Linear Equations in Two Variables' },
+      mathematics: { pct: 32, lastChapter: 'Ch 3 – Linear Equations in Two Variables' },
+      social: { pct: 18, lastChapter: 'Ch 2 – Physical Features of India' },
+      'social-science': { pct: 18, lastChapter: 'Ch 2 – Physical Features of India' },
+      english: { pct: 42, lastChapter: 'Ch 4 – The Little Girl' },
+      hindi: { pct: 25, lastChapter: 'Ch 1 – Do Bailon Ki Katha' },
+    };
+
+    for (const subj of subjectsForClass) {
+      const chapters = subj.chapters.filter((c) => c.classLevel === selectedClass);
+      if (chapters.length === 0) continue;
+
+      const bookId = `book-${selectedClass}-${subj.id}`;
+      const defaultInfo = sampleBookData[subj.id] || { pct: 20, lastChapter: `Ch 1 – ${chapters[0]?.title || 'Introduction'}` };
+
+      // Check if user has progress saved
+      let progressPct = defaultInfo.pct;
+      try {
+        const storedPct = localStorage.getItem(`ncert_book_pct_${bookId}`);
+        if (storedPct !== null) {
+          progressPct = parseInt(storedPct, 10);
+        }
+      } catch (e) {}
+
+      list.push({
+        id: bookId,
+        title: subj.name,
+        classLevel: selectedClass,
+        subjectId: subj.id,
+        board: 'NCERT',
+        progressPercentage: progressPct,
+        lastOpenedChapterTitle: defaultInfo.lastChapter,
+        isFavorite: favoriteBookIds.has(bookId),
+        isUploaded: false,
+        chapters,
+      });
+    }
+
+    // Add user uploaded books for this class
+    for (const upBook of uploadedBooks) {
+      if (upBook.classLevel === selectedClass || selectedCategory === 'uploaded') {
+        list.push({
+          id: upBook.id,
+          title: upBook.title,
+          classLevel: upBook.classLevel,
+          subjectId: upBook.subjectId,
+          board: 'Uploaded PDF',
+          progressPercentage: 10,
+          lastOpenedChapterTitle: upBook.chapters[0]?.title || 'Chapter 1',
+          isFavorite: favoriteBookIds.has(upBook.id),
+          isUploaded: true,
+          uploadedBookRef: upBook,
+          chapters: (upBook.chapters || []).map((ch) => ({
+            id: ch.id,
+            chapterNumber: ch.chapterNumber,
+            title: ch.title,
+            subjectId: upBook.subjectId,
+            classLevel: upBook.classLevel,
+            bookTitle: upBook.title,
+            totalPages: ch.totalPages,
+            description: `Extracted from ${upBook.fileName}`,
+            highYieldWeightage: 'User Upload',
+            keyThemes: ch.topics || [],
+          })),
+        });
+      }
+    }
+
+    return list;
+  }, [selectedClass, uploadedBooks, favoriteBookIds, selectedCategory]);
+
+  // Filter books by search & category
+  const filteredBooks = useMemo(() => {
+    let result = allBooksList;
+
+    // Filter category
+    if (selectedCategory === 'ncert') {
+      result = result.filter((b) => !b.isUploaded);
+    } else if (selectedCategory === 'uploaded') {
+      result = result.filter((b) => b.isUploaded);
+    } else if (selectedCategory === 'favorites') {
+      result = result.filter((b) => b.isFavorite);
+    } else if (selectedCategory === 'recently_studied' || selectedCategory === 'my_books') {
+      result = result.filter((b) => b.progressPercentage > 0);
+    }
+
+    // Filter search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      chapters = chapters.filter(
-        (c: NCERTChapter) =>
-          c.title.toLowerCase().includes(q) ||
-          c.description.toLowerCase().includes(q) ||
-          c.keyThemes.some((t: string) => t.toLowerCase().includes(q))
+      result = result.filter(
+        (b) =>
+          b.title.toLowerCase().includes(q) ||
+          b.lastOpenedChapterTitle.toLowerCase().includes(q) ||
+          b.chapters.some((c) => c.title.toLowerCase().includes(q))
       );
     }
 
-    return chapters;
-  }, [selectedClass, selectedSubject, searchQuery]);
+    return result;
+  }, [allBooksList, selectedCategory, searchQuery]);
 
-  const handleOpenChapter = (
-    chapter: NCERTChapter,
-    pageNum: number = 1,
-    book?: NCERTUploadedBook
-  ) => {
+  const handleOpenBook = (book: BookDetailModel) => {
+    setSelectedBookForDetail(book);
+  };
+
+  const handleContinueReadingBook = (book: BookDetailModel) => {
+    const firstCh = book.chapters[0];
+    if (firstCh) {
+      setActiveChapter(firstCh);
+      setActiveUploadedBook(book.uploadedBookRef || null);
+      setReaderPageNumber(1);
+    }
+  };
+
+  const handleOpenChapterFromDetail = (chapter: NCERTChapter, pageNum: number = 1) => {
     setActiveChapter(chapter);
-    setActiveUploadedBook(book || uploadedBooks[0] || null);
+    setActiveUploadedBook(selectedBookForDetail?.uploadedBookRef || null);
     setReaderPageNumber(pageNum);
   };
 
-  const handleOpenUploadedBook = (book: NCERTUploadedBook) => {
-    if (book.chapters && book.chapters.length > 0) {
-      const firstCh = book.chapters[0];
-      const matchedChapter: NCERTChapter = {
-        id: firstCh.id,
-        bookTitle: book.title,
-        classLevel: book.classLevel,
-        subjectId: book.subjectId,
-        chapterNumber: firstCh.chapterNumber,
-        title: firstCh.title,
-        description: `Official NCERT textbook chapter extracted directly from ${book.fileName}`,
-        totalPages: firstCh.totalPages,
-        highYieldWeightage: 'Board Core',
-        keyThemes: firstCh.topics.slice(0, 4),
-      };
-      setActiveChapter(matchedChapter);
-      setActiveUploadedBook(book);
-      setReaderPageNumber(firstCh.startPage);
+  const handleSelectAIToolFromDetail = (tool: AIToolActionType, chapter?: NCERTChapter) => {
+    const targetCh = chapter || selectedBookForDetail?.chapters[0];
+    if (!targetCh) return;
+
+    if (tool === 'notes' || tool === 'explain_page') {
+      setActiveChapter(targetCh);
+      setReaderPageNumber(1);
+    } else if (tool === 'ask_ai') {
+      setActiveChapter(targetCh);
+      setReaderPageNumber(1);
+    } else if (tool === 'page_quiz' || tool === 'chapter_quiz') {
+      setActiveChapter(targetCh);
+      setReaderPageNumber(1);
+    } else if (tool === 'flashcards' || tool === 'important_questions') {
+      setActiveChapter(targetCh);
+      setReaderPageNumber(1);
     }
   };
 
@@ -216,20 +343,14 @@ export const NCERTBooksPage: React.FC = () => {
     setQuizModalOpen(true);
   };
 
-  const handleUploadPageLoaded = (page: NCERTPageContent, customChapterName?: string) => {
+  const handleUploadPageLoaded = (page: NCERTPageContent) => {
     if (activeChapter) {
       setReaderPageNumber(page.pageNumber);
-    } else {
-      const firstChapter = filteredChapters[0];
-      if (firstChapter) {
-        setActiveChapter(firstChapter);
-        setReaderPageNumber(page.pageNumber);
-      }
     }
   };
 
   const handleDirectQuizFromUpload = (page: NCERTPageContent, pageNumber: number) => {
-    const chapterToUse = activeChapter || filteredChapters[0];
+    const chapterToUse = activeChapter || (allBooksList[0]?.chapters[0]);
     if (chapterToUse) {
       setActiveChapter(chapterToUse);
       setQuizPageContent(page);
@@ -240,28 +361,12 @@ export const NCERTBooksPage: React.FC = () => {
 
   const handleBookUploaded = (book: NCERTUploadedBook) => {
     setUploadedBooks((prev) => [book, ...prev.filter((b) => b.id !== book.id)]);
-    handleOpenUploadedBook(book);
+    refreshUploadedBooks();
   };
 
-  const getSubjectIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'Calculator':
-        return <Calculator className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
-      case 'Globe':
-        return <Globe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />;
-      case 'Languages':
-        return <Languages className="w-5 h-5 text-rose-600 dark:text-rose-400" />;
-      case 'Sparkles':
-        return <Sparkles className="w-5 h-5 text-teal-600 dark:text-teal-400" />;
-      case 'BookOpen':
-        return <BookOpen className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
-      case 'Atom':
-      default:
-        return <Atom className="w-5 h-5 text-sky-600 dark:text-sky-400" />;
-    }
-  };
-
-  // If student is actively reading a chapter, show the full NCERTReader!
+  // -------------------------------------------------------------
+  // RENDER LEVEL 1: Fullscreen Interactive Reader (Screen 4 & 5)
+  // -------------------------------------------------------------
   if (activeChapter) {
     return (
       <>
@@ -301,34 +406,6 @@ export const NCERTBooksPage: React.FC = () => {
           />
         )}
 
-        {uploadModalOpen && (
-          <NCERTPageUploadModal
-            isOpen={uploadModalOpen}
-            onClose={() => setUploadModalOpen(false)}
-            chapter={activeChapter}
-            onPageLoaded={handleUploadPageLoaded}
-            onDirectQuiz={handleDirectQuizFromUpload}
-          />
-        )}
-
-        {pdfUploadModalOpen && (
-          <NCERTPDFUploadModal
-            isOpen={pdfUploadModalOpen}
-            onClose={() => setPdfUploadModalOpen(false)}
-            onBookLoaded={handleBookUploaded}
-            currentClass={selectedClass}
-          />
-        )}
-
-        {revisionDeckOpen && (
-          <NCERTRevisionDeck
-            isOpen={revisionDeckOpen}
-            onClose={() => setRevisionDeckOpen(false)}
-            userId={user?.uid || 'guest-student'}
-            chapter={activeChapter}
-          />
-        )}
-
         {analyticsModalOpen && (
           <NCERTChapterAnalytics
             isOpen={analyticsModalOpen}
@@ -342,286 +419,316 @@ export const NCERTBooksPage: React.FC = () => {
     );
   }
 
-  // Catalogue View: Browse by Class & Subject + Uploaded Books
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-16">
-      {/* Top Clean Header */}
-      <section className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 py-6 px-4 sm:px-6 shadow-2xs">
-        <div className="max-w-7xl mx-auto space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
-                <BookOpen className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                    {translateUI('NCERT & Books', currentLang)}
-                  </h1>
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-                    Class {selectedClass}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                  Official NCERT textbooks page-by-page with AI notes &amp; chapter quizzes
-                </p>
-              </div>
-            </div>
+  // -------------------------------------------------------------
+  // RENDER LEVEL 2: Book Detail View (Screen 2)
+  // -------------------------------------------------------------
+  if (selectedBookForDetail) {
+    return (
+      <>
+        <NCERTBookDetailView
+          book={selectedBookForDetail}
+          onBack={() => setSelectedBookForDetail(null)}
+          onOpenChapter={(ch, pageNum) => handleOpenChapterFromDetail(ch, pageNum)}
+          onContinueReading={() => handleContinueReadingBook(selectedBookForDetail)}
+          onSelectAITool={(tool, ch) => handleSelectAIToolFromDetail(tool, ch)}
+          onOpenUploadModal={() => setPdfUploadModalOpen(true)}
+          onToggleFavorite={toggleFavoriteBook}
+        />
 
-            <div className="flex items-center gap-2">
-              <button
-                id="ncert-hero-upload-pdf-btn"
-                onClick={() => setPdfUploadModalOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center space-x-2 shadow-sm transition-all cursor-pointer"
-              >
-                <Upload className="w-4 h-4" />
-                <span>Upload PDF</span>
-              </button>
+        {pdfUploadModalOpen && (
+          <NCERTPDFUploadModal
+            isOpen={pdfUploadModalOpen}
+            onClose={() => setPdfUploadModalOpen(false)}
+            onBookLoaded={handleBookUploaded}
+            currentClass={selectedClass}
+          />
+        )}
+      </>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // RENDER LEVEL 3: Library Home (Screen 1)
+  // -------------------------------------------------------------
+  const categoryTabs = [
+    { id: 'all' as FilterCategory, label: 'All' },
+    { id: 'ncert' as FilterCategory, label: 'NCERT', icon: BookOpen },
+    { id: 'my_books' as FilterCategory, label: 'My Books', icon: Layers },
+    { id: 'uploaded' as FilterCategory, label: 'Uploaded', icon: Upload },
+    { id: 'recently_studied' as FilterCategory, label: 'Recently Studied', icon: Clock },
+    { id: 'favorites' as FilterCategory, label: 'Favorites', icon: Bookmark },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#faf7fc] dark:bg-slate-950 text-slate-800 dark:text-slate-100 pb-24">
+      {/* Top Main Navigation Bar matching Screen 1 */}
+      <header className="sticky top-0 z-30 bg-[#faf7fc]/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-purple-100/60 dark:border-slate-800/80 px-4 sm:px-6 py-3.5">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#E11D74] via-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-pink-500/20">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                StudyPilot AI
+              </h1>
+              <p className="text-[11px] font-semibold text-slate-400 leading-none">
+                Learn Smarter • Grow Faster
+              </p>
             </div>
           </div>
 
-          {/* Search Bar */}
-          <div className="relative max-w-xl">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setSearchModalOpen(true)}
+              className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-purple-100 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shadow-2xs"
+              title="Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+
+            <button
+              className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-purple-100 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shadow-2xs relative"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#E11D74] ring-2 ring-white dark:ring-slate-900" />
+            </button>
+
+            {/* User Avatar */}
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-[#E11D74] text-white font-black text-xs flex items-center justify-center shadow-2xs">
+              {user?.displayName ? user.displayName.slice(0, 1).toUpperCase() : 'S'}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Library Container */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-5 space-y-6">
+        {/* Hero Card: "My Learning Library" matching Screen 1 */}
+        <div className="relative rounded-3xl p-6 sm:p-7 overflow-hidden bg-gradient-to-r from-[#20053b] via-[#3b0764] to-[#581c87] text-white shadow-xl shadow-purple-950/20">
+          {/* Subtle star/sparkle background elements */}
+          <div className="absolute -right-6 -bottom-10 w-48 h-48 rounded-full bg-pink-500/20 blur-3xl pointer-events-none" />
+          <div className="absolute top-4 right-1/3 w-2 h-2 rounded-full bg-amber-300 animate-ping opacity-60" />
+          <div className="absolute bottom-6 left-1/4 w-1.5 h-1.5 rounded-full bg-pink-300 opacity-50" />
+
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-md">
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
+                My Learning Library
+              </h2>
+              <p className="text-xs sm:text-sm text-purple-200 font-medium leading-relaxed">
+                Your NCERT, Books &amp; Notes — All in One Place
+              </p>
+
+              {/* Class Selector Badges */}
+              <div className="pt-2 flex items-center gap-1.5 flex-wrap">
+                {(['6', '7', '8', '9', '10', '11', '12'] as NCERTClass[]).map((cls) => (
+                  <button
+                    key={cls}
+                    onClick={() => setSelectedClass(cls)}
+                    className={`px-3 py-1 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                      selectedClass === cls
+                        ? 'bg-white text-purple-950 shadow-md ring-2 ring-pink-400'
+                        : 'bg-white/10 text-white/90 hover:bg-white/20'
+                    }`}
+                  >
+                    Class {cls}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 3D Stack of Books Isometric Graphic */}
+            <div className="relative shrink-0 flex items-center justify-center self-center sm:self-auto">
+              <div className="relative w-32 h-28 sm:w-40 sm:h-36 flex items-center justify-center">
+                {/* Glowing Aura */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/30 to-purple-400/30 blur-xl rounded-full" />
+
+                {/* Stack of colorful isometric books */}
+                <svg className="w-28 h-28 sm:w-36 sm:h-36 drop-shadow-2xl" viewBox="0 0 160 140" fill="none">
+                  {/* Bottom Book (Cyan) */}
+                  <g transform="translate(10, 50)">
+                    <polygon points="70,10 130,35 70,60 10,35" fill="#0284c7" />
+                    <polygon points="10,35 70,60 70,72 10,47" fill="#0369a1" />
+                    <polygon points="70,60 130,35 130,47 70,72" fill="#075985" />
+                    {/* Pages */}
+                    <polygon points="12,37 68,60 68,69 12,46" fill="#f8fafc" opacity="0.9" />
+                  </g>
+
+                  {/* Middle Book (Magenta/Pink) */}
+                  <g transform="translate(15, 30)">
+                    <polygon points="70,10 130,35 70,60 10,35" fill="#E11D74" />
+                    <polygon points="10,35 70,60 70,72 10,47" fill="#be123c" />
+                    <polygon points="70,60 130,35 130,47 70,72" fill="#9f1239" />
+                    {/* Pages */}
+                    <polygon points="12,37 68,60 68,69 12,46" fill="#fdf2f8" opacity="0.9" />
+                  </g>
+
+                  {/* Top Open Book (Amber/Violet) */}
+                  <g transform="translate(20, 10)">
+                    <polygon points="70,10 130,35 70,60 10,35" fill="#a855f7" />
+                    <polygon points="10,35 70,60 70,72 10,47" fill="#7e22ce" />
+                    <polygon points="70,60 130,35 130,47 70,72" fill="#6b21a8" />
+                    {/* Pages */}
+                    <polygon points="12,37 68,60 68,69 12,46" fill="#ffffff" />
+                  </g>
+
+                  {/* Sparkle Stars */}
+                  <path d="M 30 15 Q 35 15 35 10 Q 35 15 40 15 Q 35 15 35 20 Q 35 15 30 15" fill="#fbbf24" />
+                  <path d="M 125 15 Q 130 15 130 10 Q 130 15 135 15 Q 130 15 130 20 Q 130 15 125 15" fill="#fbbf24" />
+                  <path d="M 140 55 Q 143 55 143 52 Q 143 55 146 55 Q 143 55 143 58 Q 143 55 140 55" fill="#f472b6" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search Bar + Filter Icon matching Screen 1 */}
+        <div className="flex items-center gap-2.5">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
             <input
-              id="ncert-search-input"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search NCERT textbooks, chapters, topics, formulas..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 font-medium transition-all"
+              placeholder="Search books, chapters or topics..."
+              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-slate-800 shadow-xs text-xs sm:text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#E11D74]"
             />
           </div>
+
+          <button
+            onClick={() => {}}
+            className="w-11 h-11 rounded-2xl bg-white dark:bg-slate-900 border border-purple-100 dark:border-slate-800 shadow-xs flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+            title="Sort & Filters"
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+          </button>
         </div>
-      </section>
 
-      {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
-        {/* Uploaded & Official Indexed Books Carousel / Grid */}
-        {uploadedBooks.length > 0 && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 p-5 shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <FileText className="w-4 h-4 text-indigo-600" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Processed &amp; Indexed NCERT Books ({uploadedBooks.length})
-                </h3>
-              </div>
+        {/* Category Filter Chips matching Screen 1 */}
+        <div className="flex items-center space-x-2 overflow-x-auto pb-1 no-scrollbar">
+          {categoryTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = selectedCategory === tab.id;
+            return (
               <button
-                onClick={() => setPdfUploadModalOpen(true)}
-                className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center space-x-1 cursor-pointer"
+                key={tab.id}
+                onClick={() => setSelectedCategory(tab.id)}
+                className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap flex items-center space-x-1.5 transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-[#E11D74] text-white shadow-md shadow-pink-500/25 scale-[1.02]'
+                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-purple-50 dark:hover:bg-slate-800 border border-purple-100/80 dark:border-slate-800'
+                }`}
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Upload Another NCERT PDF</span>
+                {Icon && <Icon className="w-3.5 h-3.5" />}
+                <span>{tab.label}</span>
               </button>
-            </div>
+            );
+          })}
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {uploadedBooks.map((book) => (
-                <div
-                  key={book.id}
-                  className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-600 bg-slate-50/50 dark:bg-slate-800/40 transition-all flex flex-col justify-between space-y-3"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 text-[10px] font-bold">
-                        Class {book.classLevel} • {book.subjectId.toUpperCase()}
-                      </span>
-                      <span className="text-[11px] text-slate-500 font-semibold">
-                        {book.totalPages} Pages
-                      </span>
-                    </div>
+        {/* Section Header: "Your Books" with "View All" */}
+        <div className="flex items-center justify-between pt-2 px-1">
+          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+            Your Books
+          </h3>
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className="text-xs font-extrabold text-[#E11D74] hover:underline cursor-pointer"
+          >
+            View All
+          </button>
+        </div>
 
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug">
+        {/* Book Cards Grid matching Screen 1 */}
+        {filteredBooks.length === 0 ? (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 text-center border border-purple-100 dark:border-slate-800 space-y-3">
+            <BookOpen className="w-10 h-10 text-purple-400 mx-auto opacity-70" />
+            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              No books found
+            </h4>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              Try adjusting your search query, selecting another class, or upload a textbook PDF.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {filteredBooks.map((book) => (
+              <div
+                key={book.id}
+                onClick={() => handleOpenBook(book)}
+                className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-purple-100/80 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-pink-300 dark:hover:border-pink-800 hover:-translate-y-1"
+              >
+                <div className="space-y-3">
+                  {/* Book Cover Container */}
+                  <div className="flex justify-center pt-1">
+                    <NCERTBookCover
+                      title={book.title}
+                      subjectId={book.subjectId}
+                      classLevel={book.classLevel}
+                      size="md"
+                      isUploaded={book.isUploaded}
+                    />
+                  </div>
+
+                  {/* Title & Class */}
+                  <div>
+                    <h4 className="text-base font-black text-slate-900 dark:text-white group-hover:text-[#E11D74] transition-colors leading-snug truncate">
                       {book.title}
                     </h4>
-                    <p className="text-[11px] text-slate-500 truncate">
-                      {book.fileName} • {book.chapters.length} Chapters detected
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                      Class {book.classLevel} • {book.board}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <button
-                      onClick={() => handleOpenUploadedBook(book)}
-                      className="flex-1 py-1.5 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center space-x-1 transition-colors cursor-pointer"
-                    >
-                      <BookOpen className="w-3.5 h-3.5" />
-                      <span>Read Book</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveUploadedBook(book);
-                        setFullBookTestModalOpen(true);
-                      }}
-                      className="py-1.5 px-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center space-x-1 transition-colors cursor-pointer"
-                      title="Take Full Book Mock Test"
-                    >
-                      <Award className="w-3.5 h-3.5" />
-                      <span>Test</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveUploadedBook(book);
-                        setSearchModalOpen(true);
-                      }}
-                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-                      title="Search Content Index"
-                    >
-                      <Search className="w-3.5 h-3.5" />
-                    </button>
+                  {/* Progress Bar & Percentage */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px] font-bold">
+                      <span className="text-[#E11D74]">{book.progressPercentage}% Complete</span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#E11D74] via-purple-500 to-indigo-500 transition-all duration-500"
+                        style={{ width: `${Math.max(5, Math.min(100, book.progressPercentage))}%` }}
+                      />
+                    </div>
                   </div>
+
+                  {/* Last Chapter Studied */}
+                  <p className="text-[11px] text-slate-400 font-medium truncate">
+                    Last: {book.lastOpenedChapterTitle}
+                  </p>
                 </div>
-              ))}
-            </div>
+
+                {/* Continue Reading Button */}
+                <div className="pt-3 mt-2 border-t border-purple-50 dark:border-slate-800/80">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleContinueReadingBook(book);
+                    }}
+                    className="w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-[#E11D74] via-[#c026d3] to-[#8b5cf6] hover:from-[#c026d3] hover:to-[#7c3aed] text-white font-extrabold text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-pink-500/20 hover:shadow-lg transition-all cursor-pointer"
+                  >
+                    <Play className="w-3 h-3 fill-white" />
+                    <span>Continue Reading</span>
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
+      </main>
 
-        {/* Class Selection Pills */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Select NCERT Class:
-            </span>
-            <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
-              CBSE &amp; State Boards Aligned
-            </span>
-          </div>
-
-          <div className="flex items-center space-x-2 overflow-x-auto pb-1">
-            {(['6', '7', '8', '9', '10', '11', '12'] as NCERTClass[]).map((cls) => (
-              <button
-                key={cls}
-                onClick={() => setSelectedClass(cls)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                  selectedClass === cls
-                    ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-500/20'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                Class {cls}
-              </button>
-            ))}
-          </div>
-
-          {/* Subject Filter Tabs */}
-          <div className="flex items-center space-x-2 overflow-x-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-            <button
-              onClick={() => setSelectedSubject('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                selectedSubject === 'all'
-                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              All Subjects
-            </button>
-
-            {NCERT_SUBJECTS_CATALOG.filter((subj: any) =>
-              subj.classes.includes(selectedClass)
-            ).map((subj: any) => (
-              <button
-                key={subj.id}
-                onClick={() => setSelectedSubject(subj.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap flex items-center space-x-1.5 transition-colors cursor-pointer ${
-                  selectedSubject === subj.id
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                {getSubjectIcon(subj.iconName)}
-                <span>{subj.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Chapters Grid */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-              NCERT Class {selectedClass} Chapters ({filteredChapters.length})
-            </h2>
-            <span className="text-xs text-slate-500">
-              Click any chapter to read page-by-page &amp; take quizzes
-            </span>
-          </div>
-
-          {filteredChapters.length === 0 ? (
-            <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
-              <BookOpen className="w-10 h-10 text-slate-400 mx-auto" />
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                No chapters found matching &ldquo;{searchQuery}&rdquo;
-              </p>
-              <p className="text-xs text-slate-500">
-                Try searching for another keyword, or click &ldquo;Upload NCERT PDF&rdquo; to process any official book!
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredChapters.map((chapter: NCERTChapter) => (
-                <div
-                  key={chapter.id}
-                  className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-700 transition-all flex flex-col justify-between"
-                >
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                          Chapter {chapter.chapterNumber}
-                        </span>
-                        {chapter.pages && Object.keys(chapter.pages).length > 0 && (
-                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-sm bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
-                            Full Pages
-                          </span>
-                        )}
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                        {chapter.highYieldWeightage}
-                      </span>
-                    </div>
-
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
-                      {chapter.title}
-                    </h3>
-
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                      {chapter.description}
-                    </p>
-
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {chapter.keyThemes.slice(0, 3).map((theme: string, tIdx: number) => (
-                        <span
-                          key={tIdx}
-                          className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-medium"
-                        >
-                          {theme}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      {chapter.totalPages} Textbook Pages
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleOpenChapter(chapter, 1)}
-                        className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs flex items-center space-x-1 transition-colors cursor-pointer"
-                      >
-                        <span>Read Book</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Floating "+ Upload Book" Button matching Screen 1 */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => setPdfUploadModalOpen(true)}
+          className="px-5 py-3.5 rounded-full bg-gradient-to-r from-[#E11D74] to-[#a855f7] hover:from-[#c026d3] hover:to-[#9333ea] text-white font-black text-xs sm:text-sm shadow-xl shadow-pink-500/35 hover:shadow-2xl flex items-center space-x-2 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[3]" />
+          <span>Upload Book</span>
+        </button>
       </div>
 
       {/* Global Modals */}
@@ -651,14 +758,13 @@ export const NCERTBooksPage: React.FC = () => {
         />
       )}
 
-      {searchModalOpen && activeUploadedBook && (
+      {searchModalOpen && (
         <NCERTSearchModal
           isOpen={searchModalOpen}
           onClose={() => setSearchModalOpen(false)}
-          book={activeUploadedBook}
+          book={activeUploadedBook || uploadedBooks[0]}
           onNavigateToPage={(p) => {
             if (activeUploadedBook) {
-              handleOpenUploadedBook(activeUploadedBook);
               setReaderPageNumber(p);
             }
           }}
@@ -684,10 +790,6 @@ export const NCERTBooksPage: React.FC = () => {
               <NCERTWeakTopicsDashboard
                 onNavigateToPage={(p) => {
                   setWeakTopicsModalOpen(false);
-                  const firstCh = filteredChapters[0];
-                  if (firstCh) {
-                    handleOpenChapter(firstCh, p);
-                  }
                 }}
               />
             </div>

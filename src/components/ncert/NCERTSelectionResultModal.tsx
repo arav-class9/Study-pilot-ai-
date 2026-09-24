@@ -77,6 +77,10 @@ export const NCERTSelectionResultModal: React.FC<SelectionResultModalProps> = ({
         return 'Authentic NCERT Study Notes';
       case 'explain':
         return 'Conceptual Explanation & Analogy';
+      case 'simplify':
+        return 'Simplified Breakdown & Key Idea';
+      case 'ask_ai':
+        return 'NCERT AI Doubt Resolver';
       case 'quiz':
         return 'Strict Selection-Based Quiz';
       default:
@@ -93,7 +97,7 @@ export const NCERTSelectionResultModal: React.FC<SelectionResultModalProps> = ({
             <div className="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
               {result?.actionType === 'notes' ? (
                 <FileText className="w-5 h-5" />
-              ) : result?.actionType === 'explain' ? (
+              ) : result?.actionType === 'explain' || result?.actionType === 'simplify' ? (
                 <Lightbulb className="w-5 h-5 text-amber-500" />
               ) : (
                 <Sparkles className="w-5 h-5 text-indigo-500" />
@@ -203,15 +207,19 @@ export const NCERTSelectionResultModal: React.FC<SelectionResultModalProps> = ({
                 </div>
               )}
 
-              {/* Action Type 2: EXPLAIN */}
-              {result.actionType === 'explain' && (
+              {/* Action Type 2: EXPLAIN / SIMPLIFY / ASK AI */}
+              {(result.actionType === 'explain' || result.actionType === 'simplify' || result.actionType === 'ask_ai') && (
                 <div className="space-y-4 text-xs sm:text-sm">
                   <div>
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                      Conceptual Explanation
+                      {result.actionType === 'simplify'
+                        ? 'Simplified Explanation'
+                        : result.actionType === 'ask_ai'
+                        ? 'AI Doubt Explanation'
+                        : 'Conceptual Explanation'}
                     </h4>
-                    <p className="text-slate-800 dark:text-slate-200 leading-relaxed font-sans">
-                      {result.simplifiedExplanation}
+                    <p className="text-slate-800 dark:text-slate-200 leading-relaxed font-sans whitespace-pre-line">
+                      {result.simplifiedExplanation || result.explanationText}
                     </p>
                   </div>
 

@@ -579,7 +579,7 @@ export class NCERTService {
    * Execute Action (Notes, Explanation, Strict Quiz) on Selected Textbook Text
    */
   static async executeSelectionAction(params: {
-    actionType: 'notes' | 'explain' | 'quiz';
+    actionType: 'notes' | 'explain' | 'quiz' | 'simplify' | 'ask_ai';
     selectedText: string;
     pageNumber: number;
     chapterName: string;
@@ -610,6 +610,14 @@ export class NCERTService {
         selectedText: sel,
         pageNumber: params.pageNumber,
         formattedNotes: `### Core Notes from Page ${params.pageNumber}\n- **Selected Excerpt**: "${sel}"\n- **Key Takeaway**: High-yield NCERT board concept for ${params.chapterName}.\n- **Exam Strategy**: Memorize exact textbook keywords and definitions for top marks.`,
+        bulletNotes: [
+          `Key concept: ${sel.slice(0, 100)}...`,
+          `Essential for NCERT Class ${params.classLevel} ${params.subject} exam preparation.`,
+          `Formulas and definitions from this excerpt should be reviewed regularly.`
+        ],
+        keyTerms: [
+          { term: sel.split(' ')[0] || 'Term', definition: 'Fundamental NCERT curriculum definition.' }
+        ]
       };
     } else if (params.actionType === 'explain') {
       return {
@@ -617,6 +625,26 @@ export class NCERTService {
         selectedText: sel,
         pageNumber: params.pageNumber,
         explanationText: `Simplified Explanation: "${sel}" refers to a core scientific or mathematical principle taught in NCERT Class ${params.classLevel} ${params.subject}. In simple terms, it describes how elements interact predictably under standard conditions according to curriculum rules.`,
+        simplifiedExplanation: `In simple terms: "${sel}" explains a foundational concept in ${params.chapterName}. Think of it like building blocks—each part follows specific laws of nature to create the observable world around us.`,
+        realWorldAnalogy: 'Think of this like recipe ingredients: the exact ratios and rules determine the final result every single time.',
+        ncertRuleToRemember: `${params.chapterName} Rule: Always state the standard definition and units in your board answers.`
+      };
+    } else if (params.actionType === 'simplify') {
+      return {
+        actionType: 'simplify',
+        selectedText: sel,
+        pageNumber: params.pageNumber,
+        explanationText: `Simplified Breakdown:\n1. What it means: "${sel.slice(0, 120)}..."\n2. Why it matters: It explains the basic behavior studied in this chapter.\n3. Remember this: High marks come from clear understanding, not rote learning.`,
+        simplifiedExplanation: `Simplified: ${sel}\n\nKey meaning: Everything follows structured natural rules. Even complex phenomena can be broken down into simpler constituent parts.`,
+        realWorldAnalogy: 'Like Lego bricks: individual tiny pieces assemble to construct large, complex structures.',
+      };
+    } else if (params.actionType === 'ask_ai') {
+      return {
+        actionType: 'ask_ai',
+        selectedText: sel,
+        pageNumber: params.pageNumber,
+        explanationText: `Doubt Resolution for: "${sel.slice(0, 100)}..."\n\nQ: How does this apply to NCERT exams?\nA: This is frequently asked in 2-mark and 3-mark conceptual questions. Be sure to memorize the core definition and mention relevant examples.`,
+        simplifiedExplanation: `AI Study Assistant: This concept from ${params.chapterName} is directly aligned with CBSE & State Board learning objectives. When asked in tests, always begin with the formal definition from Page ${params.pageNumber}.`,
       };
     } else {
       const pageRef = `Page ${params.pageNumber} • ${params.chapterName}`;

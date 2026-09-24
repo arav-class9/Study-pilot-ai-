@@ -285,7 +285,7 @@ export interface NCERTHighlight {
 }
 
 export interface NCERTSelectionActionResult {
-  actionType: 'notes' | 'explain' | 'quiz';
+  actionType: 'notes' | 'explain' | 'quiz' | 'simplify' | 'ask_ai';
   selectedText: string;
   pageNumber: number;
   chapterName?: string;
