@@ -49,7 +49,7 @@ export const ExamPage: React.FC = () => {
     selectedBoard: globalBoard,
     selectedExamChapters: globalChapters,
   } = useApp();
-  const { persistedState, saveExamState, clearExamState } = useExamPersistence();
+  const { persistedState, saveExamState, clearExamState } = useExamPersistence(user.uid || 'guest');
 
   // Curriculum & Exam Setup State
   const [board, setBoard] = useState<string>(persistedState.board || globalBoard || user.board || 'CBSE');

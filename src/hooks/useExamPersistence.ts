@@ -15,10 +15,11 @@ export interface ExamPersistenceState {
   isExamCompleted: boolean;
 }
 
-export function useExamPersistence() {
+export function useExamPersistence(userId: string = 'default') {
+  const storageKey = `studypilot_active_exam_state_${userId}`;
   const [persistedState, setPersistedState] = useState<ExamPersistenceState>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_EXAM);
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.examPaper && !parsed.isExamCompleted && parsed.timeLeftSeconds > 0) {
@@ -47,20 +48,20 @@ export function useExamPersistence() {
       const updated = { ...prev, ...state };
       try {
         if (updated.examPaper && !updated.isExamCompleted) {
-          localStorage.setItem(STORAGE_KEY_EXAM, JSON.stringify(updated));
+          localStorage.setItem(storageKey, JSON.stringify(updated));
         } else {
-          localStorage.removeItem(STORAGE_KEY_EXAM);
+          localStorage.removeItem(storageKey);
         }
       } catch (e) {
         console.warn('Failed to save exam state:', e);
       }
       return updated;
     });
-  }, []);
+  }, [storageKey]);
 
   const clearExamState = useCallback(() => {
     try {
-      localStorage.removeItem(STORAGE_KEY_EXAM);
+      localStorage.removeItem(storageKey);
     } catch (e) {
       console.warn('Failed to clear exam state:', e);
     }
@@ -76,7 +77,7 @@ export function useExamPersistence() {
       board: 'CBSE',
       isExamCompleted: false,
     });
-  }, []);
+  }, [storageKey]);
 
   return {
     persistedState,

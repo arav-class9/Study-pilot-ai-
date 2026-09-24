@@ -452,3 +452,283 @@ Return clean JSON conforming to the schema.`;
     });
   }
 });
+
+// ==========================================
+// 6. GENERATE INTELLIGENT STRUCTURED VISUAL ANSWER
+// ==========================================
+const visualAnswerSchema: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    topicTitle: { type: Type.STRING, description: 'Clear title of the topic or concept' },
+    subject: { type: Type.STRING, description: 'Academic subject e.g. Science (Physics), Mathematics, Biology' },
+    classLevel: { type: Type.STRING, description: 'Class level e.g. Class 10 or Class 9' },
+    chapter: { type: Type.STRING, description: 'Curriculum chapter name' },
+    oneLineDescription: { type: Type.STRING, description: 'Short one-line description of the topic' },
+    bigIdea: { type: Type.STRING, description: 'Big Idea: A short, simple explanation of the central concept' },
+    subjectIcon: {
+      type: Type.STRING,
+      enum: ['atom', 'calculator', 'flask', 'dna', 'globe', 'book', 'sparkles'],
+      description: 'Icon identifier matching the subject domain',
+    },
+    cards: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          id: { type: Type.STRING },
+          cardNumber: { type: Type.INTEGER },
+          title: { type: Type.STRING },
+          accentColor: {
+            type: Type.STRING,
+            enum: ['teal', 'purple', 'amber', 'pink', 'emerald', 'blue', 'indigo', 'violet', 'green', 'rose', 'orange', 'cyan', 'fuchsia'],
+          },
+          importantPoint: {
+            type: Type.OBJECT,
+            properties: {
+              badgeText: { type: Type.STRING, description: 'e.g. "Important Point"' },
+              quoteOrText: { type: Type.STRING },
+            },
+            required: ['quoteOrText'],
+          },
+          paragraphs: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+          },
+          bullets: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+          },
+          formula: {
+            type: Type.OBJECT,
+            properties: {
+              equation: { type: Type.STRING, description: 'Key equation or boxed formula e.g. F = m × a' },
+              explanation: { type: Type.STRING },
+              conditionOrWhenToUse: { type: Type.STRING },
+            },
+          },
+          comparison: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              columns: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: 'Names of the 2 or more entities compared, e.g. ["Balanced Forces", "Unbalanced Forces"]',
+              },
+              rows: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    feature: { type: Type.STRING },
+                    values: {
+                      type: Type.ARRAY,
+                      items: { type: Type.STRING },
+                    },
+                  },
+                  required: ['values'],
+                },
+              },
+            },
+            required: ['columns', 'rows'],
+          },
+          example: {
+            type: Type.OBJECT,
+            properties: {
+              type: { type: Type.STRING, enum: ['numerical', 'conceptual'] },
+              title: { type: Type.STRING },
+              given: { type: Type.ARRAY, items: { type: Type.STRING } },
+              toFind: { type: Type.STRING },
+              formula: { type: Type.STRING },
+              substitution: { type: Type.STRING },
+              calculation: { type: Type.STRING },
+              answer: { type: Type.STRING },
+              situation: { type: Type.STRING },
+              explanation: { type: Type.STRING },
+              conclusion: { type: Type.STRING },
+            },
+            required: ['type'],
+          },
+          processSteps: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                stepNumber: { type: Type.STRING, description: 'e.g. "01", "02"' },
+                title: { type: Type.STRING },
+                description: { type: Type.STRING },
+              },
+              required: ['stepNumber', 'title', 'description'],
+            },
+          },
+          realLifeApplications: {
+            type: Type.OBJECT,
+            properties: {
+              items: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              calloutDoodleText: { type: Type.STRING },
+            },
+            required: ['items'],
+          },
+          examTrap: {
+            type: Type.OBJECT,
+            properties: {
+              wrongIdea: { type: Type.STRING },
+              correctConcept: { type: Type.STRING },
+              explanation: { type: Type.STRING },
+            },
+            required: ['wrongIdea', 'correctConcept', 'explanation'],
+          },
+          memoryTrick: {
+            type: Type.OBJECT,
+            properties: {
+              mnemonic: { type: Type.STRING },
+              explanation: { type: Type.STRING },
+            },
+            required: ['mnemonic', 'explanation'],
+          },
+          conceptMap: {
+            type: Type.STRING,
+            description: 'ASCII relationship tree diagram',
+          },
+          examFocus: {
+            type: Type.OBJECT,
+            properties: {
+              checklist: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+            },
+            required: ['checklist'],
+          },
+          quickRevision: {
+            type: Type.OBJECT,
+            properties: {
+              keyPoints: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              takeawayBanner: { type: Type.STRING },
+            },
+            required: ['keyPoints'],
+          },
+          selfCheck: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                question: { type: Type.STRING },
+                hint: { type: Type.STRING },
+                answer: { type: Type.STRING },
+                explanation: { type: Type.STRING },
+              },
+              required: ['question', 'answer', 'explanation'],
+            },
+          },
+          customBlocks: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                content: { type: Type.STRING },
+                bullets: { type: Type.ARRAY, items: { type: Type.STRING } },
+                highlightPill: { type: Type.STRING },
+                style: { type: Type.STRING, enum: ['info', 'highlight', 'warning', 'formula_pill'] },
+              },
+              required: ['content'],
+            },
+          },
+        },
+        required: ['id', 'title'],
+      },
+      description: 'Dynamic list of colorful visual cards structured pedagogically for this specific topic',
+    },
+  },
+  required: ['topicTitle', 'subject', 'classLevel', 'chapter', 'oneLineDescription', 'bigIdea', 'cards'],
+};
+
+topicWorkspaceRouter.post('/generate-visual-answer', async (req: Request, res: Response) => {
+  try {
+    const { topicOrQuestion, subject, classLevel, chapter, uploadedContextText } = req.body;
+
+    if (!topicOrQuestion) {
+      res.status(400).json({ error: 'Topic or question is required.' });
+      return;
+    }
+
+    const prompt = `You are StudyPilot AI's Master Intelligent Structured Visual Answer Engine.
+The student has asked or searched for the academic topic/question:
+"${topicOrQuestion}"
+Context: Subject: ${subject || 'Science / Academic Studies'} | Class: ${classLevel || 'Class 9-10'} | Chapter: ${chapter || 'General'}
+
+${uploadedContextText ? `PRIORITIZE UPLOADED TEXTBOOK MATERIAL:\n${uploadedContextText.slice(0, 4000)}\n` : ''}
+
+PEDAGOGICAL TEACHER PRINCIPLES:
+1. Do NOT return a plain wall of text.
+2. Structure the answer into dynamic visual cards, inspired by a colorful modern digital textbook.
+3. Automatically decide:
+   - What information is important?
+   - What should be explained first?
+   - Which concepts need separate numbered cards?
+   - Which information deserves an Important Point callout?
+   - Which information should become a formula card (prominent math equations with variables & units)?
+   - Which information needs an example (numerical or conceptual situation)?
+   - Which information needs a comparison (e.g. Balanced vs Unbalanced Forces, Tendon vs Ligament)?
+   - Which information needs an exam warning/trap (wrong misconception vs correct fact)?
+   - Which information needs real-life applications with checkmarks?
+   - Which information needs a quick revision card with key points and a memorable takeaway banner?
+4. DYNAMIC & TOPIC-AWARE STRUCTURE:
+   - If the student asks a specific question (e.g., "What is inertia?"), create a focused 3-4 card explanation (Definition -> Types & Explanation -> Examples -> Remember).
+   - If the student asks a broad topic (e.g., "Newton's Laws of Motion"), create a rich comprehensive 7-9 card structure matching the digital textbook reference design.
+   - For Math: Concept -> Formulas & Discriminant/Conditions -> Step-by-Step Method -> Solved Numerical Example -> Common Mistakes.
+   - For Chemistry: Concept -> Definition -> Reaction & Equation -> Conditions -> Solved Example -> Applications.
+   - For Biology: Definition -> Structure & Function -> Process Steps -> Real-life significance -> Quick Revision.
+   - For Social Science / Humanities: Causes -> Core Events -> Impacts -> Key Terms -> Exam Focus.
+
+5. COLOR SYSTEM:
+   Assign varying lively accent colors across cards: 'teal', 'purple', 'amber', 'pink', 'emerald', 'blue', 'indigo', 'violet', 'green', 'rose', 'fuchsia'.
+
+6. TYPOGRAPHY & CLARITY:
+   - Keep paragraphs short and scannable.
+   - In 'formula', provide the clean equation (e.g. "F = m × a", "p = m × v").
+   - In 'comparison', provide clean comparative rows (e.g. feature and values).
+   - In 'realLifeApplications', provide concrete bullet points and an encouraging doodle text.
+   - In 'quickRevision', provide key point bullets and a high-yield takeaway banner (e.g. "Understand the concept, not just the formula! ⭐").
+
+Generate clean JSON strictly following the schema.`;
+
+    const response = await generateContentWithRetry({
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: visualAnswerSchema,
+      },
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.1-flash-lite',
+    });
+
+    const parsed = safeJsonParse<any>(response.text, null);
+
+    if (!parsed || !parsed.cards || parsed.cards.length === 0) {
+      throw new Error('Model produced an empty visual card set.');
+    }
+
+    res.json({
+      success: true,
+      visualAnswer: {
+        ...parsed,
+        generatedAt: new Date().toISOString(),
+      },
+    });
+  } catch (err: any) {
+    console.error('[TOPIC WORKSPACE] Generate Visual Answer Error:', err);
+    res.status(500).json({
+      error: 'Failed to generate structured visual answer.',
+      message: err.message,
+    });
+  }
+});
+

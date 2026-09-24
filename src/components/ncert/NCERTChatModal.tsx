@@ -69,7 +69,7 @@ export const NCERTChatModal: React.FC<NCERTChatModalProps> = ({
   }, [isOpen, chapter.title, pageNumber]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    chatEndRef.current?.scrollIntoView();
   }, [messages, loading]);
 
   if (!isOpen) return null;

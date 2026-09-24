@@ -45,7 +45,7 @@ export const NotesChatWidget: React.FC<NotesChatWidgetProps> = ({ notesList, act
 
   useEffect(() => {
     if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current?.scrollIntoView();
     }
   }, [messages, isOpen]);
 

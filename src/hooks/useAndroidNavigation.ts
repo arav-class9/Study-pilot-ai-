@@ -30,7 +30,11 @@ export function useAndroidNavigation({
       // Keep max 20 history states
       if (currentStack.length > 20) currentStack.shift();
       try {
-        window.history.pushState({ tab: activeTab }, '', '');
+        const canonical = ['workspace', 'topic-workspace', 'topic', 'topics'].includes(activeTab) ? 'workspace' : activeTab;
+        const targetPath = canonical === 'home' ? '/' : `/${canonical}`;
+        if (window.location.pathname !== targetPath) {
+          window.history.pushState({ tab: activeTab }, '', targetPath);
+        }
       } catch {
         // Safe fallback
       }

@@ -85,30 +85,48 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [selectedSubject, setSelectedSubject] = useState<SubjectId>('science');
 
+  const userId = user?.uid || 'guest';
+
   // Stats
-  const [completedSessions, setCompletedSessions] = useState<number>(() => {
-    const saved = safeGetStorage('studypilot_pomodoro_completed');
-    return saved ? parseInt(saved, 10) : 0;
-  });
-  const [totalFocusedMinutes, setTotalFocusedMinutes] = useState<number>(() => {
-    const saved = safeGetStorage('studypilot_pomodoro_minutes');
-    return saved ? parseInt(saved, 10) : 0;
-  });
+  const [completedSessions, setCompletedSessions] = useState<number>(0);
+  const [totalFocusedMinutes, setTotalFocusedMinutes] = useState<number>(0);
 
   // History Log
-  const [sessionHistory, setSessionHistory] = useState<FocusSessionRecord[]>(() => {
-    const saved = safeGetStorage('studypilot_pomodoro_history');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [sessionHistory, setSessionHistory] = useState<FocusSessionRecord[]>([]);
 
   // Tasks
-  const [tasks, setTasks] = useState<FocusTask[]>(() => {
-    const saved = safeGetStorage('studypilot_pomodoro_tasks');
-    return saved ? JSON.parse(saved) : [
-      { id: 't-1', text: 'Review core definitions & formulas', completed: false, createdAt: new Date().toISOString() },
-      { id: 't-2', text: 'Solve 5 practice problems with high focus', completed: false, createdAt: new Date().toISOString() },
-    ];
-  });
+  const [tasks, setTasks] = useState<FocusTask[]>([
+    { id: 't-1', text: 'Review core definitions & formulas', completed: false, createdAt: new Date().toISOString() },
+    { id: 't-2', text: 'Solve 5 practice problems with high focus', completed: false, createdAt: new Date().toISOString() },
+  ]);
+
+  // Sync state when user changes (User isolation)
+  useEffect(() => {
+    if (!user?.uid) {
+      setCompletedSessions(0);
+      setTotalFocusedMinutes(0);
+      setSessionHistory([]);
+      return;
+    }
+
+    const savedCompleted = safeGetStorage(`studypilot_pomodoro_completed_${userId}`);
+    setCompletedSessions(savedCompleted ? parseInt(savedCompleted, 10) : 0);
+
+    const savedMins = safeGetStorage(`studypilot_pomodoro_minutes_${userId}`);
+    setTotalFocusedMinutes(savedMins ? parseInt(savedMins, 10) : 0);
+
+    const savedHistory = safeGetStorage(`studypilot_pomodoro_history_${userId}`);
+    setSessionHistory(savedHistory ? JSON.parse(savedHistory) : []);
+
+    const savedTasks = safeGetStorage(`studypilot_pomodoro_tasks_${userId}`);
+    if (savedTasks) {
+      try {
+        setTasks(JSON.parse(savedTasks));
+      } catch {
+        // default
+      }
+    }
+  }, [user?.uid, userId]);
 
   // Ambient sound
   const [ambientSound, setAmbientSoundState] = useState<AmbientSoundType>('none');
@@ -124,18 +142,22 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const endTimeRef = useRef<number | null>(null);
 
-  // Persist durations, tasks, history
+  // Persist durations, tasks, history per user
   useEffect(() => {
-    safeSetStorage('studypilot_pomodoro_durations', JSON.stringify(customDurations));
-  }, [customDurations]);
+    safeSetStorage(`studypilot_pomodoro_durations_${userId}`, JSON.stringify(customDurations));
+  }, [customDurations, userId]);
 
   useEffect(() => {
-    safeSetStorage('studypilot_pomodoro_tasks', JSON.stringify(tasks));
-  }, [tasks]);
+    if (user?.uid) {
+      safeSetStorage(`studypilot_pomodoro_tasks_${userId}`, JSON.stringify(tasks));
+    }
+  }, [tasks, user?.uid, userId]);
 
   useEffect(() => {
-    safeSetStorage('studypilot_pomodoro_history', JSON.stringify(sessionHistory));
-  }, [sessionHistory]);
+    if (user?.uid) {
+      safeSetStorage(`studypilot_pomodoro_history_${userId}`, JSON.stringify(sessionHistory));
+    }
+  }, [sessionHistory, user?.uid, userId]);
 
   // Ambient sound engine sync
   const setAmbientSound = (sound: AmbientSoundType) => {
@@ -260,8 +282,8 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       setCompletedSessions(newTotalSessions);
       setTotalFocusedMinutes(newMinutes);
-      localStorage.setItem('studypilot_pomodoro_completed', newTotalSessions.toString());
-      localStorage.setItem('studypilot_pomodoro_minutes', newMinutes.toString());
+      safeSetStorage(`studypilot_pomodoro_completed_${userId}`, newTotalSessions.toString());
+      safeSetStorage(`studypilot_pomodoro_minutes_${userId}`, newMinutes.toString());
 
       // Count tasks completed
       const doneCount = tasks.filter((t) => t.completed).length;

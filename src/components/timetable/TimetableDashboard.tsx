@@ -5,14 +5,14 @@ import { Edit2, Play, CheckCircle2, XCircle, Trash2, Clock, Check, Coffee, MoreV
 import { TimetableGeneratorModal } from './TimetableGeneratorModal';
 
 export const TimetableDashboard: React.FC = () => {
-  const { customTimetable, setCustomTimetable, saveCustomTimetable } = useApp();
+  const { user, customTimetable, setCustomTimetable, saveCustomTimetable } = useApp();
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [generatorMode, setGeneratorMode] = useState<'manual' | 'ai'>('manual');
 
   const deleteTimetable = () => {
     if (confirm('Are you sure you want to delete this timetable?')) {
       setCustomTimetable(null);
-      localStorage.removeItem('studypilot_custom_timetable');
+      localStorage.removeItem(`studypilot_custom_timetable_${user.uid || 'guest'}`);
     }
   };
 

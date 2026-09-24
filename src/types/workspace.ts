@@ -112,6 +112,132 @@ export interface TopicProgressMetrics {
   masteryPercentage: number; // 0 - 100
 }
 
+export type VisualAccentColor =
+  | 'teal'
+  | 'purple'
+  | 'amber'
+  | 'pink'
+  | 'emerald'
+  | 'blue'
+  | 'indigo'
+  | 'violet'
+  | 'green'
+  | 'rose'
+  | 'orange'
+  | 'cyan'
+  | 'fuchsia';
+
+export interface VisualFormulaBlock {
+  equation: string; // e.g. "F = m × a" or "p = m × v"
+  boxedFormula?: string;
+  variables?: { symbol: string; meaning: string; unit?: string }[];
+  explanation?: string;
+  conditionOrWhenToUse?: string;
+}
+
+export interface VisualComparisonBlock {
+  title?: string;
+  columns: string[]; // e.g. ["Balanced Forces", "Unbalanced Forces"]
+  columnColors?: string[]; // e.g. ["blue", "pink"]
+  rows: { feature?: string; values: string[] }[];
+}
+
+export interface VisualExampleBlock {
+  type: 'numerical' | 'conceptual';
+  title?: string;
+  // Numerical structure:
+  given?: string[];
+  toFind?: string;
+  formula?: string;
+  substitution?: string;
+  calculation?: string;
+  answer?: string;
+  // Conceptual structure:
+  situation?: string;
+  explanation?: string;
+  conclusion?: string;
+}
+
+export interface VisualProcessStep {
+  stepNumber: string; // "01", "02", etc.
+  title: string;
+  description: string;
+}
+
+export interface VisualExamTrapBlock {
+  wrongIdea: string;
+  correctConcept: string;
+  explanation: string;
+}
+
+export interface VisualSelfCheckQuestion {
+  id?: string;
+  question: string;
+  hint?: string;
+  answer: string;
+  explanation: string;
+}
+
+export interface VisualCustomSubBlock {
+  title?: string;
+  icon?: string;
+  content: string;
+  bullets?: string[];
+  highlightPill?: string; // e.g. "Inertia ∝ Mass"
+  style?: 'info' | 'highlight' | 'warning' | 'formula_pill';
+}
+
+export interface StructuredVisualCard {
+  id: string;
+  cardNumber?: number; // 1, 2, 3...
+  title: string;
+  accentColor?: VisualAccentColor;
+  iconName?: string;
+  importantPoint?: {
+    badgeText?: string; // "Important Point", "Definition", etc.
+    quoteOrText: string;
+    icon?: string;
+  };
+  paragraphs?: string[];
+  bullets?: string[];
+  formula?: VisualFormulaBlock;
+  comparison?: VisualComparisonBlock;
+  example?: VisualExampleBlock;
+  processSteps?: VisualProcessStep[];
+  realLifeApplications?: {
+    items: string[];
+    calloutDoodleText?: string;
+  };
+  examTrap?: VisualExamTrapBlock;
+  memoryTrick?: {
+    mnemonic: string;
+    explanation: string;
+  };
+  conceptMap?: string;
+  examFocus?: {
+    checklist: string[];
+  };
+  quickRevision?: {
+    keyPoints: string[];
+    takeawayBanner?: string;
+  };
+  selfCheck?: VisualSelfCheckQuestion[];
+  customBlocks?: VisualCustomSubBlock[];
+}
+
+export interface StructuredVisualAnswer {
+  topicTitle: string;
+  subject: string;
+  classLevel: string;
+  chapter: string;
+  oneLineDescription: string;
+  bigIdea: string;
+  subjectIcon: 'atom' | 'calculator' | 'flask' | 'dna' | 'globe' | 'book' | 'sparkles';
+  bannerAccent?: 'blue_purple' | 'teal_blue' | 'indigo_violet';
+  cards: StructuredVisualCard[];
+  generatedAt: string;
+}
+
 export interface TopicWorkspaceItem {
   id: string;
   userId?: string;
@@ -125,6 +251,7 @@ export interface TopicWorkspaceItem {
   masteryScore: number; // 0 - 100
   lastActivityTab: 'learn' | 'notes' | 'explain' | 'practice' | 'recall' | 'revision';
   definitionBreakdown?: TopicDefinitionBreakdown;
+  structuredVisualAnswer?: StructuredVisualAnswer;
   notes: {
     aiGeneratedText: string;
     studentManualText: string;

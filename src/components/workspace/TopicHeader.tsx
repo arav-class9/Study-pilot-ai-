@@ -50,7 +50,7 @@ export const TopicHeader: React.FC<TopicHeaderProps> = ({
   const mastery = topic.masteryScore || 10;
 
   const sections = [
-    { id: 'learn', label: 'Overview', icon: BookOpen },
+    { id: 'learn', label: 'Visual Cards', icon: Sparkles },
     { id: 'notes', label: 'AI Notes', icon: FileText },
     { id: 'explain', label: 'Explain', icon: Video },
     { id: 'practice', label: 'Practice', icon: HelpCircle },

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   BookOpen,
   Sparkles,
@@ -29,13 +29,6 @@ export const TopicDefinitionBlock: React.FC<TopicDefinitionBlockProps> = ({
   const [copied, setCopied] = useState(false);
 
   const breakdown = topic.definitionBreakdown;
-
-  // Auto-generate definition breakdown if missing on load
-  useEffect(() => {
-    if (!topic.definitionBreakdown && topic.topicName && !isGenerating) {
-      handleGenerateDefinition();
-    }
-  }, [topic.id, topic.topicName]);
 
   const handleGenerateDefinition = async () => {
     setIsGenerating(true);
@@ -156,23 +149,23 @@ ${breakdown.quickSummary || `${topic.topicName} is essential for ${topic.subject
   return (
     <div className={`space-y-4 ${className}`}>
       {/* 1. DEFINITION: Primary Standard Definition Hero Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-600/10 dark:from-indigo-950/60 dark:via-slate-900 dark:to-slate-900 border-2 border-amber-300/80 dark:border-indigo-900/80 p-5 sm:p-6 shadow-xs">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-2xl bg-amber-600 text-white shadow-xs">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-600/10 dark:from-indigo-950/60 dark:via-slate-900 dark:to-slate-900 border-2 border-amber-300/80 dark:border-indigo-900/80 p-3.5 sm:p-6 shadow-xs w-full max-w-full min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="p-2 rounded-xl sm:rounded-2xl bg-amber-600 text-white shadow-xs shrink-0">
               <BookOpen className="w-4 h-4" />
             </span>
-            <div>
+            <div className="min-w-0">
               <span className="text-[10px] font-black tracking-widest text-amber-800 dark:text-amber-300 uppercase">
                 1. Standard Topic Definition
               </span>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-amber-50">
+              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-amber-50 truncate">
                 {topic.topicName}
               </h3>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
             <button
               onClick={handleGenerateDefinition}
               disabled={isGenerating}
@@ -201,55 +194,55 @@ ${breakdown.quickSummary || `${topic.topicName} is essential for ${topic.subject
         </div>
 
         {/* Clear Standard Definition Text */}
-        <p className="text-sm sm:text-base font-serif text-slate-800 dark:text-slate-100 leading-relaxed bg-white/80 dark:bg-slate-950/80 p-4 rounded-2xl border border-amber-200/60 dark:border-slate-800 shadow-2xs">
+        <p className="text-xs sm:text-base font-serif text-slate-800 dark:text-slate-100 leading-relaxed bg-white/80 dark:bg-slate-950/80 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-amber-200/60 dark:border-slate-800 shadow-2xs break-words [overflow-wrap:anywhere]">
           {breakdown.formalDefinition}
         </p>
       </div>
 
       {/* Grid Row for Sections 2 & 3 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 w-full min-w-0">
         {/* 2. KEY USES / APPLICATIONS */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-slate-800 shadow-xs space-y-3">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-slate-800 shadow-xs space-y-3 w-full min-w-0 overflow-x-hidden">
           <div className="flex items-center gap-2 pb-2 border-b border-amber-100 dark:border-slate-800">
-            <div className="p-1.5 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+            <div className="p-1.5 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 shrink-0">
               <Briefcase className="w-4 h-4" />
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 truncate">
               2. Key Uses & Applications
             </h4>
           </div>
           <ul className="space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
             {displayKeyUses.map((useItem, idx) => (
-              <li key={idx} className="flex items-start gap-2.5">
+              <li key={idx} className="flex items-start gap-2.5 min-w-0">
                 <span className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                <span>{useItem}</span>
+                <span className="break-words [overflow-wrap:anywhere] min-w-0 flex-1">{useItem}</span>
               </li>
             ))}
           </ul>
         </div>
 
         {/* 3. SOLVED EXAMPLES / REAL-WORLD EXAMPLE */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-slate-800 shadow-xs space-y-3">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-slate-800 shadow-xs space-y-3 w-full min-w-0 overflow-x-hidden">
           <div className="flex items-center gap-2 pb-2 border-b border-amber-100 dark:border-slate-800">
-            <div className="p-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
+            <div className="p-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 shrink-0">
               <Calculator className="w-4 h-4" />
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 truncate">
               3. Solved Examples & Calculations
             </h4>
           </div>
           <div className="space-y-3">
             {displayExamples.map((ex, idx) => (
-              <div key={idx} className="p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 space-y-1.5">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 dark:text-emerald-300">
+              <div key={idx} className="p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 space-y-1.5 w-full min-w-0">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 dark:text-emerald-300 min-w-0">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>{ex.title}</span>
+                  <span className="break-words [overflow-wrap:anywhere]">{ex.title}</span>
                 </div>
-                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed break-words [overflow-wrap:anywhere]">
                   {ex.explanation}
                 </p>
                 {ex.calculationOrSteps && (
-                  <div className="bg-white/90 dark:bg-slate-950 p-2 rounded-lg border border-emerald-200/60 dark:border-slate-800 text-[11px] font-mono text-emerald-800 dark:text-emerald-300">
+                  <div className="bg-white/90 dark:bg-slate-950 p-2 rounded-lg border border-emerald-200/60 dark:border-slate-800 text-[11px] font-mono text-emerald-800 dark:text-emerald-300 overflow-x-auto max-w-full break-words [overflow-wrap:anywhere]">
                     {ex.calculationOrSteps}
                   </div>
                 )}

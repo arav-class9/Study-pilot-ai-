@@ -1,5 +1,6 @@
 import { TopicWorkspaceItem, TopicProgressMetrics } from '../types/workspace';
 import { safeGetStorage, safeSetStorage } from '../utils/storage';
+import { generateOfflineStructuredVisualAnswer } from './topicWorkspaceClient';
 
 const STORAGE_KEY_TOPICS = 'studypilot_topic_workspaces';
 
@@ -167,9 +168,41 @@ export function getAllTopicWorkspaces(): TopicWorkspaceItem[] {
   }
 
   if (!topics || topics.length === 0) {
-    // Generate an initial sample topic for immediate rich experience
+    // Flagship reference topic: Newton's Laws of Motion (Intelligent Structured Visual Answer Engine)
+    const newtonTopic = createNewTopicWorkspace({
+      topicName: "Newton's Laws of Motion",
+      subject: "Science (Physics)",
+      classLevel: "Class 10",
+      chapter: "Motion",
+    });
+    newtonTopic.isBookmarked = true;
+    newtonTopic.structuredVisualAnswer = generateOfflineStructuredVisualAnswer({
+      topicOrQuestion: "Newton's Laws of Motion",
+      subject: "Science (Physics)",
+      classLevel: "Class 10",
+      chapter: "Motion",
+    });
+    newtonTopic.notes.aiGeneratedText = `# Newton's Laws of Motion
+Newton's laws of motion are three basic laws of classical mechanics that describe the relationship between the motion of an object and the forces acting on it.
+
+## 1. First Law (Law of Inertia)
+An object remains in a state of rest or uniform motion unless acted upon by an unbalanced external force.
+
+## 2. Second Law
+The rate of change of momentum is proportional to the applied force: F = m × a.
+
+## 3. Third Law
+To every action, there is an equal and opposite reaction (F_AB = -F_BA).`;
+
+    // Generate second sample topic: Connective Tissue
     const initialTopic = createNewTopicWorkspace({
       topicName: 'Connective Tissue',
+      subject: 'Science',
+      classLevel: 'Class 9',
+      chapter: 'Tissues',
+    });
+    initialTopic.structuredVisualAnswer = generateOfflineStructuredVisualAnswer({
+      topicOrQuestion: 'Connective Tissue',
       subject: 'Science',
       classLevel: 'Class 9',
       chapter: 'Tissues',
@@ -303,9 +336,33 @@ Remember:
       },
     ];
 
-    const processed = calculateTopicProgress(initialTopic);
-    safeSetStorage(STORAGE_KEY_TOPICS, JSON.stringify([processed]));
-    return [processed];
+    const processedNewton = calculateTopicProgress(newtonTopic);
+    const processedConnective = calculateTopicProgress(initialTopic);
+    const initialList = [processedNewton, processedConnective];
+    safeSetStorage(STORAGE_KEY_TOPICS, JSON.stringify(initialList));
+    return initialList;
+  }
+
+  // Ensure any existing topic has a structuredVisualAnswer
+  let hasMissingVisual = false;
+  topics = topics.map((t) => {
+    if (!t.structuredVisualAnswer) {
+      hasMissingVisual = true;
+      return {
+        ...t,
+        structuredVisualAnswer: generateOfflineStructuredVisualAnswer({
+          topicOrQuestion: t.topicName,
+          subject: t.subject,
+          classLevel: t.classLevel,
+          chapter: t.chapter,
+        }),
+      };
+    }
+    return t;
+  });
+
+  if (hasMissingVisual) {
+    safeSetStorage(STORAGE_KEY_TOPICS, JSON.stringify(topics));
   }
 
   return topics;

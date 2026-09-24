@@ -122,10 +122,21 @@ export function parseRoute(pathname: string): RouteState {
     };
   }
 
+  // Explicit Topic Workspace aliases
+  if (cleanPath === '/topic' || cleanPath === '/topics' || cleanPath === '/workspace' || cleanPath === '/topic-workspace') {
+    return {
+      path: cleanPath,
+      type: 'tab',
+      params: { tabName: 'workspace' },
+    };
+  }
+
   // 5. Existing Known Application Tabs
   const knownTabs = [
     'dashboard',
     'workspace',
+    'topic',
+    'topics',
     'topic-workspace',
     'tutor',
     'learn',
@@ -183,7 +194,7 @@ export function useSEORouter() {
         window.history.pushState({}, '', targetPath);
       }
       setCurrentRoute(parseRoute(targetPath));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo(0, 0);
     }
   }, []);
 

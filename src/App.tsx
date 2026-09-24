@@ -8,7 +8,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { BottomNav } from './components/layout/BottomNav';
 import { AndroidFloatingActionButton } from './components/layout/AndroidFloatingActionButton';
 import { useAndroidNavigation } from './hooks/useAndroidNavigation';
-
+import { Toaster } from 'react-hot-toast';
 
 import { OnboardingModal } from './components/onboarding/OnboardingModal';
 import { WalkthroughModal } from './components/onboarding/WalkthroughModal';
@@ -30,6 +30,7 @@ import { FeatureLanderPage } from './pages/public/FeatureLanderPage';
 import { PublicNCERTPage } from './pages/public/PublicNCERTPage';
 import { PublicTopicPage } from './pages/public/PublicTopicPage';
 import { NotFoundPage } from './pages/public/NotFoundPage';
+import { TopicWorkspaceView } from './components/workspace/TopicWorkspaceView';
 import { SEODiagnosticBar } from './components/seo/SEODiagnosticBar';
 import { useSEORouter } from './hooks/useSEORouter';
 
@@ -59,9 +60,6 @@ const ParentDashboardPage = safeLazy(() => import('./pages/ParentDashboardPage')
 const TeacherDashboardPage = safeLazy(() => import('./pages/TeacherDashboardPage'), 'TeacherDashboardPage');
 const NCERTBooksPage = safeLazy(() => import('./pages/NCERTBooksPage'), 'NCERTBooksPage');
 const StudyCoachPage = safeLazy<{ initialTab?: string }>(() => import('./pages/StudyCoachPage'), 'StudyCoachPage');
-const TopicWorkspaceView = safeLazy<{ onBackToDashboard?: () => void }>(() => import('./components/workspace/TopicWorkspaceView'), 'TopicWorkspaceView');
-
-import { Toaster } from 'react-hot-toast';
 
 const AppContent: React.FC = () => {
   const { activeTab, setActiveTab, isDarkMode } = useApp();
@@ -74,8 +72,11 @@ const AppContent: React.FC = () => {
   // Sync tab navigation with route if route is tab
   React.useEffect(() => {
     if (currentRoute.type === 'tab' && currentRoute.params.tabName) {
-      if (currentRoute.params.tabName !== activeTab) {
-        setActiveTab(currentRoute.params.tabName);
+      const canonicalTab = ['workspace', 'topic-workspace', 'topic', 'topics'].includes(currentRoute.params.tabName)
+        ? 'workspace'
+        : currentRoute.params.tabName;
+      if (canonicalTab !== activeTab) {
+        setActiveTab(canonicalTab);
       }
     }
   }, [currentRoute, activeTab, setActiveTab]);
@@ -85,13 +86,10 @@ const AppContent: React.FC = () => {
   React.useEffect(() => {
     if (prevTabRef.current !== activeTab) {
       prevTabRef.current = activeTab;
-      const targetPath = activeTab === 'home' ? '/' : `/${activeTab}`;
+      const canonical = ['workspace', 'topic-workspace', 'topic', 'topics'].includes(activeTab) ? 'workspace' : activeTab;
+      const targetPath = canonical === 'home' ? '/' : `/${canonical}`;
       if (window.location.pathname !== targetPath) {
         navigate(targetPath);
-      }
-      // Reset scroll position to top on tab change with default native scroll
-      if (typeof window !== 'undefined') {
-        window.scrollTo(0, 0);
       }
     }
   }, [activeTab, navigate]);
@@ -330,9 +328,9 @@ const AppContent: React.FC = () => {
         }} 
       />
       <Navbar />
-      <div className={`flex-1 flex w-full mx-auto ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'max-w-full' : 'max-w-7xl'}`}>
+      <div className={`flex-1 flex w-full min-w-0 mx-auto overflow-x-hidden ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'max-w-full' : 'max-w-7xl'}`}>
         {!['workspace', 'topic-workspace', 'topic'].includes(activeTab) && <Sidebar />}
-        <main className={`flex-1 w-full hardware-accelerated ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'p-0 pb-[calc(env(safe-area-inset-bottom,0px)+72px)] md:pb-6' : 'p-4 sm:p-6 lg:p-8 pb-[calc(env(safe-area-inset-bottom,0px)+80px)] md:pb-8 max-w-7xl mx-auto'}`}>
+        <main className={`flex-1 w-full min-w-0 ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'p-0 pb-[calc(env(safe-area-inset-bottom,0px)+72px)] md:pb-6' : 'p-4 sm:p-6 lg:p-8 pb-[calc(env(safe-area-inset-bottom,0px)+80px)] md:pb-8 max-w-7xl mx-auto'}`}>
           <ErrorBoundary sectionName={activeTab.toUpperCase()}>
             {renderContent()}
           </ErrorBoundary>

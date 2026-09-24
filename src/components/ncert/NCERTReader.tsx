@@ -180,10 +180,10 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
         }
 
         if (matchedElem) {
-          matchedElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          matchedElem.scrollIntoView({ block: 'center' });
           setHasScrolledToCitation(true);
         }
-      }, 250);
+      }, 100);
 
       return () => clearTimeout(timer);
     }
@@ -413,14 +413,14 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage((p) => p - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo(0, 0);
     }
   };
 
   const handleNextPage = () => {
     if (currentPage < chapter.totalPages) {
       setCurrentPage((p) => p + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo(0, 0);
     }
   };
 
@@ -429,7 +429,7 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
     const p = parseInt(jumpPageInput, 10);
     if (!isNaN(p) && p >= 1 && p <= chapter.totalPages) {
       setCurrentPage(p);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo(0, 0);
     } else {
       setJumpPageInput(String(currentPage));
     }
@@ -493,7 +493,7 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
           book={uploadedBook}
           onNavigateToPage={(p) => {
             setCurrentPage(p);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo(0, 0);
           }}
         />
       )}
@@ -531,7 +531,7 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
                 onNavigateToPage={(p) => {
                   setCurrentPage(p);
                   setWeakTopicsModalOpen(false);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  window.scrollTo(0, 0);
                 }}
               />
             </div>

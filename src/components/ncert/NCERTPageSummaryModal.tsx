@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { NCERTChapter, NCERTPageContent } from '../../types/ncert';
+import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../context/AppContext';
 import {
   X,
   FileText,
@@ -30,6 +32,8 @@ export const NCERTPageSummaryModal: React.FC<NCERTPageSummaryModalProps> = ({
   pageNumber,
   onSaveNote,
 }) => {
+  const { user } = useAuth();
+  const { saveNote } = useApp();
   const [copied, setCopied] = useState(false);
   const [savedNote, setSavedNote] = useState(false);
 
@@ -66,18 +70,46 @@ ${formulas.length > 0 ? `FORMULAS & EQUATIONS:\n${formulas.map((f) => `• ${f}`
   };
 
   const handleSaveNote = () => {
-    // Store in localStorage notes for student
     const noteId = `ncert-note-${chapter.id}-p${pageNumber}-${Date.now()}`;
-    const existingNotes = JSON.parse(localStorage.getItem('studypilot_student_notes') || '[]');
-    const newNote = {
-      id: noteId,
-      title: `${chapter.title} - Page ${pageNumber} Summary`,
-      chapterId: chapter.id,
-      pageNumber,
-      content: compiledText,
-      createdAt: new Date().toISOString(),
-    };
-    localStorage.setItem('studypilot_student_notes', JSON.stringify([newNote, ...existingNotes]));
+    const userUid = user?.uid || 'guest';
+    const storageKey = `studypilot_student_notes_${userUid}`;
+
+    try {
+      const existingNotes = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const newNote = {
+        id: noteId,
+        title: `${chapter.title} - Page ${pageNumber} Summary`,
+        chapterId: chapter.id,
+        pageNumber,
+        content: compiledText,
+        createdAt: new Date().toISOString(),
+      };
+      localStorage.setItem(storageKey, JSON.stringify([newNote, ...existingNotes]));
+    } catch {
+      // ignore
+    }
+
+    try {
+      const subjectKey = (chapter.subjectId || 'science').toLowerCase() as any;
+      saveNote({
+        id: noteId,
+        userId: userUid,
+        title: `${chapter.title} - Page ${pageNumber} Summary`,
+        subjectId: subjectKey,
+        chapterName: chapter.title,
+        topicName: `Page ${pageNumber} Summary`,
+        detailLevel: 'medium',
+        content: compiledText,
+        overview: summaryParagraphs.join('\n\n'),
+        keyPoints: keyPoints,
+        definitions: definitions.map((d) => ({ term: d.term, definition: d.definition })),
+        isFavorite: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.warn('Could not sync note to AppContext:', e);
+    }
 
     if (onSaveNote) {
       onSaveNote(compiledText);

@@ -103,16 +103,15 @@ export function generateInitialRevisionQueue(): RevisionQueueItem[] {
   return [];
 }
 
-const STORAGE_KEY_SM2_CARDS = 'studypilot_sm2_flashcards_v1';
-
-export function getStoredSM2Cards(): SM2Flashcard[] {
+export function getStoredSM2Cards(userId: string = 'default'): SM2Flashcard[] {
+  const storageKey = `studypilot_sm2_flashcards_${userId}`;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY_SM2_CARDS);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) {
-      // Seed default SM-2 cards for immediate testing
+      // Seed default SM-2 cards for new student profile
       const seeded: SM2Flashcard[] = [
         {
-          id: 'sm2-default-1',
+          id: `sm2-${userId}-1`,
           front: 'What is the structural and functional unit of kidney?',
           back: 'Nephron. Each kidney contains approximately 1 million nephrons responsible for filtering blood.',
           topicName: 'Life Processes',
@@ -126,7 +125,7 @@ export function getStoredSM2Cards(): SM2Flashcard[] {
           history: [{ date: new Date().toISOString().split('T')[0], grade: 4 }],
         },
         {
-          id: 'sm2-default-2',
+          id: `sm2-${userId}-2`,
           front: 'State Ohm’s Law and write its mathematical equation.',
           back: 'V = I × R. Electric current flowing through a metallic conductor is directly proportional to potential difference across its ends, provided temperature remains constant.',
           topicName: 'Electricity',
@@ -140,7 +139,7 @@ export function getStoredSM2Cards(): SM2Flashcard[] {
           history: [],
         },
         {
-          id: 'sm2-default-3',
+          id: `sm2-${userId}-3`,
           front: 'What is the quadratic formula to solve ax² + bx + c = 0?',
           back: 'x = (-b ± √(b² - 4ac)) / (2a). Discriminant D = b² - 4ac determines real or complex roots.',
           topicName: 'Quadratic Equations',
@@ -154,7 +153,7 @@ export function getStoredSM2Cards(): SM2Flashcard[] {
           history: [{ date: new Date().toISOString().split('T')[0], grade: 5 }],
         },
       ];
-      localStorage.setItem(STORAGE_KEY_SM2_CARDS, JSON.stringify(seeded));
+      localStorage.setItem(storageKey, JSON.stringify(seeded));
       return seeded;
     }
     return JSON.parse(raw);
@@ -163,13 +162,14 @@ export function getStoredSM2Cards(): SM2Flashcard[] {
   }
 }
 
-export function saveSM2Card(card: SM2Flashcard): void {
-  const cards = getStoredSM2Cards();
+export function saveSM2Card(card: SM2Flashcard, userId: string = 'default'): void {
+  const storageKey = `studypilot_sm2_flashcards_${userId}`;
+  const cards = getStoredSM2Cards(userId);
   const idx = cards.findIndex((c) => c.id === card.id);
   if (idx >= 0) {
     cards[idx] = card;
   } else {
     cards.push(card);
   }
-  localStorage.setItem(STORAGE_KEY_SM2_CARDS, JSON.stringify(cards));
+  localStorage.setItem(storageKey, JSON.stringify(cards));
 }

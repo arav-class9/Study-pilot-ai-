@@ -43,22 +43,25 @@ export const RightDockedPanel: React.FC<RightDockedPanelProps> = ({
   const [isSoundOn, setIsSoundOn] = useState(true);
 
   useEffect(() => {
-    let interval: any = null;
-    if (isRunning && secondsLeft > 0) {
-      interval = setInterval(() => {
-        setSecondsLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (secondsLeft === 0 && isRunning) {
-      setIsRunning(false);
-      if (isSoundOn) {
-        try {
-          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-          audio.play().catch(() => {});
-        } catch (e) {}
-      }
-    }
+    if (!isRunning) return;
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          setIsRunning(false);
+          if (isSoundOn) {
+            try {
+              const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+              audio.play().catch(() => {});
+            } catch (e) {}
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
     return () => clearInterval(interval);
-  }, [isRunning, secondsLeft, isSoundOn]);
+  }, [isRunning, isSoundOn]);
 
   const toggleTimer = () => setIsRunning(!isRunning);
   const resetTimer = () => {

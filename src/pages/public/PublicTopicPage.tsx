@@ -285,28 +285,28 @@ export const PublicTopicPage: React.FC<PublicTopicPageProps> = ({
         </div>
 
         {/* Detailed Explanation Section */}
-        <section aria-labelledby="detailed-explanation-heading" className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
-          <h2 id="detailed-explanation-heading" className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Lightbulb className="w-5 h-5 text-amber-500" />
+        <section aria-labelledby="detailed-explanation-heading" className="p-3.5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3 min-w-0">
+          <h2 id="detailed-explanation-heading" className="text-base sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Lightbulb className="w-5 h-5 text-amber-500 shrink-0" />
             <span>In-Depth Conceptual Breakdown</span>
           </h2>
-          <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed break-words [overflow-wrap:anywhere]">
             {topic.detailedExplanation}
           </p>
         </section>
 
         {/* Important Formulas & Equations */}
-        <section aria-labelledby="formulas-heading" className="space-y-4">
-          <h2 id="formulas-heading" className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Calculator className="w-5 h-5 text-indigo-500" />
+        <section aria-labelledby="formulas-heading" className="space-y-3 sm:space-y-4 min-w-0">
+          <h2 id="formulas-heading" className="text-base sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Calculator className="w-5 h-5 text-indigo-500 shrink-0" />
             <span>Key Formulas, Laws &amp; Definitions</span>
           </h2>
 
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-0">
             {topic.keyFormulas.map((formula, i) => (
               <div
                 key={i}
-                className="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-900/60 text-xs sm:text-sm font-mono font-semibold text-indigo-950 dark:text-indigo-200"
+                className="p-3 sm:p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-900/60 text-xs sm:text-sm font-mono font-semibold text-indigo-950 dark:text-indigo-200 break-words [overflow-wrap:anywhere] overflow-x-auto"
               >
                 {formula}
               </div>
@@ -315,35 +315,35 @@ export const PublicTopicPage: React.FC<PublicTopicPageProps> = ({
         </section>
 
         {/* Solved Example */}
-        <section aria-labelledby="solved-example-heading" className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+        <section aria-labelledby="solved-example-heading" className="p-3.5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3 min-w-0">
           <h2 id="solved-example-heading" className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
             Step-by-Step Solved Problem
           </h2>
-          <div className="space-y-2 text-xs sm:text-sm">
-            <p className="font-bold text-slate-900 dark:text-white">
+          <div className="space-y-2 text-xs sm:text-sm min-w-0">
+            <p className="font-bold text-slate-900 dark:text-white break-words [overflow-wrap:anywhere]">
               Q: {topic.solvedExample.question}
             </p>
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 whitespace-pre-line font-mono text-xs">
+            <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 whitespace-pre-line font-mono text-xs break-words [overflow-wrap:anywhere] overflow-x-auto">
               {topic.solvedExample.answer}
             </div>
           </div>
         </section>
 
         {/* Common Student Mistakes */}
-        <section aria-labelledby="common-mistakes-heading" className="space-y-4">
-          <h2 id="common-mistakes-heading" className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-rose-500" />
+        <section aria-labelledby="common-mistakes-heading" className="space-y-3 sm:space-y-4 min-w-0">
+          <h2 id="common-mistakes-heading" className="text-base sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
             <span>Common Exam Mistakes &amp; Pitfalls</span>
           </h2>
 
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-0">
             {topic.commonMistakes.map((mistake, i) => (
               <div
                 key={i}
-                className="p-3.5 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 text-xs sm:text-sm text-rose-950 dark:text-rose-200 flex items-start gap-2.5"
+                className="p-3 sm:p-3.5 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 text-xs sm:text-sm text-rose-950 dark:text-rose-200 flex items-start gap-2.5 break-words [overflow-wrap:anywhere]"
               >
-                <span className="font-bold text-rose-600">✕</span>
-                <span>{mistake}</span>
+                <span className="font-bold text-rose-600 shrink-0">✕</span>
+                <span className="break-words [overflow-wrap:anywhere] min-w-0 flex-1">{mistake}</span>
               </div>
             ))}
           </div>

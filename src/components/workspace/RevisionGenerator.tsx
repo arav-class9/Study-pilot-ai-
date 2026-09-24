@@ -85,51 +85,51 @@ export const RevisionGenerator: React.FC<RevisionGeneratorProps> = ({
         </div>
 
         {/* Mode Selector Tabs */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
           <button
             onClick={() => handleGenerateSheet('5min')}
             disabled={isGenerating}
-            className={`p-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-2 ${
+            className={`p-2 sm:p-3 rounded-xl border text-[11px] sm:text-xs font-black transition-all flex items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
               activeMode === '5min'
                 ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
                 : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-amber-200 dark:border-slate-800 hover:bg-amber-50'
             }`}
           >
-            <Zap className="w-4 h-4 text-amber-300" />
-            <span>5-Min Refresher</span>
+            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300 shrink-0" />
+            <span className="truncate">5-Min</span>
           </button>
 
           <button
             onClick={() => handleGenerateSheet('15min')}
             disabled={isGenerating}
-            className={`p-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-2 ${
+            className={`p-2 sm:p-3 rounded-xl border text-[11px] sm:text-xs font-black transition-all flex items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
               activeMode === '15min'
                 ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
                 : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-amber-200 dark:border-slate-800 hover:bg-amber-50'
             }`}
           >
-            <Clock className="w-4 h-4 text-amber-300" />
-            <span>15-Min High Yield</span>
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300 shrink-0" />
+            <span className="truncate">15-Min</span>
           </button>
 
           <button
             onClick={() => handleGenerateSheet('exam_night')}
             disabled={isGenerating}
-            className={`p-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-2 ${
+            className={`p-2 sm:p-3 rounded-xl border text-[11px] sm:text-xs font-black transition-all flex items-center justify-center gap-1 sm:gap-2 cursor-pointer ${
               activeMode === 'exam_night'
                 ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
                 : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-amber-200 dark:border-slate-800 hover:bg-amber-50'
             }`}
           >
-            <Flame className="w-4 h-4 text-amber-300" />
-            <span>Exam Night Emergency</span>
+            <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300 shrink-0" />
+            <span className="truncate">Exam Night</span>
           </button>
         </div>
       </div>
 
       {/* Revision Sheet Display */}
       {isGenerating ? (
-        <div className="py-20 flex flex-col items-center justify-center space-y-3 bg-white dark:bg-slate-900 rounded-2xl border-2 border-amber-200 dark:border-slate-800">
+        <div className="py-20 flex flex-col items-center justify-center space-y-3 bg-white dark:bg-slate-900 rounded-2xl border-2 border-amber-200 dark:border-slate-800 px-4 text-center">
           <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
           <div className="font-bold text-sm text-slate-800 dark:text-slate-200">
             Synthesizing personalized {activeMode} revision sheet...
@@ -137,38 +137,38 @@ export const RevisionGenerator: React.FC<RevisionGeneratorProps> = ({
           <div className="text-xs text-slate-500">Integrating weak concepts and high-yield board tips</div>
         </div>
       ) : sheet ? (
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border-2 border-amber-200 dark:border-slate-800 shadow-md space-y-6">
-          <div className="flex items-center justify-between pb-3 border-b border-amber-100 dark:border-slate-800">
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-amber-100 dark:bg-slate-800 text-amber-900 dark:text-amber-200 font-black text-xs uppercase">
+        <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-6 rounded-2xl border-2 border-amber-200 dark:border-slate-800 shadow-md space-y-4 sm:space-y-6 w-full max-w-full min-w-0 overflow-x-hidden">
+          <div className="flex flex-wrap items-center justify-between pb-3 border-b border-amber-100 dark:border-slate-800 gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-amber-100 dark:bg-slate-800 text-amber-900 dark:text-amber-200 font-black text-[11px] sm:text-xs uppercase shrink-0">
                 {sheet.mode} Revision
               </span>
-              <span className="text-xs font-bold text-slate-500">
-                Generated {new Date(sheet.generatedAt).toLocaleTimeString()}
+              <span className="text-[10px] sm:text-xs font-bold text-slate-500 truncate">
+                {new Date(sheet.generatedAt).toLocaleTimeString()}
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={handleCopy}
-                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-amber-100 text-xs font-bold flex items-center gap-1"
+                className="p-1.5 sm:p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-amber-100 text-xs font-bold flex items-center gap-1 cursor-pointer"
               >
-                {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                {copied ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                 <span className="hidden sm:inline">Copy Sheet</span>
               </button>
               <button
                 onClick={() => window.print()}
-                className="p-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-bold flex items-center gap-1"
+                className="p-1.5 sm:p-2 rounded-xl bg-amber-600 text-white hover:bg-amber-700 text-xs font-bold flex items-center gap-1 cursor-pointer"
               >
-                <Printer className="w-4 h-4" />
+                <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Print</span>
               </button>
             </div>
           </div>
 
           {/* Executive Summary */}
-          <div className="p-4 rounded-xl bg-amber-50/50 dark:bg-slate-800/40 border border-amber-200/80 dark:border-slate-700 text-sm leading-relaxed text-slate-800 dark:text-slate-200 font-medium">
-            <div className="text-xs font-extrabold uppercase text-amber-800 dark:text-amber-400 mb-1">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50/50 dark:bg-slate-800/40 border border-amber-200/80 dark:border-slate-700 text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 font-medium break-words [overflow-wrap:anywhere] min-w-0">
+            <div className="text-[10px] sm:text-xs font-extrabold uppercase text-amber-800 dark:text-amber-400 mb-1">
               Topic Revision Core Summary
             </div>
             {sheet.summary}
@@ -176,16 +176,16 @@ export const RevisionGenerator: React.FC<RevisionGeneratorProps> = ({
 
           {/* High Yield Bullets */}
           {sheet.highYieldBullets && sheet.highYieldBullets.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-600" />
+            <div className="space-y-2 min-w-0">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-1.5 truncate">
+                <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>Must-Remember High-Yield Exam Bullets</span>
               </h4>
               <ul className="space-y-2">
                 {sheet.highYieldBullets.map((bullet, idx) => (
-                  <li key={idx} className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900 text-xs font-medium text-slate-800 dark:text-slate-200 flex items-start gap-2">
-                    <span className="text-emerald-600 font-bold">•</span>
-                    <span>{bullet}</span>
+                  <li key={idx} className="p-2.5 sm:p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900 text-xs font-medium text-slate-800 dark:text-slate-200 flex items-start gap-2 min-w-0">
+                    <span className="text-emerald-600 font-bold shrink-0">•</span>
+                    <span className="break-words [overflow-wrap:anywhere] min-w-0 flex-1">{bullet}</span>
                   </li>
                 ))}
               </ul>
@@ -194,16 +194,16 @@ export const RevisionGenerator: React.FC<RevisionGeneratorProps> = ({
 
           {/* Common Exam Traps & Misconceptions */}
           {sheet.memoryTraps && sheet.memoryTraps.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-xs font-black uppercase tracking-wider text-rose-900 dark:text-rose-300 flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4 text-rose-600" />
+            <div className="space-y-2 min-w-0">
+              <h4 className="text-xs font-black uppercase tracking-wider text-rose-900 dark:text-rose-300 flex items-center gap-1.5 truncate">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>Common Exam Traps & Unit Errors to Avoid</span>
               </h4>
               <ul className="space-y-2">
                 {sheet.memoryTraps.map((trap, idx) => (
-                  <li key={idx} className="p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900 text-xs font-medium text-rose-900 dark:text-rose-200 flex items-start gap-2">
-                    <span className="text-rose-600 font-bold">⚠️</span>
-                    <span>{trap}</span>
+                  <li key={idx} className="p-2.5 sm:p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900 text-xs font-medium text-rose-900 dark:text-rose-200 flex items-start gap-2 min-w-0">
+                    <span className="text-rose-600 font-bold shrink-0">⚠️</span>
+                    <span className="break-words [overflow-wrap:anywhere] min-w-0 flex-1">{trap}</span>
                   </li>
                 ))}
               </ul>

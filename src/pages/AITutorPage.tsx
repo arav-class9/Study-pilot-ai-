@@ -746,8 +746,8 @@ export const AITutorPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setQuestionText(`Explain ${solution.concept} in simpler, everyday language for Class ${selectedClass} with an easy intuition and simple real-life analogy.`);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    setTimeout(() => handleSolve(), 150);
+                    window.scrollTo(0, 0);
+                    setTimeout(() => handleSolve(), 50);
                   }}
                   className="px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 text-amber-900 dark:text-amber-200 text-xs font-bold border border-amber-200 dark:border-amber-800 text-center transition active:scale-95 cursor-pointer"
                 >
@@ -758,8 +758,8 @@ export const AITutorPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setQuestionText(`Explain ${solution.concept} deeper for Class ${selectedClass}, including rigorous derivation, mathematical equations, underlying scientific mechanisms, and board exam marking points.`);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    setTimeout(() => handleSolve(), 150);
+                    window.scrollTo(0, 0);
+                    setTimeout(() => handleSolve(), 50);
                   }}
                   className="px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-900 dark:text-indigo-200 text-xs font-bold border border-indigo-200 dark:border-indigo-800 text-center transition active:scale-95 cursor-pointer"
                 >
@@ -770,8 +770,8 @@ export const AITutorPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setQuestionText(`Give 2 step-by-step solved practical numerical/application examples for ${solution.concept} for Class ${selectedClass}.`);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    setTimeout(() => handleSolve(), 150);
+                    window.scrollTo(0, 0);
+                    setTimeout(() => handleSolve(), 50);
                   }}
                   className="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-900 dark:text-emerald-200 text-xs font-bold border border-emerald-200 dark:border-emerald-800 text-center transition active:scale-95 cursor-pointer"
                 >
@@ -831,10 +831,10 @@ export const AITutorPage: React.FC = () => {
                     type="button"
                     onClick={() => {
                       setQuestionText(followUpText);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      window.scrollTo(0, 0);
                       setTimeout(() => {
                         handleSolve();
-                      }, 200);
+                      }, 50);
                     }}
                     className="text-xs bg-white hover:bg-indigo-600 hover:text-white text-indigo-950 font-medium px-3 py-2 rounded-xl border border-indigo-200 shadow-xs transition-all cursor-pointer text-left"
                   >

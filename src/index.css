@@ -51,10 +51,9 @@ body {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 64px);
 }
 
-/* Android Touch Feedback */
+/* Android Touch Feedback - Opacity based for zero touch-scroll interruption */
 .android-touch-active:active {
-  transform: scale(0.97);
-  transition: transform 0.1s ease-out;
+  opacity: 0.85;
 }
 
 *, *:before, *:after {

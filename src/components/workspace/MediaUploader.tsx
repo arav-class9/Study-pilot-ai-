@@ -21,6 +21,12 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<any>(null);
 
+  React.useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
   const startSimulatedRecording = () => {
     setIsRecording(true);
     setRecordingSeconds(0);

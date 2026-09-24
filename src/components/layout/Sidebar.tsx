@@ -29,7 +29,7 @@ export const Sidebar: React.FC = () => {
   const coreNavItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'ncert', label: 'NCERT & Books', icon: BookOpen },
-    { id: 'learn', label: 'Topic Workspace', icon: BookOpen },
+    { id: 'workspace', label: 'Topics', icon: BookOpen },
     { id: 'practice', label: 'Practice Quiz', icon: CheckCircle2 },
     { id: 'exam', label: 'Exam Mode', icon: FileCheck2, badge: 'Mock' },
     {

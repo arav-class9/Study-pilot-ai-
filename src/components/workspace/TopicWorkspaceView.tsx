@@ -6,6 +6,7 @@ import {
   deleteTopicWorkspace,
   createNewTopicWorkspace,
 } from '../../services/topicWorkspaceStorage';
+import { safeGetStorage, safeSetStorage } from '../../utils/storage';
 import { fetchGeneratedNotes } from '../../services/topicWorkspaceClient';
 import { TopicHeader } from './TopicHeader';
 import { TopicDefinitionBlock } from './TopicDefinitionBlock';
@@ -19,7 +20,12 @@ import { TopicProgressTracker } from './TopicProgressTracker';
 import { RevisionGenerator } from './RevisionGenerator';
 import { TopicListDrawer } from './TopicListDrawer';
 import { CreateTopicModal } from './CreateTopicModal';
-import { BookOpen, Plus } from 'lucide-react';
+import { StructuredVisualAnswerView } from './StructuredVisualAnswerView';
+import { generateOfflineStructuredVisualAnswer } from '../../services/topicWorkspaceClient';
+import { BookOpen, Plus, Sparkles, LayoutDashboard } from 'lucide-react';
+
+const ACTIVE_TOPIC_ID_KEY = 'studypilot_active_topic_id';
+const ACTIVE_TOPIC_SECTION_KEY = 'studypilot_active_topic_section';
 
 interface TopicWorkspaceViewProps {
   onBackToDashboard?: () => void;
@@ -28,11 +34,31 @@ interface TopicWorkspaceViewProps {
 export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
   onBackToDashboard,
 }) => {
-  const [topics, setTopics] = useState<TopicWorkspaceItem[]>([]);
-  const [currentTopic, setCurrentTopic] = useState<TopicWorkspaceItem | null>(null);
-  const [activeSection, setActiveSection] = useState<
+  const [topics, setTopics] = useState<TopicWorkspaceItem[]>(() => getAllTopicWorkspaces());
+  const [currentTopic, setCurrentTopic] = useState<TopicWorkspaceItem | null>(() => {
+    const loaded = getAllTopicWorkspaces();
+    if (!loaded || loaded.length === 0) return null;
+    const savedTopicId = safeGetStorage(ACTIVE_TOPIC_ID_KEY);
+    if (savedTopicId) {
+      const match = loaded.find((t) => t.id === savedTopicId);
+      if (match) return match;
+    }
+    return loaded[0];
+  });
+  const [activeSection, setActiveSectionState] = useState<
     'learn' | 'notes' | 'explain' | 'practice' | 'recall' | 'revision'
-  >('learn');
+  >(() => {
+    const savedSec = safeGetStorage(ACTIVE_TOPIC_SECTION_KEY);
+    if (savedSec && ['learn', 'notes', 'explain', 'practice', 'recall', 'revision'].includes(savedSec)) {
+      return savedSec as any;
+    }
+    return 'learn';
+  });
+
+  const setActiveSection = (sec: 'learn' | 'notes' | 'explain' | 'practice' | 'recall' | 'revision') => {
+    setActiveSectionState(sec);
+    safeSetStorage(ACTIVE_TOPIC_SECTION_KEY, sec);
+  };
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -41,18 +67,29 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
   const [showRightTools, setShowRightTools] = useState(false);
   const [showDefinitionBlock, setShowDefinitionBlock] = useState(false);
 
-  // Load topics on mount
+  // Failsafe: if currentTopic was ever unset but topics exist, recover immediately
   useEffect(() => {
-    const loaded = getAllTopicWorkspaces();
-    setTopics(loaded);
-    if (loaded.length > 0) {
-      setCurrentTopic(loaded[0]);
+    if (!currentTopic && topics.length > 0) {
+      const savedTopicId = safeGetStorage(ACTIVE_TOPIC_ID_KEY);
+      const match = savedTopicId ? topics.find((t) => t.id === savedTopicId) : null;
+      const target = match || topics[0];
+      setCurrentTopic(target);
+      safeSetStorage(ACTIVE_TOPIC_ID_KEY, target.id);
     }
-  }, []);
+  }, [currentTopic, topics]);
+
+  const handleSelectTopic = (topicId: string) => {
+    const selected = topics.find((t) => t.id === topicId);
+    if (selected) {
+      setCurrentTopic(selected);
+      safeSetStorage(ACTIVE_TOPIC_ID_KEY, selected.id);
+    }
+  };
 
   const handleUpdateTopic = (updated: TopicWorkspaceItem) => {
     const saved = saveTopicWorkspace(updated);
     setCurrentTopic(saved);
+    safeSetStorage(ACTIVE_TOPIC_ID_KEY, saved.id);
     setTopics((prev) => prev.map((t) => (t.id === saved.id ? saved : t)));
   };
 
@@ -71,11 +108,18 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
     });
 
     newTopic.isBookmarked = params.isBookmarked;
+    newTopic.structuredVisualAnswer = generateOfflineStructuredVisualAnswer({
+      topicOrQuestion: params.topicName,
+      subject: params.subject,
+      classLevel: params.classLevel,
+      chapter: params.chapter,
+    });
 
     const saved = saveTopicWorkspace(newTopic);
+    safeSetStorage(ACTIVE_TOPIC_ID_KEY, saved.id);
     setTopics((prev) => [saved, ...prev]);
     setCurrentTopic(saved);
-    setActiveSection('notes'); // Jump straight into notes workspace
+    setActiveSection('learn'); // Jump straight into the Visual Cards Textbook!
   };
 
   const handleDeleteTopic = (topicId: string) => {
@@ -83,7 +127,11 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
     const updated = topics.filter((t) => t.id !== topicId);
     setTopics(updated);
     if (currentTopic?.id === topicId) {
-      setCurrentTopic(updated.length > 0 ? updated[0] : null);
+      const nextTopic = updated.length > 0 ? updated[0] : null;
+      setCurrentTopic(nextTopic);
+      if (nextTopic) {
+        safeSetStorage(ACTIVE_TOPIC_ID_KEY, nextTopic.id);
+      }
     }
   };
 
@@ -186,17 +234,14 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
       />
 
       {/* Responsive Layout Container */}
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 flex flex-col lg:flex-row gap-6">
+      <div className="w-full max-w-[1600px] mx-auto px-2.5 sm:px-4 md:px-6 py-3 sm:py-6 flex flex-col lg:flex-row gap-4 sm:gap-6 min-w-0 overflow-x-hidden">
         {/* Left Sidebar (Collapsible, default closed for full reading space) */}
         {showLeftSidebar && (
           <div className="animate-in slide-in-from-left-4 duration-200">
             <LeftTopicSidebar
               topics={topics}
               currentTopic={currentTopic}
-              onSelectTopic={(id) => {
-                const selected = topics.find((t) => t.id === id);
-                if (selected) setCurrentTopic(selected);
-              }}
+              onSelectTopic={handleSelectTopic}
               onCreateNewTopic={() => setIsCreateModalOpen(true)}
               onDeleteTopic={handleDeleteTopic}
               onBookmarkToggle={handleBookmarkToggle}
@@ -205,10 +250,10 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
         )}
 
         {/* Central Main Workspace Panel */}
-        <main className={`flex-1 min-w-0 space-y-6 ${!showLeftSidebar && !showRightTools ? 'max-w-5xl mx-auto' : ''}`}>
+        <main className={`flex-1 min-w-0 w-full max-w-full space-y-4 sm:space-y-6 overflow-x-hidden ${!showLeftSidebar && !showRightTools ? 'max-w-5xl mx-auto' : ''}`}>
           {/* Sleek 1-line Concept Bar */}
-          <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-amber-50/80 dark:bg-slate-900 border border-amber-200/60 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 shadow-xs">
-            <div className="flex items-center gap-2 truncate">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between px-3.5 py-2.5 rounded-2xl bg-amber-50/80 dark:bg-slate-900 border border-amber-200/60 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 shadow-xs gap-1.5 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 truncate">
               <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 animate-pulse" />
               <span className="font-semibold truncate">
                 {currentTopic.definitionBreakdown?.quickSummary || `Topic: ${currentTopic.topicName} • ${currentTopic.subject}`}
@@ -216,7 +261,7 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
             </div>
             <button
               onClick={() => setShowDefinitionBlock((prev) => !prev)}
-              className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline shrink-0 ml-3 cursor-pointer"
+              className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline shrink-0 sm:ml-3 cursor-pointer self-end sm:self-auto"
             >
               {showDefinitionBlock ? 'Hide Breakdown' : 'Formal Definition & Examples'}
             </button>
@@ -235,11 +280,14 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
           {/* Active Workspace View Section */}
           {activeSection === 'learn' && (
             <div className="space-y-6 animate-in fade-in duration-200">
+              <StructuredVisualAnswerView
+                topic={currentTopic}
+                onUpdateTopic={handleUpdateTopic}
+              />
               <TopicProgressTracker
                 topic={currentTopic}
                 onNavigateSection={setActiveSection}
               />
-              <NotesEditor topic={currentTopic} onUpdateTopic={handleUpdateTopic} />
             </div>
           )}
 
@@ -294,10 +342,7 @@ export const TopicWorkspaceView: React.FC<TopicWorkspaceViewProps> = ({
         onClose={() => setIsDrawerOpen(false)}
         topics={topics}
         currentTopicId={currentTopic.id}
-        onSelectTopic={(id) => {
-          const selected = topics.find((t) => t.id === id);
-          if (selected) setCurrentTopic(selected);
-        }}
+        onSelectTopic={handleSelectTopic}
         onCreateNewTopic={() => setIsCreateModalOpen(true)}
         onDeleteTopic={handleDeleteTopic}
       />

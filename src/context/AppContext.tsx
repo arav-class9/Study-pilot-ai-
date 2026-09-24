@@ -372,23 +372,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               safeRemoveStorage('studypilot_walkthrough_seen');
             }
 
+            // Load user-scoped custom timetable & daily plan
+            const savedTimetable = safeGetStorage(`studypilot_custom_timetable_${firebaseUser.uid}`);
+            if (savedTimetable) {
+              try { setCustomTimetable(JSON.parse(savedTimetable)); } catch { setCustomTimetable(null); }
+            } else {
+              setCustomTimetable(null);
+            }
+
+            const savedPlan = safeGetStorage(`studypilot_plan_${firebaseUser.uid}`);
+            if (savedPlan) {
+              try { setDailyPlan(JSON.parse(savedPlan)); } catch {}
+            }
+
             if (Array.isArray(attempts)) {
               setQuizAttempts(attempts as QuizAttempt[]);
+            } else {
+              setQuizAttempts([]);
             }
             if (Array.isArray(userMistakes) && userMistakes.length > 0) {
               setMistakes(userMistakes as MistakeItem[]);
+            } else {
+              setMistakes([]);
             }
             if (Array.isArray(userRevisionItems) && userRevisionItems.length > 0) {
               setRevisionQueue(userRevisionItems as RevisionQueueItem[]);
+            } else {
+              setRevisionQueue([]);
             }
             if (Array.isArray(userNotes) && userNotes.length > 0) {
               setNotesList(userNotes as StudyNote[]);
+            } else {
+              setNotesList([]);
             }
             if (Array.isArray(userExams) && userExams.length > 0) {
               setExamAttempts(userExams as ExamAttempt[]);
+            } else {
+              setExamAttempts([]);
             }
             if (Array.isArray(userNotifs) && userNotifs.length > 0) {
               setNotifications(userNotifs as AppNotification[]);
+            } else {
+              setNotifications([]);
             }
           } else {
             // New user: initialize profile with explicit zero-value fields
@@ -436,7 +461,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             safeSetStorage('studypilot_onboarded', 'false');
             safeRemoveStorage('studypilot_walkthrough_seen');
 
-            // Fresh user has no prior activity: reset all state lists to empty
+            // Fresh user has no prior activity: reset all state lists to clean empty state
             setTopicProgressList([]);
             setQuizAttempts([]);
             setNotesList([]);
@@ -444,15 +469,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setRevisionQueue([]);
             setExamAttempts([]);
             setNotifications([]);
+            setCustomTimetable(null);
             setAchievements(INITIAL_ACHIEVEMENTS.map((a) => ({ ...a, unlocked: false, currentCount: 0 })));
-
-            localStorage.removeItem('studypilot_progress');
-            localStorage.removeItem('studypilot_quizzes');
-            localStorage.removeItem('studypilot_notes');
-            localStorage.removeItem('studypilot_mistakes');
-            localStorage.removeItem('studypilot_revision_queue');
-            localStorage.removeItem('studypilot_exams');
-            localStorage.removeItem('studypilot_notifications');
           }
         })
         .catch((err) => {
@@ -722,7 +740,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const saveCustomTimetable = (timetable: CustomTimetable) => {
     setCustomTimetable(timetable);
-    safeSetStorage('studypilot_custom_timetable', JSON.stringify(timetable));
+    const targetUid = firebaseUser?.uid || user?.uid || 'guest';
+    safeSetStorage(`studypilot_custom_timetable_${targetUid}`, JSON.stringify(timetable));
   };
 
   const [dailyPlan, setDailyPlan] = useState<DailyStudyPlan>(() => {

@@ -25,15 +25,23 @@ interface SelfExplanationProps {
 export const SelfExplanation: React.FC<SelfExplanationProps> = ({ topic, onUpdateTopic }) => {
   const [isChecking, setIsChecking] = useState(false);
   const selfExp = topic.selfExplanation || { writtenText: '' };
+  const [localWrittenText, setLocalWrittenText] = useState(selfExp.writtenText || '');
 
-  const handleTextChange = (text: string) => {
-    onUpdateTopic({
-      ...topic,
-      selfExplanation: {
-        ...selfExp,
-        writtenText: text,
-      },
-    });
+  React.useEffect(() => {
+    setLocalWrittenText(topic.selfExplanation?.writtenText || '');
+  }, [topic.id]);
+
+  const saveLocalText = (textToSave?: string) => {
+    const text = typeof textToSave === 'string' ? textToSave : localWrittenText;
+    if (text !== (topic.selfExplanation?.writtenText || '')) {
+      onUpdateTopic({
+        ...topic,
+        selfExplanation: {
+          ...selfExp,
+          writtenText: text,
+        },
+      });
+    }
   };
 
   const handleMediaSave = (url: string, type: 'video' | 'audio' | 'image', fileName: string) => {
@@ -41,6 +49,7 @@ export const SelfExplanation: React.FC<SelfExplanationProps> = ({ topic, onUpdat
       ...topic,
       selfExplanation: {
         ...selfExp,
+        writtenText: localWrittenText,
         mediaUrl: url,
         mediaType: type,
         mediaFileName: fileName,
@@ -53,6 +62,7 @@ export const SelfExplanation: React.FC<SelfExplanationProps> = ({ topic, onUpdat
       ...topic,
       selfExplanation: {
         ...selfExp,
+        writtenText: localWrittenText,
         mediaUrl: undefined,
         mediaType: undefined,
         mediaFileName: undefined,
@@ -61,11 +71,13 @@ export const SelfExplanation: React.FC<SelfExplanationProps> = ({ topic, onUpdat
   };
 
   const handleCheckUnderstanding = async () => {
-    if (!selfExp.writtenText && !selfExp.mediaUrl) {
+    const currentText = localWrittenText.trim();
+    if (!currentText && !selfExp.mediaUrl) {
       alert('Please type or record a short explanation first!');
       return;
     }
 
+    saveLocalText(currentText);
     setIsChecking(true);
 
     try {
@@ -74,7 +86,7 @@ export const SelfExplanation: React.FC<SelfExplanationProps> = ({ topic, onUpdat
       const feedback = await checkStudentExplanation({
         topicName: topic.topicName,
         subject: topic.subject,
-        explanationText: selfExp.writtenText || `[Attached ${selfExp.mediaType} explanation: ${selfExp.mediaFileName}]`,
+        explanationText: currentText || `[Attached ${selfExp.mediaType} explanation: ${selfExp.mediaFileName}]`,
         notesContext: combinedNotes,
       });
 
@@ -82,6 +94,7 @@ export const SelfExplanation: React.FC<SelfExplanationProps> = ({ topic, onUpdat
         ...topic,
         selfExplanation: {
           ...selfExp,
+          writtenText: currentText,
           checkResult: feedback,
         },
       });
@@ -121,8 +134,9 @@ export const SelfExplanation: React.FC<SelfExplanationProps> = ({ topic, onUpdat
             <span>Type Your Own Explanation</span>
           </label>
           <textarea
-            value={selfExp.writtenText}
-            onChange={(e) => handleTextChange(e.target.value)}
+            value={localWrittenText}
+            onChange={(e) => setLocalWrittenText(e.target.value)}
+            onBlur={() => saveLocalText()}
             placeholder={`Explain "${topic.topicName}" as if you were teaching a classmate or friend. Mention core principles, formulas, or steps...`}
             rows={7}
             className="w-full p-4 rounded-xl border border-amber-300 dark:border-slate-700 bg-amber-50/20 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 font-sans"
@@ -141,7 +155,7 @@ export const SelfExplanation: React.FC<SelfExplanationProps> = ({ topic, onUpdat
         {/* Action Button */}
         <button
           onClick={handleCheckUnderstanding}
-          disabled={isChecking || (!selfExp.writtenText && !selfExp.mediaUrl)}
+          disabled={isChecking || (!localWrittenText.trim() && !selfExp.mediaUrl)}
           className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-600 to-indigo-600 hover:from-amber-700 hover:to-indigo-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-md shadow-amber-600/20 transition-all disabled:opacity-50 active:scale-[0.99]"
         >
           {isChecking ? (
