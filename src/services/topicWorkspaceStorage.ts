@@ -2,7 +2,20 @@ import { TopicWorkspaceItem, TopicProgressMetrics } from '../types/workspace';
 import { safeGetStorage, safeSetStorage } from '../utils/storage';
 import { generateOfflineStructuredVisualAnswer } from './topicWorkspaceClient';
 
-const STORAGE_KEY_TOPICS = 'studypilot_topic_workspaces';
+const BASE_STORAGE_KEY_TOPICS = 'studypilot_topic_workspaces';
+
+function getActiveStorageKey(): string {
+  try {
+    const userStr = safeGetStorage('studypilot_user');
+    if (userStr) {
+      const parsed = JSON.parse(userStr);
+      if (parsed?.uid && parsed.uid !== 'pilot-student-001') {
+        return `${BASE_STORAGE_KEY_TOPICS}_${parsed.uid}`;
+      }
+    }
+  } catch {}
+  return BASE_STORAGE_KEY_TOPICS;
+}
 
 /**
  * Calculates dynamic Topic Mastery % and progress metrics based on activity completion.
@@ -157,7 +170,8 @@ export function createNewTopicWorkspace(params: {
 }
 
 export function getAllTopicWorkspaces(): TopicWorkspaceItem[] {
-  const rawData = safeGetStorage(STORAGE_KEY_TOPICS);
+  const storageKey = getActiveStorageKey();
+  const rawData = safeGetStorage(storageKey);
   let topics: TopicWorkspaceItem[] = [];
   if (rawData) {
     try {
@@ -339,7 +353,7 @@ Remember:
     const processedNewton = calculateTopicProgress(newtonTopic);
     const processedConnective = calculateTopicProgress(initialTopic);
     const initialList = [processedNewton, processedConnective];
-    safeSetStorage(STORAGE_KEY_TOPICS, JSON.stringify(initialList));
+    safeSetStorage(storageKey, JSON.stringify(initialList));
     return initialList;
   }
 
@@ -362,7 +376,7 @@ Remember:
   });
 
   if (hasMissingVisual) {
-    safeSetStorage(STORAGE_KEY_TOPICS, JSON.stringify(topics));
+    safeSetStorage(storageKey, JSON.stringify(topics));
   }
 
   return topics;
@@ -379,14 +393,14 @@ export function saveTopicWorkspace(topic: TopicWorkspaceItem): TopicWorkspaceIte
     currentList.unshift(updatedTopic);
   }
 
-  safeSetStorage(STORAGE_KEY_TOPICS, JSON.stringify(currentList));
+  safeSetStorage(getActiveStorageKey(), JSON.stringify(currentList));
   return updatedTopic;
 }
 
 export function deleteTopicWorkspace(id: string): void {
   const currentList = getAllTopicWorkspaces();
   const filtered = currentList.filter((t) => t.id !== id);
-  safeSetStorage(STORAGE_KEY_TOPICS, JSON.stringify(filtered));
+  safeSetStorage(getActiveStorageKey(), JSON.stringify(filtered));
 }
 
 export function getTopicWorkspaceById(id: string): TopicWorkspaceItem | null {

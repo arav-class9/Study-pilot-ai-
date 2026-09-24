@@ -226,33 +226,45 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setCustomDurations((prev) => ({ ...prev, [mode]: newSeconds }));
       endTimeRef.current = null;
     } else {
-      const newRemaining = Math.max(10, timeLeft + minutesDelta * 60);
-      setTimeLeft(newRemaining);
       if (endTimeRef.current) {
+        endTimeRef.current += minutesDelta * 60 * 1000;
+        const newRemaining = Math.max(10, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+        setTimeLeft(newRemaining);
+      } else {
+        const newRemaining = Math.max(10, timeLeft + minutesDelta * 60);
         endTimeRef.current = Date.now() + newRemaining * 1000;
+        setTimeLeft(newRemaining);
       }
     }
   };
 
-  // Timer Tick handler
+  // Timer Tick handler - clean single interval without churn
   useEffect(() => {
     if (isRunning) {
       if (!endTimeRef.current) {
         endTimeRef.current = Date.now() + timeLeft * 1000;
       }
 
-      timerRef.current = setInterval(() => {
-        const remaining = Math.max(0, Math.ceil((endTimeRef.current! - Date.now()) / 1000));
+      const intervalId = setInterval(() => {
+        if (!endTimeRef.current) return;
+        const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
         setTimeLeft(remaining);
 
         if (remaining <= 0) {
-          clearInterval(timerRef.current!);
+          clearInterval(intervalId);
           timerRef.current = null;
           endTimeRef.current = null;
           setIsRunning(false);
           handleSessionCompletion();
         }
-      }, 500);
+      }, 1000);
+
+      timerRef.current = intervalId;
+
+      return () => {
+        clearInterval(intervalId);
+        timerRef.current = null;
+      };
     } else {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -260,11 +272,7 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       endTimeRef.current = null;
     }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isRunning, timeLeft]);
+  }, [isRunning]);
 
   // Session completion
   const handleSessionCompletion = () => {

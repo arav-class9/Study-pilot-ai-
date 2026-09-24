@@ -189,10 +189,21 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
     }
 
     // Load saved highlights
-    const loadedHls = NCERTBookStorage.getHighlights(chapter.id, currentPage);
-    setHighlights(loadedHls);
+    NCERTBookStorage.getHighlights(chapter.id, currentPage)
+      .then((loadedHls) => {
+        if (isMounted) setHighlights(loadedHls);
+      })
+      .catch((err) => {
+        console.warn('Could not load highlights:', err);
+      });
 
-    NCERTService.getPageContent(chapter, currentPage)
+    NCERTService.getPageContent({
+      chapterId: chapter.id,
+      classLevel: chapter.classLevel,
+      subjectId: chapter.subjectId,
+      chapterName: chapter.title,
+      pageNumber: currentPage,
+    })
       .then((data) => {
         if (isMounted) {
           setPageData(data);
@@ -385,7 +396,7 @@ export const NCERTReader: React.FC<NCERTReaderProps> = ({
           onClose={() => setSelectionModalOpen(false)}
           result={selectionResult}
           loading={selectionLoading}
-          onSaveNote={() => {}}
+          chapterTitle={chapter.title}
         />
       )}
 

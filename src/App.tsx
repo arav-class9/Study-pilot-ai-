@@ -6,6 +6,7 @@ import { FocusProvider } from './context/FocusContext';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
 import { BottomNav } from './components/layout/BottomNav';
+import { Footer } from './components/layout/Footer';
 import { AndroidFloatingActionButton } from './components/layout/AndroidFloatingActionButton';
 import { useAndroidNavigation } from './hooks/useAndroidNavigation';
 import { Toaster } from 'react-hot-toast';
@@ -31,7 +32,6 @@ import { PublicNCERTPage } from './pages/public/PublicNCERTPage';
 import { PublicTopicPage } from './pages/public/PublicTopicPage';
 import { NotFoundPage } from './pages/public/NotFoundPage';
 import { TopicWorkspaceView } from './components/workspace/TopicWorkspaceView';
-import { SEODiagnosticBar } from './components/seo/SEODiagnosticBar';
 import { useSEORouter } from './hooks/useSEORouter';
 
 function safeLazy<P = {}>(factory: () => Promise<any>, exportName: string): React.LazyExoticComponent<React.ComponentType<P>> {
@@ -120,7 +120,7 @@ const AppContent: React.FC = () => {
               StudyPilot AI
             </h1>
             <p className="text-xs text-slate-400 font-medium">
-              Initializing neural tutoring engine & syncing spaced repetition memory...
+              Initializing neural tutoring engine &amp; syncing spaced repetition memory...
             </p>
           </div>
 
@@ -145,12 +145,18 @@ const AppContent: React.FC = () => {
         return <AboutPage onNavigate={navigate} />;
       case 'features':
         return <FeaturesPage onNavigate={navigate} />;
-      case 'ai-planner':
-        return <FeatureLanderPage feature="planner" onNavigate={navigate} />;
+      case 'ai-assistant':
+        return <FeatureLanderPage feature="assistant" onNavigate={navigate} />;
       case 'ai-notes':
         return <FeatureLanderPage feature="notes" onNavigate={navigate} />;
       case 'ai-quiz':
         return <FeatureLanderPage feature="quiz" onNavigate={navigate} />;
+      case 'ai-flashcards':
+        return <FeatureLanderPage feature="flashcards" onNavigate={navigate} />;
+      case 'ai-planner':
+        return <FeatureLanderPage feature="planner" onNavigate={navigate} />;
+      case 'ai-solver':
+        return <FeatureLanderPage feature="solver" onNavigate={navigate} />;
       case 'ncert-hub':
         return (
           <PublicNCERTPage
@@ -243,6 +249,7 @@ const AppContent: React.FC = () => {
             {publicPageView}
           </ErrorBoundary>
         </main>
+        <Footer onNavigate={navigate} />
       </div>
     );
   }

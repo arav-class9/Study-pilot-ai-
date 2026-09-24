@@ -13,6 +13,7 @@ import {
   getNCERTChapterById,
 } from '../../data/ncertBooksData';
 import { NCERTClass, NCERTChapter, NCERTSubject } from '../../types/ncert';
+import { normalizeSubjectSlug } from '../../hooks/useSEORouter';
 import {
   BookOpen,
   ArrowRight,
@@ -47,9 +48,12 @@ export const PublicNCERTPage: React.FC<PublicNCERTPageProps> = ({
   const cleanClass = (classLevel ? classLevel.replace('class-', '') : '') as NCERTClass;
   const isSpecificClass = ['6', '7', '8', '9', '10', '11', '12'].includes(cleanClass);
 
+  // Normalize subject
+  const cleanSubjectId = subjectId ? normalizeSubjectSlug(subjectId) : undefined;
+
   // Find matched subject
-  const currentSubject: NCERTSubject | undefined = subjectId
-    ? NCERT_SUBJECTS_CATALOG.find((s) => s.id.toLowerCase() === subjectId.toLowerCase())
+  const currentSubject: NCERTSubject | undefined = cleanSubjectId
+    ? NCERT_SUBJECTS_CATALOG.find((s) => s.id.toLowerCase() === cleanSubjectId.toLowerCase())
     : undefined;
 
   // Find matched chapter if slug provided
@@ -70,7 +74,14 @@ export const PublicNCERTPage: React.FC<PublicNCERTPageProps> = ({
     return undefined;
   }, [chapterSlug, cleanClass, currentSubject, isSpecificClass]);
 
-  // Handle Chapter View
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    if (onNavigate) {
+      e.preventDefault();
+      onNavigate(path);
+    }
+  };
+
+  // 1. Single Chapter View
   if (matchedChapter) {
     const chClass = matchedChapter.classLevel;
     const chSubject = matchedChapter.subjectId.toUpperCase();
@@ -143,7 +154,7 @@ export const PublicNCERTPage: React.FC<PublicNCERTPageProps> = ({
                   onNavigate('/ncert');
                 }
               }}
-              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer"
             >
               <BookOpen className="w-4 h-4" />
               <span>Read Chapter Page-by-Page</span>
@@ -157,7 +168,7 @@ export const PublicNCERTPage: React.FC<PublicNCERTPageProps> = ({
                   onNavigate('/ncert');
                 }
               }}
-              className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-amber-400 dark:text-indigo-600" />
               <span>Take Chapter Practice Quiz</span>
@@ -226,12 +237,7 @@ export const PublicNCERTPage: React.FC<PublicNCERTPageProps> = ({
                   <a
                     key={rel.id}
                     href={`/ncert/class-${chClass}/${rel.subjectId}/${slugify(rel.title)}`}
-                    onClick={(e) => {
-                      if (onNavigate) {
-                        e.preventDefault();
-                        onNavigate(`/ncert/class-${chClass}/${rel.subjectId}/${slugify(rel.title)}`);
-                      }
-                    }}
+                    onClick={(e) => handleLinkClick(e, `/ncert/class-${chClass}/${rel.subjectId}/${slugify(rel.title)}`)}
                     className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 transition-all space-y-1 block cursor-pointer"
                   >
                     <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">
@@ -252,22 +258,22 @@ export const PublicNCERTPage: React.FC<PublicNCERTPageProps> = ({
     );
   }
 
-  // Handle Class or Subject Overview
-  const activeClass = (isSpecificClass ? cleanClass : '10') as NCERTClass;
+  // 2. Class or Subject Overview
+  const activeClass = (isSpecificClass ? cleanClass : '9') as NCERTClass;
   const filteredChapters = getNCERTChaptersForClass(
     activeClass,
     currentSubject ? currentSubject.id : undefined
   );
 
   const pageTitle = currentSubject
-    ? `NCERT Class ${activeClass} ${currentSubject.name} Textbooks & Chapters | StudyPilot AI`
+    ? `NCERT Class ${activeClass} ${currentSubject.name} Notes, Solutions & Quizzes | StudyPilot AI`
     : isSpecificClass
     ? `NCERT Class ${activeClass} Textbooks, Syllabus & Chapters | StudyPilot AI`
     : 'NCERT School Textbooks (Classes 6 to 12) – Notes & Quizzes | StudyPilot AI';
 
   const pageDescription = currentSubject
-    ? `Complete syllabus and chapter guide for NCERT Class ${activeClass} ${currentSubject.name}. Read official textbook chapters page-by-page and solve interactive practice quizzes.`
-    : `Explore official CBSE & NCERT textbooks for Class ${activeClass}. Covers Science, Mathematics, English, and Social Science with chapter notes and quizzes.`;
+    ? `Complete syllabus and chapter guide for NCERT Class ${activeClass} ${currentSubject.name}. Study chapter overviews, key concepts, formulas, and take interactive practice quizzes.`
+    : `Explore official CBSE & NCERT textbooks for Class ${activeClass}. Covers Science, Mathematics, English, Hindi, and Social Science with chapter notes and quizzes.`;
 
   const pageUrl = currentSubject
     ? `/ncert/class-${activeClass}/${currentSubject.id}`
@@ -294,6 +300,8 @@ export const PublicNCERTPage: React.FC<PublicNCERTPageProps> = ({
     getBreadcrumbSchema(breadcrumbs),
   ];
 
+  const subjectsForClass = NCERT_SUBJECTS_CATALOG.filter((s) => s.classes.includes(activeClass));
+
   return (
     <article className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-16">
       <SEOHead
@@ -309,19 +317,19 @@ export const PublicNCERTPage: React.FC<PublicNCERTPageProps> = ({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 space-y-8">
         <SEOBreadcrumbs items={breadcrumbs} onNavigate={onNavigate} />
 
-        {/* Header */}
+        {/* Page Hero */}
         <header className="space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
             <BookOpen className="w-3.5 h-3.5" />
-            <span>OFFICIAL CBSE &amp; NCERT CURRICULUM</span>
+            <span>OFFICIAL NCERT CURRICULUM</span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             {currentSubject
-              ? `NCERT Class ${activeClass} ${currentSubject.name} – Chapters & Quizzes`
+              ? `NCERT Class ${activeClass} ${currentSubject.name}`
               : isSpecificClass
-              ? `NCERT Class ${activeClass} Textbooks & Curriculum`
-              : 'NCERT Textbooks & Chapters (Classes 6 to 12)'}
+              ? `NCERT Class ${activeClass} Curriculum & Textbooks`
+              : 'NCERT School Textbooks & Interactive Learning'}
           </h1>
 
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-3xl leading-relaxed">
@@ -329,90 +337,69 @@ export const PublicNCERTPage: React.FC<PublicNCERTPageProps> = ({
           </p>
         </header>
 
-        {/* Class Selection Strip */}
-        <section aria-labelledby="class-select-heading" className="space-y-2">
-          <h2 id="class-select-heading" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Select Grade / Class:
-          </h2>
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {(['6', '7', '8', '9', '10', '11', '12'] as NCERTClass[]).map((cls) => (
+        {/* Class Selection Pills */}
+        <nav aria-label="NCERT Classes" className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {['6', '7', '8', '9', '10', '11', '12'].map((cls) => {
+            const isSelected = cls === activeClass;
+            const targetUrl = `/ncert/class-${cls}${currentSubject ? `/${currentSubject.id}` : ''}`;
+            return (
               <a
                 key={cls}
-                href={`/ncert/class-${cls}`}
-                onClick={(e) => {
-                  if (onNavigate) {
-                    e.preventDefault();
-                    onNavigate(`/ncert/class-${cls}`);
-                  }
-                }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                  activeClass === cls
-                    ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-500/20'
-                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'
+                href={targetUrl}
+                onClick={(e) => handleLinkClick(e, targetUrl)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                  isSelected
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 Class {cls}
               </a>
-            ))}
-          </div>
-        </section>
+            );
+          })}
+        </nav>
 
         {/* Subject Filter Tabs */}
-        <section aria-labelledby="subjects-heading" className="space-y-2">
-          <h2 id="subjects-heading" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Filter by Subject:
-          </h2>
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        {isSpecificClass && (
+          <nav aria-label="Class Subjects" className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
             <a
               href={`/ncert/class-${activeClass}`}
-              onClick={(e) => {
-                if (onNavigate) {
-                  e.preventDefault();
-                  onNavigate(`/ncert/class-${activeClass}`);
-                }
-              }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+              onClick={(e) => handleLinkClick(e, `/ncert/class-${activeClass}`)}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 cursor-pointer ${
                 !currentSubject
-                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'
+                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               All Subjects
             </a>
-
-            {NCERT_SUBJECTS_CATALOG.filter((s) => s.classes.includes(activeClass)).map((subj) => (
-              <a
-                key={subj.id}
-                href={`/ncert/class-${activeClass}/${subj.id}`}
-                onClick={(e) => {
-                  if (onNavigate) {
-                    e.preventDefault();
-                    onNavigate(`/ncert/class-${activeClass}/${subj.id}`);
-                  }
-                }}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-colors cursor-pointer ${
-                  currentSubject?.id === subj.id
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'
-                }`}
-              >
-                <span>{subj.name}</span>
-              </a>
-            ))}
-          </div>
-        </section>
+            {subjectsForClass.map((subj) => {
+              const isSelected = currentSubject?.id === subj.id;
+              const subjUrl = `/ncert/class-${activeClass}/${subj.id}`;
+              return (
+                <a
+                  key={subj.id}
+                  href={subjUrl}
+                  onClick={(e) => handleLinkClick(e, subjUrl)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 cursor-pointer ${
+                    isSelected
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {subj.name}
+                </a>
+              );
+            })}
+          </nav>
+        )}
 
         {/* Chapters Grid */}
-        <section aria-labelledby="chapter-list-heading" className="space-y-4">
+        <section aria-labelledby="chapters-grid-heading" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 id="chapter-list-heading" className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-              Class {activeClass} Chapters ({filteredChapters.length})
+            <h2 id="chapters-grid-heading" className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+              {currentSubject ? `${currentSubject.name} Chapters` : `Class ${activeClass} Chapters`} ({filteredChapters.length})
             </h2>
-            <span className="text-xs text-slate-500">
-              Click any chapter to view syllabus notes and practice quizzes
-            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -421,67 +408,84 @@ export const PublicNCERTPage: React.FC<PublicNCERTPageProps> = ({
               return (
                 <div
                   key={chapter.id}
-                  className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs hover:border-indigo-400 dark:hover:border-indigo-600 transition-all flex flex-col justify-between space-y-4"
+                  className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-indigo-500 transition-all flex flex-col justify-between space-y-4 group"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                        Chapter {chapter.chapterNumber} • {chapter.subjectId.toUpperCase()}
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 uppercase">
+                        {chapter.subjectId} • Ch {chapter.chapterNumber}
                       </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                        {chapter.highYieldWeightage || 'Board Core'}
-                      </span>
+                      {chapter.highYieldWeightage && (
+                        <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                          {chapter.highYieldWeightage}
+                        </span>
+                      )}
                     </div>
 
-                    <a
-                      href={chUrl}
-                      onClick={(e) => {
-                        if (onNavigate) {
-                          e.preventDefault();
-                          onNavigate(chUrl);
-                        }
-                      }}
-                      className="block group"
-                    >
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-snug">
-                        {chapter.title}
-                      </h3>
-                    </a>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      {chapter.title}
+                    </h3>
 
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
                       {chapter.description}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                     <a
                       href={chUrl}
-                      onClick={(e) => {
-                        if (onNavigate) {
-                          e.preventDefault();
-                          onNavigate(chUrl);
-                        }
-                      }}
-                      className="flex-1 py-1.5 px-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                      onClick={(e) => handleLinkClick(e, chUrl)}
+                      className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
                     >
-                      <span>Chapter Notes</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span>Chapter Notes &amp; Quiz</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
                     </a>
 
-                    {onOpenReader && (
-                      <button
-                        onClick={() => onOpenReader(chapter)}
-                        className="py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
-                        title="Read this chapter page-by-page"
-                      >
-                        <BookOpen className="w-3.5 h-3.5" />
-                        <span>Read</span>
-                      </button>
-                    )}
+                    <button
+                      onClick={() => {
+                        if (onOpenReader) {
+                          onOpenReader(chapter);
+                        } else if (onNavigate) {
+                          onNavigate('/ncert');
+                        }
+                      }}
+                      className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer"
+                      title="Open Interactive Reader"
+                      aria-label={`Open interactive reader for ${chapter.title}`}
+                    >
+                      <BookOpen className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        {/* Educational Content / Study Tips Section */}
+        <section aria-labelledby="study-tips-heading" className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <h2 id="study-tips-heading" className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+            How to Excel in NCERT Class {activeClass} Examinations
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-1.5">
+              <h3 className="font-bold text-indigo-600 dark:text-indigo-400">1. Master In-Text Questions</h3>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                Over 70% of board questions are directly adapted from in-text NCERT examples and exercise problems.
+              </p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-1.5">
+              <h3 className="font-bold text-indigo-600 dark:text-indigo-400">2. Memorize Precise Definitions</h3>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                Board examiners reward standard textbook phrasing for definitions, SI units, and chemical reactions.
+              </p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-1.5">
+              <h3 className="font-bold text-indigo-600 dark:text-indigo-400">3. Spaced Quizzing</h3>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                Use StudyPilot AI interactive quizzes to test your recall 3 days and 7 days after reading each chapter.
+              </p>
+            </div>
           </div>
         </section>
       </div>

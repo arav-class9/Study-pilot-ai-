@@ -59,6 +59,7 @@ export const purgeMismatchedStorage = (activeUid?: string | null) => {
       try {
         const parsed = JSON.parse(savedUserStr);
         if (!activeUid || !parsed?.uid || parsed.uid !== activeUid || parsed.uid === 'pilot-student-001') {
+          const oldUid = parsed?.uid;
           localStorage.removeItem('studypilot_user');
           localStorage.removeItem('studypilot_progress');
           localStorage.removeItem('studypilot_quizzes');
@@ -69,6 +70,14 @@ export const purgeMismatchedStorage = (activeUid?: string | null) => {
           localStorage.removeItem('studypilot_notifications');
           localStorage.removeItem('studypilot_plan');
           localStorage.removeItem('studypilot_achievements');
+          localStorage.removeItem('studypilot_custom_timetable');
+          localStorage.removeItem('studypilot_study_group');
+          if (oldUid) {
+            localStorage.removeItem(`studypilot_custom_timetable_${oldUid}`);
+            localStorage.removeItem(`studypilot_plan_${oldUid}`);
+            localStorage.removeItem(`studypilot_study_group_${oldUid}`);
+            localStorage.removeItem(`studypilot_topic_workspaces_${oldUid}`);
+          }
         }
       } catch {
         localStorage.removeItem('studypilot_user');

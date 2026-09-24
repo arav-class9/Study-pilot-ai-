@@ -3,9 +3,13 @@ User-agent: *
 Allow: /
 Allow: /about
 Allow: /features
-Allow: /ai-study-planner
+Allow: /ai-study-assistant
+Allow: /ai-notes-generator
 Allow: /ai-notes
 Allow: /ai-quiz-generator
+Allow: /ai-flashcards
+Allow: /ai-study-planner
+Allow: /ai-question-solver
 Allow: /ncert
 Allow: /ncert/*
 Allow: /class/*

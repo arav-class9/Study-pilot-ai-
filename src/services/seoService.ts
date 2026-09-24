@@ -6,7 +6,7 @@ export const SITE_NAME = 'StudyPilot AI';
 export const PRODUCTION_DOMAIN = 'https://studypilot-ai-8.vercel.app';
 export const DEFAULT_OG_IMAGE = `${PRODUCTION_DOMAIN}/pwa-512x512.png`;
 export const DEFAULT_DESCRIPTION =
-  'AI-powered study coach and NCERT learning companion featuring page-by-page interactive readers, CBSE curriculum mapping, adaptive quizzes, and active recall study planners.';
+  'StudyPilot AI helps students learn smarter with AI-powered explanations, NCERT learning, notes, quizzes, revision tools and personalized study support.';
 
 export function getBaseUrl(): string {
   return PRODUCTION_DOMAIN;
@@ -26,7 +26,9 @@ export function slugify(text: string): string {
  */
 export function getCanonicalUrl(path: string): string {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${PRODUCTION_DOMAIN}${cleanPath}`;
+  // Normalize trailing slashes
+  const normalizedPath = cleanPath.length > 1 && cleanPath.endsWith('/') ? cleanPath.slice(0, -1) : cleanPath;
+  return `${PRODUCTION_DOMAIN}${normalizedPath}`;
 }
 
 /**
@@ -67,28 +69,28 @@ export function getOrganizationSchema() {
 }
 
 /**
- * Schema.org WebApplication structured data
+ * Schema.org SoftwareApplication structured data
  */
-export function getWebApplicationSchema() {
+export function getSoftwareApplicationSchema() {
   const base = PRODUCTION_DOMAIN;
   return {
     '@context': 'https://schema.org',
-    '@type': 'WebApplication',
-    '@id': `${base}/#webapp`,
+    '@type': 'SoftwareApplication',
+    '@id': `${base}/#softwareapplication`,
     name: SITE_NAME,
     applicationCategory: 'EducationalApplication',
-    operatingSystem: 'Android, Web',
+    operatingSystem: 'Web',
     url: `${base}/`,
     description: DEFAULT_DESCRIPTION,
-    browserRequirements: 'Requires JavaScript',
     offers: {
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'INR',
-      description: 'Free access to NCERT textbook syllabus, formulas, and practice quizzes',
     },
   };
 }
+
+export const getWebApplicationSchema = getSoftwareApplicationSchema;
 
 /**
  * Schema.org BreadcrumbList structured data
@@ -225,7 +227,7 @@ export function applySEOMetadata(metadata: SEOMetadata) {
   setMetaTag('description', metadata.description);
   setMetaTag('robots', metadata.robots || 'index, follow');
 
-  // Strict Production Canonical URL (never allows localhost or run.app)
+  // Strict Production Canonical URL
   let canonicalUrl = metadata.canonicalUrl;
   if (!canonicalUrl || canonicalUrl.includes('localhost') || canonicalUrl.includes('run.app')) {
     const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
@@ -250,7 +252,7 @@ export function applySEOMetadata(metadata: SEOMetadata) {
   // JSON-LD Structured Data
   const jsonLdData = metadata.jsonLd && (Array.isArray(metadata.jsonLd) ? metadata.jsonLd.length > 0 : true)
     ? metadata.jsonLd
-    : [getWebSiteSchema(), getOrganizationSchema(), getWebApplicationSchema()];
+    : [getWebSiteSchema(), getOrganizationSchema(), getSoftwareApplicationSchema()];
   
   setJsonLd(jsonLdData);
 }
@@ -266,9 +268,17 @@ export function getAllSitemapURLs(): SitemapURL[] {
     { loc: `${base}/`, lastmod: today, changefreq: 'daily', priority: 1.0 },
     { loc: `${base}/about`, lastmod: today, changefreq: 'weekly', priority: 0.8 },
     { loc: `${base}/features`, lastmod: today, changefreq: 'weekly', priority: 0.8 },
-    { loc: `${base}/ai-study-planner`, lastmod: today, changefreq: 'weekly', priority: 0.9 },
-    { loc: `${base}/ai-notes`, lastmod: today, changefreq: 'weekly', priority: 0.9 },
-    { loc: `${base}/ai-quiz-generator`, lastmod: today, changefreq: 'weekly', priority: 0.9 },
+    
+    // Core AI Capability Landing Pages
+    { loc: `${base}/ai-study-assistant`, lastmod: today, changefreq: 'weekly', priority: 0.95 },
+    { loc: `${base}/ai-notes-generator`, lastmod: today, changefreq: 'weekly', priority: 0.95 },
+    { loc: `${base}/ai-notes`, lastmod: today, changefreq: 'weekly', priority: 0.90 },
+    { loc: `${base}/ai-quiz-generator`, lastmod: today, changefreq: 'weekly', priority: 0.95 },
+    { loc: `${base}/ai-flashcards`, lastmod: today, changefreq: 'weekly', priority: 0.95 },
+    { loc: `${base}/ai-study-planner`, lastmod: today, changefreq: 'weekly', priority: 0.95 },
+    { loc: `${base}/ai-question-solver`, lastmod: today, changefreq: 'weekly', priority: 0.95 },
+    
+    // NCERT Hub
     { loc: `${base}/ncert`, lastmod: today, changefreq: 'daily', priority: 0.95 },
   ];
 
@@ -279,13 +289,18 @@ export function getAllSitemapURLs(): SitemapURL[] {
       loc: `${base}/ncert/class-${cls}`,
       lastmod: today,
       changefreq: 'weekly',
-      priority: 0.85,
+      priority: 0.90,
     });
+  }
+
+  // Class 9 Specific Subjects requested by user
+  const class9Subjects = ['science', 'maths', 'math', 'social-science', 'english', 'hindi'];
+  for (const subj of class9Subjects) {
     urls.push({
-      loc: `${base}/class/${cls}`,
+      loc: `${base}/ncert/class-9/${subj}`,
       lastmod: today,
       changefreq: 'weekly',
-      priority: 0.8,
+      priority: 0.90,
     });
   }
 
@@ -296,7 +311,7 @@ export function getAllSitemapURLs(): SitemapURL[] {
         loc: `${base}/ncert/class-${cls}/${subject.id}`,
         lastmod: today,
         changefreq: 'weekly',
-        priority: 0.8,
+        priority: 0.85,
       });
     }
 
@@ -306,12 +321,12 @@ export function getAllSitemapURLs(): SitemapURL[] {
         loc: `${base}/ncert/class-${chapter.classLevel}/${chapter.subjectId}/${chSlug}`,
         lastmod: today,
         changefreq: 'monthly',
-        priority: 0.75,
+        priority: 0.80,
       });
     }
   }
 
-  // Public Core Curriculum Topics (sample high-yield curated topics)
+  // Curated High-Yield Educational Topics
   const highYieldTopics = [
     { slug: 'newtons-laws-of-motion', name: "Newton's Laws of Motion" },
     { slug: 'chemical-reactions-and-equations', name: 'Chemical Reactions and Equations' },
@@ -330,7 +345,7 @@ export function getAllSitemapURLs(): SitemapURL[] {
       loc: `${base}/topic/${topic.slug}`,
       lastmod: today,
       changefreq: 'weekly',
-      priority: 0.8,
+      priority: 0.85,
     });
   }
 
@@ -368,9 +383,13 @@ User-agent: *
 Allow: /
 Allow: /about
 Allow: /features
-Allow: /ai-study-planner
+Allow: /ai-study-assistant
+Allow: /ai-notes-generator
 Allow: /ai-notes
 Allow: /ai-quiz-generator
+Allow: /ai-flashcards
+Allow: /ai-study-planner
+Allow: /ai-question-solver
 Allow: /ncert
 Allow: /ncert/*
 Allow: /class/*

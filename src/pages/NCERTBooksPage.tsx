@@ -497,7 +497,7 @@ export const NCERTBooksPage: React.FC = () => {
 
             {/* User Avatar */}
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-[#E11D74] text-white font-black text-xs flex items-center justify-center shadow-2xs">
-              {user?.displayName ? user.displayName.slice(0, 1).toUpperCase() : 'S'}
+              {(user?.name || user?.email || 'S').slice(0, 1).toUpperCase()}
             </div>
           </div>
         </div>

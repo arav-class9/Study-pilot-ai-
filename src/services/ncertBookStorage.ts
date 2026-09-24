@@ -7,6 +7,20 @@ import {
   NCERTSubjectId,
 } from '../types/ncert';
 import { CLASS_10_SCIENCE_CH1_PAGES, CLASS_10_MATH_CH4_PAGES } from '../data/ncertBooksData';
+import { safeGetStorage } from '../utils/storage';
+
+function getActiveUserId(): string {
+  try {
+    const raw = safeGetStorage('studypilot_user');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.uid && parsed.uid !== 'pilot-student-001') {
+        return parsed.uid;
+      }
+    }
+  } catch {}
+  return 'default';
+}
 
 const DB_NAME = 'studypilot_ncert_db';
 const DB_VERSION = 1;
@@ -227,7 +241,8 @@ export class NCERTBookStorage {
     sourcePageNumber: number;
     isCorrect: boolean;
   }): void {
-    const key = `ncert_weak_topic_${topic.topicName.toLowerCase().replace(/\s+/g, '_')}`;
+    const uid = getActiveUserId();
+    const key = `ncert_weak_topic_${uid}_${topic.topicName.toLowerCase().replace(/\s+/g, '_')}`;
     try {
       const raw = localStorage.getItem(key);
       const existing: NCERTWeakTopicInfo = raw
@@ -256,10 +271,12 @@ export class NCERTBookStorage {
 
   static getWeakTopics(chapterTitle?: string): NCERTWeakTopicInfo[] {
     const list: NCERTWeakTopicInfo[] = [];
+    const uid = getActiveUserId();
+    const prefix = `ncert_weak_topic_${uid}_`;
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('ncert_weak_topic_')) {
+        if (key && key.startsWith(prefix)) {
           const raw = localStorage.getItem(key);
           if (raw) {
             const topic = JSON.parse(raw) as NCERTWeakTopicInfo;

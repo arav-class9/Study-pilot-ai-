@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Core Public Pages -->
   <url>
     <loc>https://studypilot-ai-8.vercel.app/</loc>
     <changefreq>daily</changefreq>
@@ -15,10 +16,17 @@
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
+
+  <!-- High-Intent AI Capability Landing Pages -->
   <url>
-    <loc>https://studypilot-ai-8.vercel.app/ai-study-planner</loc>
+    <loc>https://studypilot-ai-8.vercel.app/ai-study-assistant</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.90</priority>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://studypilot-ai-8.vercel.app/ai-notes-generator</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
   </url>
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ai-notes</loc>
@@ -28,32 +36,51 @@
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ai-quiz-generator</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.90</priority>
+    <priority>0.95</priority>
   </url>
+  <url>
+    <loc>https://studypilot-ai-8.vercel.app/ai-flashcards</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://studypilot-ai-8.vercel.app/ai-study-planner</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://studypilot-ai-8.vercel.app/ai-question-solver</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <!-- NCERT Hub -->
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert</loc>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
+
+  <!-- Class Pages (6-12) -->
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-6</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
+    <priority>0.90</priority>
   </url>
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-7</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
+    <priority>0.90</priority>
   </url>
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-8</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
+    <priority>0.90</priority>
   </url>
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-9</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.90</priority>
+    <priority>0.95</priority>
   </url>
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-10</loc>
@@ -63,13 +90,42 @@
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-11</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
+    <priority>0.90</priority>
   </url>
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-12</loc>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
+
+  <!-- Class 9 Subject Landers -->
+  <url>
+    <loc>https://studypilot-ai-8.vercel.app/ncert/class-9/science</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://studypilot-ai-8.vercel.app/ncert/class-9/maths</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://studypilot-ai-8.vercel.app/ncert/class-9/social-science</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://studypilot-ai-8.vercel.app/ncert/class-9/english</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://studypilot-ai-8.vercel.app/ncert/class-9/hindi</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- Class 10 Subject Landers -->
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-10/science</loc>
     <changefreq>weekly</changefreq>
@@ -80,16 +136,8 @@
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
-  <url>
-    <loc>https://studypilot-ai-8.vercel.app/ncert/class-9/science</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://studypilot-ai-8.vercel.app/ncert/class-9/math</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
+
+  <!-- High-Yield Chapter Notes & Practice Pages -->
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-10/science/chemical-reactions-and-equations</loc>
     <changefreq>monthly</changefreq>
@@ -108,23 +156,25 @@
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-9/science/matter-in-our-surroundings</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.80</priority>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-9/science/the-fundamental-unit-of-life</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.80</priority>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-9/science/force-and-laws-of-motion</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.80</priority>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://studypilot-ai-8.vercel.app/ncert/class-12/physics/electric-charges-and-fields</loc>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
+
+  <!-- Educational Concept Topic Guides -->
   <url>
     <loc>https://studypilot-ai-8.vercel.app/topic/newtons-laws-of-motion</loc>
     <changefreq>weekly</changefreq>

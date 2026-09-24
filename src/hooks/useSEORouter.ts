@@ -1,21 +1,26 @@
 import { useState, useEffect, useCallback } from 'react';
 
+export type RouteType =
+  | 'home'
+  | 'about'
+  | 'features'
+  | 'ai-assistant'
+  | 'ai-notes'
+  | 'ai-quiz'
+  | 'ai-flashcards'
+  | 'ai-planner'
+  | 'ai-solver'
+  | 'ncert-hub'
+  | 'ncert-class'
+  | 'ncert-subject'
+  | 'ncert-chapter'
+  | 'topic'
+  | 'tab'
+  | '404';
+
 export interface RouteState {
   path: string;
-  type:
-    | 'home'
-    | 'about'
-    | 'features'
-    | 'ai-planner'
-    | 'ai-notes'
-    | 'ai-quiz'
-    | 'ncert-hub'
-    | 'ncert-class'
-    | 'ncert-subject'
-    | 'ncert-chapter'
-    | 'topic'
-    | 'tab'
-    | '404';
+  type: RouteType;
   params: {
     classLevel?: string;
     subjectId?: string;
@@ -23,6 +28,19 @@ export interface RouteState {
     topicSlug?: string;
     tabName?: string;
   };
+}
+
+export function normalizeSubjectSlug(slug: string): string {
+  const s = slug.toLowerCase().trim();
+  if (s === 'math' || s === 'maths' || s === 'mathematics') return 'math';
+  if (s === 'social' || s === 'social-science' || s === 'social_science' || s === 'sst') return 'social';
+  if (s === 'sci' || s === 'science') return 'science';
+  if (s === 'eng' || s === 'english') return 'english';
+  if (s === 'hin' || s === 'hindi') return 'hindi';
+  if (s === 'phy' || s === 'physics') return 'physics';
+  if (s === 'chem' || s === 'chemistry') return 'chemistry';
+  if (s === 'bio' || s === 'biology') return 'biology';
+  return s;
 }
 
 export function parseRoute(pathname: string): RouteState {
@@ -34,21 +52,30 @@ export function parseRoute(pathname: string): RouteState {
     return { path: '/', type: 'home', params: {} };
   }
 
-  // 2. Static Public Informational Pages
+  // 2. Static Public Informational & Feature Lander Pages
   if (cleanPath === '/about') {
     return { path: '/about', type: 'about', params: {} };
   }
   if (cleanPath === '/features') {
     return { path: '/features', type: 'features', params: {} };
   }
-  if (cleanPath === '/ai-study-planner') {
+  if (cleanPath === '/ai-study-assistant' || cleanPath === '/ai-assistant') {
+    return { path: '/ai-study-assistant', type: 'ai-assistant', params: {} };
+  }
+  if (cleanPath === '/ai-notes-generator' || cleanPath === '/ai-notes') {
+    return { path: '/ai-notes-generator', type: 'ai-notes', params: {} };
+  }
+  if (cleanPath === '/ai-quiz-generator' || cleanPath === '/ai-quiz') {
+    return { path: '/ai-quiz-generator', type: 'ai-quiz', params: {} };
+  }
+  if (cleanPath === '/ai-flashcards') {
+    return { path: '/ai-flashcards', type: 'ai-flashcards', params: {} };
+  }
+  if (cleanPath === '/ai-study-planner' || cleanPath === '/ai-planner') {
     return { path: '/ai-study-planner', type: 'ai-planner', params: {} };
   }
-  if (cleanPath === '/ai-notes') {
-    return { path: '/ai-notes', type: 'ai-notes', params: {} };
-  }
-  if (cleanPath === '/ai-quiz-generator') {
-    return { path: '/ai-quiz-generator', type: 'ai-quiz', params: {} };
+  if (cleanPath === '/ai-question-solver' || cleanPath === '/ai-solver') {
+    return { path: '/ai-question-solver', type: 'ai-solver', params: {} };
   }
 
   // 3. NCERT Routes: /ncert, /ncert/:class, /ncert/:class/:subject, /ncert/:class/:subject/:chapter
@@ -63,7 +90,7 @@ export function parseRoute(pathname: string): RouteState {
       type: 'ncert-chapter',
       params: {
         classLevel: ncertChapterMatch[1],
-        subjectId: ncertChapterMatch[2],
+        subjectId: normalizeSubjectSlug(ncertChapterMatch[2]),
         chapterSlug: ncertChapterMatch[3],
       },
     };
@@ -76,7 +103,7 @@ export function parseRoute(pathname: string): RouteState {
       type: 'ncert-subject',
       params: {
         classLevel: ncertSubjectMatch[1],
-        subjectId: ncertSubjectMatch[2],
+        subjectId: normalizeSubjectSlug(ncertSubjectMatch[2]),
       },
     };
   }
@@ -98,7 +125,7 @@ export function parseRoute(pathname: string): RouteState {
       type: 'ncert-subject',
       params: {
         classLevel: altClassSubjectMatch[1],
-        subjectId: altClassSubjectMatch[2],
+        subjectId: normalizeSubjectSlug(altClassSubjectMatch[2]),
       },
     };
   }

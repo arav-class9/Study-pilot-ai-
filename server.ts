@@ -57,6 +57,12 @@ async function startServer() {
     res.sendFile(sitemapPath);
   });
 
+  // Google Search Console Verification Endpoint
+  app.get('/google8011449c284f5ad1.html', (req: Request, res: Response) => {
+    res.type('text/html');
+    res.send('google-site-verification: google8011449c284f5ad1.html');
+  });
+
   // Mount API router
   app.use('/api/ai', apiRouter);
 

@@ -60,10 +60,55 @@ body {
   box-sizing: border-box;
 }
 
-/* Hardware Acceleration for Specific UI Elements */
-.gpu-accelerated {
-  transform: translateZ(0);
+/* Hardware Acceleration & GPU compositing for 144Hz/120Hz Ultra-Smooth Refresh Rates */
+.gpu-accelerated,
+.sticky,
+.fixed {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 144 FPS High-Performance Rendering & Zero Layout Thrashing */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fast touch responsiveness without tap delays */
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ultra-smooth 144Hz cubic bezier transitions for UI interactive elements */
+button, a, .interactive-card {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Content Visibility Optimization: Skip rendering of offscreen elements for maximum framerates */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}
+
+/* Containment for heavy list cards and components */
+.contain-paint {
+  contain: paint;
+}
+
+.contain-layout {
+  contain: layout;
+}
+
+/* Momentum scrolling for Android/iOS with zero rubberband jank */
+.momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
 }
 
 /* Custom scrollbars and sleek UI adjustments */

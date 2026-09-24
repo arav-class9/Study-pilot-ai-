@@ -280,6 +280,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         safeRemoveStorage('studypilot_notifications');
         safeRemoveStorage('studypilot_plan');
         safeRemoveStorage('studypilot_achievements');
+        safeRemoveStorage('studypilot_custom_timetable');
+        safeRemoveStorage('studypilot_study_group');
 
         setTopicProgressList([]);
         setQuizAttempts([]);
@@ -288,6 +290,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setRevisionQueue([]);
         setExamAttempts([]);
         setNotifications([]);
+        setCustomTimetable(null);
         setAchievements(INITIAL_ACHIEVEMENTS.map((a) => ({ ...a, unlocked: false, currentCount: 0 })));
       }
 
@@ -372,7 +375,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               safeRemoveStorage('studypilot_walkthrough_seen');
             }
 
-            // Load user-scoped custom timetable & daily plan
             const savedTimetable = safeGetStorage(`studypilot_custom_timetable_${firebaseUser.uid}`);
             if (savedTimetable) {
               try { setCustomTimetable(JSON.parse(savedTimetable)); } catch { setCustomTimetable(null); }
@@ -383,6 +385,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const savedPlan = safeGetStorage(`studypilot_plan_${firebaseUser.uid}`);
             if (savedPlan) {
               try { setDailyPlan(JSON.parse(savedPlan)); } catch {}
+            }
+
+            const savedGroup = safeGetStorage(`studypilot_study_group_${firebaseUser.uid}`);
+            if (savedGroup) {
+              try { setStudyGroupMembers(JSON.parse(savedGroup)); } catch {}
             }
 
             if (Array.isArray(attempts)) {
@@ -677,7 +684,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [customTimetable, setCustomTimetable] = useState<CustomTimetable | null>(() => {
-    const saved = safeGetStorage('studypilot_custom_timetable');
+    const savedUser = safeGetStorage('studypilot_user');
+    let uid = 'guest';
+    if (savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        if (parsed?.uid && parsed.uid !== 'pilot-student-001') {
+          uid = parsed.uid;
+        }
+      } catch {}
+    }
+    const saved = safeGetStorage(`studypilot_custom_timetable_${uid}`) || safeGetStorage('studypilot_custom_timetable');
     if (saved) {
       try { return JSON.parse(saved); } catch {}
     }
@@ -685,7 +702,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [studyGroupMembers, setStudyGroupMembers] = useState<StudyGroupMember[]>(() => {
-    const saved = safeGetStorage('studypilot_study_group');
+    const savedUser = safeGetStorage('studypilot_user');
+    let uid = 'guest';
+    if (savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        if (parsed?.uid && parsed.uid !== 'pilot-student-001') {
+          uid = parsed.uid;
+        }
+      } catch {}
+    }
+    const saved = safeGetStorage(`studypilot_study_group_${uid}`);
     if (saved) {
       try { return JSON.parse(saved); } catch {}
     }
@@ -716,8 +743,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   useEffect(() => {
-    safeSetStorage('studypilot_study_group', JSON.stringify(studyGroupMembers));
-  }, [studyGroupMembers]);
+    const targetUid = firebaseUser?.uid || user?.uid || 'guest';
+    safeSetStorage(`studypilot_study_group_${targetUid}`, JSON.stringify(studyGroupMembers));
+  }, [studyGroupMembers, firebaseUser?.uid, user?.uid]);
 
   const inviteStudyPartner = (email: string, name?: string) => {
     const newMember: StudyGroupMember = {
@@ -1248,6 +1276,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = async () => {
+    const currentUid = firebaseUser?.uid || user?.uid;
     safeRemoveStorage('studypilot_user');
     safeRemoveStorage('studypilot_onboarded');
     safeRemoveStorage('studypilot_progress');
@@ -1259,6 +1288,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     safeRemoveStorage('studypilot_plan');
     safeRemoveStorage('studypilot_achievements');
     safeRemoveStorage('studypilot_notifications');
+    safeRemoveStorage('studypilot_custom_timetable');
+    safeRemoveStorage('studypilot_study_group');
+    if (currentUid) {
+      safeRemoveStorage(`studypilot_custom_timetable_${currentUid}`);
+      safeRemoveStorage(`studypilot_plan_${currentUid}`);
+      safeRemoveStorage(`studypilot_study_group_${currentUid}`);
+      safeRemoveStorage(`studypilot_topic_workspaces_${currentUid}`);
+    }
     setUser(DEFAULT_USER);
     setTopicProgressList([]);
     setQuizAttempts([]);
@@ -1267,6 +1304,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setRevisionQueue([]);
     setExamAttempts([]);
     setNotifications([]);
+    setCustomTimetable(null);
     setAchievements(INITIAL_ACHIEVEMENTS.map((a) => ({ ...a, unlocked: false, currentCount: 0 })));
     setIsOnboarded(false);
     await authLogout();

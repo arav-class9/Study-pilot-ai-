@@ -4,7 +4,7 @@ import {
   getCanonicalUrl,
   getWebSiteSchema,
   getOrganizationSchema,
-  getWebApplicationSchema,
+  getSoftwareApplicationSchema,
   getFAQSchema,
 } from '../../services/seoService';
 import {
@@ -15,14 +15,14 @@ import {
   ArrowRight,
   CheckCircle2,
   Calendar,
-  Award,
   Zap,
   GraduationCap,
   ShieldCheck,
   Search,
+  HelpCircle,
+  Lightbulb,
 } from 'lucide-react';
 import { NCERTClass } from '../../types/ncert';
-import { COMPREHENSIVE_NCERT_CATALOG } from '../../data/ncertCurriculumCatalog';
 
 interface PublicHomePageProps {
   onNavigate?: (path: string) => void;
@@ -33,22 +33,27 @@ const PUBLIC_FAQS = [
   {
     question: 'What is StudyPilot AI?',
     answer:
-      'StudyPilot AI is an adaptive, research-backed learning platform for Indian school students (CBSE, ICSE, and State Boards). It features official NCERT page-by-page interactive readers, AI study timetable planners, and spaced repetition quizzes.',
+      'StudyPilot AI is an AI-powered study assistant for students with notes, explanations, NCERT learning, quizzes, revision tools and personalized study support for CBSE and school curricula.',
   },
   {
-    question: 'Are all NCERT textbooks and curriculum covered?',
+    question: 'How does StudyPilot AI help students learn smarter?',
     answer:
-      'Yes. StudyPilot AI includes comprehensive curriculum mappings for Classes 6 through 12 across Science, Mathematics, Physics, Chemistry, Biology, and Social Science.',
+      'StudyPilot AI breaks down complex textbook topics into bite-sized concepts, creates automated daily study timetables, generates syllabus-aligned revision notes, and provides interactive practice quizzes with step-by-step explanations.',
   },
   {
-    question: 'Is StudyPilot AI free to use?',
+    question: 'Can students study NCERT topics and textbooks with StudyPilot AI?',
     answer:
-      'Yes. All public NCERT chapter syllabus overviews, key formulas, chemical reaction sheets, and practice questions are completely free to browse.',
+      'Yes. StudyPilot AI includes comprehensive NCERT chapter guides, key themes, formulas, and page-by-page interactive readers across Classes 6 through 12 for Science, Mathematics, Social Science, English, Hindi, Physics, Chemistry, and Biology.',
   },
   {
-    question: 'How does the AI Study Planner work?',
+    question: 'Can StudyPilot AI generate quizzes and flashcards?',
     answer:
-      'You enter your upcoming exam date and subjects. StudyPilot AI schedules your chapters into daily 45-minute study slots, prioritizing high-yield board topics and spacing out reviews.',
+      'Yes. You can generate custom MCQs, assertion-reason questions, numerical problem sets, and spaced-repetition flashcards for any chapter to test your active recall before exams.',
+  },
+  {
+    question: 'Is StudyPilot AI free to browse for school students?',
+    answer:
+      'Yes. All public NCERT chapter overviews, key concepts, formulas, study planners, and practice guides are freely accessible to help students everywhere.',
   },
 ];
 
@@ -60,9 +65,9 @@ export const PublicHomePage: React.FC<PublicHomePageProps> = ({
   const canonicalUrl = getCanonicalUrl('/');
 
   const jsonLd = [
+    getSoftwareApplicationSchema(),
     getWebSiteSchema(),
     getOrganizationSchema(),
-    getWebApplicationSchema(),
     getFAQSchema(PUBLIC_FAQS),
   ];
 
@@ -89,7 +94,7 @@ export const PublicHomePage: React.FC<PublicHomePageProps> = ({
       subject: 'science',
       path: '/ncert/class-10/science/chemical-reactions-and-equations',
       weightage: '7-8 Marks',
-      desc: 'Balancing equations, types of reactions, corrosion & rancidity.',
+      desc: 'Balancing equations, types of chemical reactions, corrosion and rancidity.',
     },
     {
       title: "Newton's Laws of Motion",
@@ -97,7 +102,7 @@ export const PublicHomePage: React.FC<PublicHomePageProps> = ({
       subject: 'physics',
       path: '/topic/newtons-laws-of-motion',
       weightage: '8-9 Marks',
-      desc: 'Inertia, F=ma, Action-Reaction pairs and momentum conservation.',
+      desc: 'Inertia, F=ma, action-reaction pairs, and momentum conservation.',
     },
     {
       title: 'Matter in Our Surroundings',
@@ -105,7 +110,7 @@ export const PublicHomePage: React.FC<PublicHomePageProps> = ({
       subject: 'science',
       path: '/ncert/class-9/science/matter-in-our-surroundings',
       weightage: '6-7 Marks',
-      desc: 'States of matter, latent heat of fusion & vaporisation, evaporation.',
+      desc: 'States of matter, latent heat of fusion and vaporisation, and evaporation factors.',
     },
     {
       title: 'The Fundamental Unit of Life',
@@ -113,7 +118,52 @@ export const PublicHomePage: React.FC<PublicHomePageProps> = ({
       subject: 'science',
       path: '/ncert/class-9/science/the-fundamental-unit-of-life',
       weightage: '7-8 Marks',
-      desc: 'Cell theory, cell organelles, osmosis, diffusion & cell division.',
+      desc: 'Cell theory, cell organelles, osmosis, diffusion, and cell division.',
+    },
+  ];
+
+  const coreTools = [
+    {
+      title: 'AI Study Assistant',
+      desc: 'Syllabus-aligned explanations and concept breakdowns for any school topic.',
+      path: '/ai-study-assistant',
+      icon: Sparkles,
+      color: 'indigo',
+    },
+    {
+      title: 'AI Notes Generator',
+      desc: 'High-yield revision cheat sheets, balanced reactions, and formula summaries.',
+      path: '/ai-notes-generator',
+      icon: Brain,
+      color: 'purple',
+    },
+    {
+      title: 'AI Quiz Generator',
+      desc: 'Adaptive MCQs, assertion-reason questions, and board exam drills.',
+      path: '/ai-quiz-generator',
+      icon: Layers,
+      color: 'emerald',
+    },
+    {
+      title: 'AI Flashcards',
+      desc: 'Lock key formulas and definitions into long-term memory with active recall.',
+      path: '/ai-flashcards',
+      icon: Zap,
+      color: 'amber',
+    },
+    {
+      title: 'AI Study Planner',
+      desc: 'Intelligent daily revision timetable based on your exam date and weightage.',
+      path: '/ai-study-planner',
+      icon: Calendar,
+      color: 'blue',
+    },
+    {
+      title: 'AI Question Solver',
+      desc: 'Step-by-step problem explanations and mathematical derivations.',
+      path: '/ai-question-solver',
+      icon: Lightbulb,
+      color: 'rose',
     },
   ];
 
@@ -121,9 +171,9 @@ export const PublicHomePage: React.FC<PublicHomePageProps> = ({
     <article className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20">
       <SEOHead
         metadata={{
-          title: 'StudyPilot AI – NCERT Textbooks, AI Study Planner & Interactive Quizzes',
+          title: 'StudyPilot AI – AI Study Assistant, NCERT Notes, Quizzes & Learning',
           description:
-            'Master CBSE & NCERT syllabus for Classes 6–12 with StudyPilot AI. Official textbook readers, AI study timetable planner, spaced repetition quizzes, and formula sheets.',
+            'StudyPilot AI helps students learn smarter with AI-powered explanations, NCERT learning, notes, quizzes, revision tools and personalized study support.',
           canonicalUrl,
           jsonLd,
         }}
@@ -134,192 +184,194 @@ export const PublicHomePage: React.FC<PublicHomePageProps> = ({
         <header className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-extrabold shadow-xs">
             <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            <span>AI-POWERED NCERT LEARNING COMPANION</span>
+            <span>AI-POWERED STUDY ASSISTANT FOR STUDENTS</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15]">
-            Master Your NCERT Syllabus with <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">Adaptive AI</span>
+            Master NCERT, Ace School Exams &amp; Learn Smarter with{' '}
+            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              StudyPilot AI
+            </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
-            Read official CBSE textbooks page-by-page, test retention with micro-quizzes, and build a stress-free daily study timetable tailored to your school exam date.
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            Personalized AI explanations, official NCERT chapter summaries, adaptive quizzes, spaced repetition flashcards, and intelligent study planners.
           </p>
 
+          {/* Quick Search Bar */}
+          <form onSubmit={handleSearchSubmit} className="max-w-xl mx-auto pt-2">
+            <div className="relative flex items-center">
+              <Search className="w-5 h-5 absolute left-4 text-slate-400 pointer-events-none" />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search any NCERT chapter, topic or formula (e.g., Matter, Newton)..."
+                className="w-full pl-11 pr-28 py-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+                aria-label="Search NCERT chapters and topics"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+
+          {/* Quick CTAs */}
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <button
               onClick={onGetStarted}
-              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer flex items-center gap-2"
+              className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md flex items-center gap-2 transition-all cursor-pointer"
             >
-              <span>Launch Study Pilot</span>
+              <span>Get Started Free</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-
             <a
               href="/ncert"
               onClick={(e) => handleLinkClick(e, '/ncert')}
-              className="px-6 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-sm shadow-xs hover:border-indigo-400 transition-all cursor-pointer flex items-center gap-2"
+              className="px-6 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-sm shadow-xs transition-all cursor-pointer"
             >
-              <BookOpen className="w-4 h-4 text-amber-500" />
-              <span>Browse NCERT Textbooks</span>
+              Browse NCERT Textbooks
             </a>
           </div>
         </header>
 
-        {/* Quick Search Bar */}
-        <div className="max-w-2xl mx-auto">
-          <form onSubmit={handleSearchSubmit} className="relative">
-            <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search NCERT chapters, topics, or formulas (e.g., Chemical Reactions, Newton's Laws)..."
-              className="w-full pl-11 pr-24 py-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500 shadow-xs"
-              aria-label="Search curriculum topics and chapters"
-            />
-            <button
-              type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all cursor-pointer"
-            >
-              Search
-            </button>
-          </form>
-        </div>
-
-        {/* NCERT Class Quick Filter Grid */}
-        <section aria-labelledby="quick-classes-heading" className="space-y-3">
-          <div className="text-center">
-            <h2 id="quick-classes-heading" className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-              Select Your NCERT / CBSE Class Level
+        {/* NCERT Class Directory Links */}
+        <section aria-labelledby="class-directory-heading" className="space-y-4 pt-4">
+          <div className="text-center space-y-1">
+            <h2 id="class-directory-heading" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Select Your NCERT Class
             </h2>
           </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
-            {(['6', '7', '8', '9', '10', '11', '12'] as NCERTClass[]).map((cls) => (
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+            {['6', '7', '8', '9', '10', '11', '12'].map((cls) => (
               <a
                 key={cls}
                 href={`/ncert/class-${cls}`}
                 onClick={(e) => handleLinkClick(e, `/ncert/class-${cls}`)}
-                className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 shadow-xs text-center transition-all group cursor-pointer"
+                className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 hover:shadow-md transition-all text-center group cursor-pointer"
               >
-                <span className="block text-base font-extrabold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                <div className="text-lg font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                   Class {cls}
-                </span>
-                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                  {cls === '10' || cls === '12' ? 'Board Exam' : 'Textbooks & Quizzes'}
-                </span>
+                </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  NCERT Syllabus
+                </div>
               </a>
             ))}
+          </div>
+        </section>
+
+        {/* AI Study Tools Grid */}
+        <section aria-labelledby="tools-heading" className="space-y-6 pt-6">
+          <div className="text-center space-y-1">
+            <h2 id="tools-heading" className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+              AI Tools Built for Student Success
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto">
+              Everything you need to master your syllabus and prepare for board exams.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {coreTools.map((tool, idx) => {
+              const Icon = tool.icon;
+              return (
+                <a
+                  key={idx}
+                  href={tool.path}
+                  onClick={(e) => handleLinkClick(e, tool.path)}
+                  className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 group cursor-pointer"
+                >
+                  <div className="space-y-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      {tool.title}
+                    </h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {tool.desc}
+                    </p>
+                  </div>
+                  <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                    <span>Learn more</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </a>
+              );
+            })}
           </div>
         </section>
 
         {/* High-Yield Chapter Highlights */}
-        <section aria-labelledby="high-yield-heading" className="space-y-4 pt-4">
-          <div className="flex items-center justify-between">
+        <section aria-labelledby="highyield-heading" className="space-y-6 pt-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
             <div>
-              <h2 id="high-yield-heading" className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                Featured NCERT Chapters &amp; Topics
+              <h2 id="highyield-heading" className="text-2xl font-extrabold text-slate-900 dark:text-white">
+                Popular NCERT Chapters &amp; Study Notes
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                High-yield chapters frequently tested on CBSE board examinations
+              <p className="text-xs text-slate-500">
+                Explore frequently asked textbook topics with curated key concepts and quizzes.
               </p>
             </div>
             <a
-              href="/ncert"
-              onClick={(e) => handleLinkClick(e, '/ncert')}
-              className="text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 flex items-center gap-1 cursor-pointer"
+              href="/ncert/class-9/science"
+              onClick={(e) => handleLinkClick(e, '/ncert/class-9/science')}
+              className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
             >
-              <span>View All</span>
+              <span>View Class 9 Science</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </a>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sampleChapters.map((ch, idx) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {sampleChapters.map((ch, i) => (
               <a
-                key={idx}
+                key={i}
                 href={ch.path}
                 onClick={(e) => handleLinkClick(e, ch.path)}
-                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-600 shadow-xs transition-all space-y-2 block cursor-pointer group"
+                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 hover:shadow-md transition-all flex flex-col justify-between space-y-3 group cursor-pointer"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                    Class {ch.classLevel} • {ch.subject.toUpperCase()}
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                    {ch.weightage}
-                  </span>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">
+                      Class {ch.classLevel} • {ch.subject}
+                    </span>
+                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                      {ch.weightage}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                    {ch.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                    {ch.desc}
+                  </p>
                 </div>
-
-                <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                  {ch.title}
-                </h3>
-
-                <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
-                  {ch.desc}
-                </p>
-
-                <div className="pt-2 flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                  <span>Read Chapter Notes &amp; Practice Quiz</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <span>Explore Chapter</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </div>
               </a>
             ))}
           </div>
         </section>
 
-        {/* Cognitive Framework Overview */}
-        <section aria-labelledby="cognitive-heading" className="space-y-4 pt-6">
-          <h2 id="cognitive-heading" className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white text-center sm:text-left">
-            Why Students Excel with StudyPilot AI
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                <Brain className="w-5 h-5" />
-              </div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                Feynman Active Recall
-              </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                Explain complex theorems in your own voice. The AI tutor evaluates conceptual completeness and corrects blind spots immediately.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                <Calendar className="w-5 h-5" />
-              </div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                Spaced Revision Timetable
-              </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                Automatically schedules chapter reviews at 1, 3, and 7-day intervals to lock information into long-term memory before exam day.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <BookOpen className="w-5 h-5" />
-              </div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                Authentic NCERT Alignment
-              </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                Zero hallucinated topics. Every question, formula, and explanation corresponds to verified CBSE textbook standards.
-              </p>
-            </div>
+        {/* FAQs */}
+        <section aria-labelledby="faqs-heading" className="space-y-6 pt-6">
+          <div className="text-center space-y-1">
+            <h2 id="faqs-heading" className="text-2xl font-extrabold text-slate-900 dark:text-white">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-xs text-slate-500">
+              Clear answers about StudyPilot AI features, NCERT textbooks, and study tools.
+            </p>
           </div>
-        </section>
 
-        {/* Visible FAQs */}
-        <section aria-labelledby="home-faqs-heading" className="space-y-4 pt-6">
-          <h2 id="home-faqs-heading" className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-            Frequently Asked Questions
-          </h2>
-
-          <div className="space-y-3">
+          <div className="max-w-3xl mx-auto space-y-3">
             {PUBLIC_FAQS.map((faq, i) => (
               <div
                 key={i}

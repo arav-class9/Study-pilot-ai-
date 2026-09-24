@@ -20,17 +20,23 @@ try {
       localCache: persistentLocalCache({
         tabManager: persistentMultipleTabManager(),
       }),
-      experimentalForceLongPolling: true,
+      // Use standard auto-detecting transport to prevent long-polling hang timeouts
+      experimentalAutoDetectLongPolling: true,
     },
     firebaseConfig.firestoreDatabaseId
   );
 } catch (err) {
   console.warn('[FIRESTORE] Initializing fallback firestore cache:', err);
-  firestoreInstance = initializeFirestore(
-    app,
-    { experimentalForceLongPolling: true },
-    firebaseConfig.firestoreDatabaseId
-  );
+  try {
+    firestoreInstance = initializeFirestore(
+      app,
+      { experimentalAutoDetectLongPolling: true },
+      firebaseConfig.firestoreDatabaseId
+    );
+  } catch (secondaryErr) {
+    console.warn('[FIRESTORE] Using standard firestore:', secondaryErr);
+    firestoreInstance = initializeFirestore(app, {}, firebaseConfig.firestoreDatabaseId);
+  }
   if (typeof window !== 'undefined') {
     enableIndexedDbPersistence(firestoreInstance).catch((pErr) => {
       console.warn('[FIRESTORE] IndexedDb persistence init info:', pErr?.message);

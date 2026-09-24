@@ -2,6 +2,18 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/google8011449c284f5ad1.html",
+      "destination": "/google8011449c284f5ad1.html"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index.ts"
     },
