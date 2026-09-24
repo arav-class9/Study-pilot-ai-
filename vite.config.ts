@@ -74,6 +74,7 @@ export default defineConfig(() => {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,json}'],
           cleanupOutdatedCaches: true,
           navigateFallback: '/index.html',
+          navigateFallbackDenylist: [/^\/api/, /^\/google.*\.html$/, /^\/robots\.txt$/, /^\/sitemap\.xml$/],
           runtimeCaching: [
             {
               urlPattern: ({ request }) => request.destination === 'document',
