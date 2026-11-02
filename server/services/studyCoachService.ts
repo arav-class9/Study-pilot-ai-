@@ -45,8 +45,8 @@ Rules:
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash-lite',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.1-flash-lite',
       contents: promptText,
       config: {
         systemInstruction,
@@ -186,8 +186,8 @@ Ensure the 3-question mini-quiz has 4 distinct options each, with a clear single
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash-lite',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.1-flash-lite',
       contents: promptText,
       config: {
         systemInstruction,
@@ -399,8 +399,8 @@ Make sure there are exactly 10 cards, ordered from 1 (easiest) to 10 (hardest).`
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash-lite',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.1-flash-lite',
       contents: promptText,
       config: {
         systemInstruction,
@@ -494,8 +494,8 @@ Structure:
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash-lite',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.1-flash-lite',
       contents: promptText,
       config: {
         systemInstruction,
@@ -702,8 +702,8 @@ Provide complete grading, mistake explanations, weak subtopics diagnosis, and ta
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash-lite',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.1-flash-lite',
       contents: promptText,
       config: {
         systemInstruction,
@@ -939,8 +939,8 @@ Rebuild the schedule to maximize marks, prioritizing difficult high-weight topic
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash-lite',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.1-flash-lite',
       contents: promptText,
       config: {
         systemInstruction,

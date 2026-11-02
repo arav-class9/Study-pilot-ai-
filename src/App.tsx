@@ -337,7 +337,7 @@ const AppContent: React.FC = () => {
       <Navbar />
       <div className={`flex-1 flex w-full min-w-0 mx-auto overflow-x-hidden ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'max-w-full' : 'max-w-7xl'}`}>
         {!['workspace', 'topic-workspace', 'topic'].includes(activeTab) && <Sidebar />}
-        <main className={`flex-1 w-full min-w-0 ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'p-0 pb-[calc(env(safe-area-inset-bottom,0px)+72px)] md:pb-6' : 'p-4 sm:p-6 lg:p-8 pb-[calc(env(safe-area-inset-bottom,0px)+80px)] md:pb-8 max-w-7xl mx-auto'}`}>
+        <main className={`flex-1 w-full min-w-0 ${['workspace', 'topic-workspace', 'topic'].includes(activeTab) ? 'p-0 pb-[calc(env(safe-area-inset-bottom,0px)+72px)] lg:pb-6' : 'p-4 sm:p-6 lg:p-8 pb-[calc(env(safe-area-inset-bottom,0px)+80px)] lg:pb-8 max-w-7xl mx-auto'}`}>
           <ErrorBoundary sectionName={activeTab.toUpperCase()}>
             {renderContent()}
           </ErrorBoundary>

@@ -34,8 +34,8 @@ Generate a crisp, motivating 20-Minute Recovery Plan based strictly on NCERT cur
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: promptText,
       config: {
         systemInstruction,

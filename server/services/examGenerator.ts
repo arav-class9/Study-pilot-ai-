@@ -178,8 +178,8 @@ Generate ${targetCount} high-yield MCQs adhering strictly to the JSON schema.`;
 
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: promptText,
       config: {
         systemInstruction,

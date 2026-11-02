@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { requireAuth } from './middleware.ts';
+import { requireAuth, checkUsageLimits } from './middleware.ts';
 import { solveDoubt } from './services/doubtSolver.ts';
 import { generateQuiz } from './services/quizGenerator.ts';
 import { generateNotes } from './services/notesGenerator.ts';
@@ -70,6 +70,7 @@ apiRouter.post('/telemetry/error', (req: Request, res: Response) => {
 
 apiRouter.use(aiRouterExtended);
 apiRouter.use(requireAuth);
+apiRouter.use(checkUsageLimits);
 
 // Notes Chat (Chat with your Notes)
 apiRouter.post('/notes-chat', async (req: Request, res: Response) => {

@@ -139,8 +139,8 @@ Ensure every step is pedagogically clear and complete.`;
       contents.push({ text: promptInstruction });
 
       const response = await generateContentWithRetry({
-        primaryModel: 'gemini-2.5-flash',
-        fallbackModel: 'gemini-2.5-flash-lite',
+        primaryModel: 'gemini-3.8-flash',
+        fallbackModel: 'gemini-3.1-flash-lite',
         contents,
         config: {
           systemInstruction: `You are an expert STEM educator, mathematician, and NCERT / CBSE curriculum authority.

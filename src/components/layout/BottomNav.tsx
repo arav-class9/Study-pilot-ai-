@@ -48,7 +48,7 @@ export const BottomNav: React.FC = () => {
     <nav
       id="mobile-bottom-nav"
       aria-label="Android Bottom Navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-2 pt-1 pb-[max(8px,env(safe-area-inset-bottom,8px))] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-2 pt-1 pb-[max(8px,env(safe-area-inset-bottom,8px))] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
     >
       <div className="flex items-center justify-around max-w-lg mx-auto">
         {navItems.map((item) => {

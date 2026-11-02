@@ -56,7 +56,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Center: Desktop Navigation Links (Stay perfectly centered) */}
-          <nav className="hidden md:flex items-center justify-center gap-6">
+          <nav className="hidden lg:flex items-center justify-center gap-6">
             {navLinks.map((link) => {
               const isActive =
                 activeTab === link.id ||
@@ -128,8 +128,8 @@ export const Navbar: React.FC = () => {
               )}
             </button>
 
-            {/* Mobile Hamburger */}
-            <div className="md:hidden flex items-center ml-1 text-white">
+            {/* Mobile / Tablet Hamburger */}
+            <div className="lg:hidden flex items-center ml-1 text-white">
               <HamburgerMenuDrawer />
             </div>
           </div>

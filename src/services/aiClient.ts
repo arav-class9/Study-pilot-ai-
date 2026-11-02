@@ -53,6 +53,20 @@ export async function getAuthBearerToken(): Promise<string | undefined> {
 }
 
 /**
+ * Centrally constructs authorization and content-type headers for AI requests.
+ */
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  const token = await getAuthBearerToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+/**
  * Centrally manages HTTP requests to backend AI endpoints with auth bearer headers
  * and centralized quota handling.
  */
@@ -66,14 +80,9 @@ export async function callBackendAI<T = any>(
   } = {}
 ): Promise<T> {
   const { method = 'POST', body, isFormData = false, timeoutMs = 25000 } = options;
-  const token = await getAuthBearerToken();
-
-  const headers: Record<string, string> = {};
-  if (!isFormData) {
-    headers['Content-Type'] = 'application/json';
-  }
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  const headers = await getAuthHeaders();
+  if (isFormData) {
+    delete headers['Content-Type'];
   }
 
   const controller = new AbortController();

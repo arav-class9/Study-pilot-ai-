@@ -54,7 +54,7 @@ export const Sidebar: React.FC = () => {
   return (
     <aside
       id="desktop-sidebar"
-      className="hidden md:flex flex-col w-64 border-r border-[#e6e6e6] dark:border-[#2a3440] bg-[#ffffff] dark:bg-[#12181f] min-h-[calc(100vh-64px)] p-4 shrink-0 justify-between overflow-y-auto"
+      className="hidden lg:flex flex-col w-64 border-r border-[#e6e6e6] dark:border-[#2a3440] bg-[#ffffff] dark:bg-[#12181f] min-h-[calc(100vh-64px)] p-4 shrink-0 justify-between overflow-y-auto"
     >
       <div className="space-y-1">
         <p className="text-[11px] font-bold uppercase tracking-[1.5px] text-[#6b6b6b] dark:text-[#8a8a8a] px-3 pb-3">

@@ -60,8 +60,8 @@ Generate exactly ${targetCount} authentic questions strictly from these pages. E
   let rawQuestions: any[] = [];
   try {
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: prompt,
       config: {
         systemInstruction,

@@ -227,8 +227,8 @@ Execute the Global Research Pipeline now:
   try {
     // Stage 1: Grounded Search Generation
     const response = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: [{ text: userPrompt }],
       config: {
         systemInstruction,
@@ -302,8 +302,8 @@ Execute the Global Research Pipeline now:
 
     // Fallback: Run synthesis without googleSearch tool if search tool fails or is restricted
     const fallbackResponse = await generateContentWithRetry({
-      primaryModel: 'gemini-2.5-flash',
-      fallbackModel: 'gemini-2.5-flash',
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.8-flash',
       contents: [{ text: `${userPrompt}\n\nNote: Search tool currently offline. Generate pristine, highly structured educational notes based on NCERT curriculum standards and expert knowledge.` }],
       config: {
         systemInstruction,

@@ -52,20 +52,32 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
 
   const ai = getGeminiClient();
   
-  const primaryModel = options.primaryModel || 'gemini-2.5-flash';
-  const fallbackModel = (options.fallbackModel && options.fallbackModel !== primaryModel) 
-    ? options.fallbackModel 
-    : 'gemini-2.5-flash-lite';
+  // Normalize legacy/deprecated models to active supported models
+  const mapModel = (m?: string): string => {
+    if (!m) return 'gemini-3.8-flash';
+    if (m === 'gemini-3.8-flash' || m === 'gemini-2.0-flash' || m === 'gemini-1.5-flash' || m === 'gemini-flash-latest') {
+      return 'gemini-3.8-flash';
+    }
+    if (m === 'gemini-3.1-flash-lite' || m === 'gemini-2.0-flash-lite' || m === 'gemini-3.5-flash-lite') {
+      return 'gemini-3.1-flash-lite';
+    }
+    if (m === 'gemini-3.8-flash' || m === 'gemini-2.0-pro' || m === 'gemini-1.5-pro') {
+      return 'gemini-3.8-flash';
+    }
+    return m;
+  };
+
+  const primaryModel = mapModel(options.primaryModel || 'gemini-3.8-flash');
+  const fallbackModel = options.fallbackModel ? mapModel(options.fallbackModel) : 'gemini-3.1-flash-lite';
   const maxRetries = options.maxRetries ?? 2;
 
-  // Build unique sequence of models to try in order of preference
+  // Build unique sequence of active models to try in order of preference
   const modelsToTry = Array.from(
     new Set([
       primaryModel,
       fallbackModel,
-      'gemini-2.5-flash',
-      'gemini-2.5-flash-lite',
-      'gemini-2.5-pro',
+      'gemini-3.8-flash',
+      'gemini-3.1-flash-lite',
     ].filter(Boolean))
   );
 
@@ -73,12 +85,22 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
 
   for (let mIdx = 0; mIdx < modelsToTry.length; mIdx++) {
     const model = modelsToTry[mIdx];
+    
+    // Prepare clean config: gemini-3.8-flash does not accept deprecated sampling params
+    const cleanConfig = options.config ? { ...options.config } : undefined;
+    if (cleanConfig && (model.startsWith('gemini-3.8') || model.startsWith('gemini-4'))) {
+      delete cleanConfig.temperature;
+      delete cleanConfig.topP;
+      delete cleanConfig.topK;
+      delete cleanConfig.candidateCount;
+    }
+
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         const response = await ai.models.generateContent({
           model,
           contents: options.contents,
-          config: options.config,
+          config: cleanConfig,
         });
 
         const text = response.text || '';
@@ -87,6 +109,14 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
         lastError = error;
         const errorMessage = error?.message || String(error);
         const errorCode = error?.status || error?.code || error?.error?.code;
+
+        const isDeprecatedOrNotFound =
+          errorCode === 404 ||
+          errorCode === 'NOT_FOUND' ||
+          errorMessage.includes('404') ||
+          errorMessage.includes('NOT_FOUND') ||
+          errorMessage.includes('no longer available') ||
+          errorMessage.includes('not found');
         
         const isQuotaExhausted =
           errorCode === 429 ||
@@ -105,6 +135,12 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
           errorMessage.includes('overloaded');
 
         console.warn(`[Gemini API] Attempt ${attempt + 1}/${maxRetries + 1} for model ${model}:`, errorMessage);
+
+        // If model is deprecated or not found, switch immediately without retrying
+        if (isDeprecatedOrNotFound && mIdx < modelsToTry.length - 1) {
+          console.warn(`[Gemini API] Model ${model} is not available (404), switching immediately to fallback model ${modelsToTry[mIdx + 1]}...`);
+          break;
+        }
 
         // Add backoff delay before switching model or retrying to clear temporary demand spikes
         if (isTransient || isQuotaExhausted) {

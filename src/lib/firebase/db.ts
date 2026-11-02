@@ -105,13 +105,27 @@ export class DatabaseService {
     return ref.id;
   }
   static async getQuizAttempts(userId: string) {
-    const q = query(collection(db, 'quizAttempts'), where('userId', '==', userId), orderBy('timestamp', 'desc'), limit(100));
     try {
+      const q = query(collection(db, 'quizAttempts'), where('userId', '==', userId), orderBy('timestamp', 'desc'), limit(100));
       const snap = await getDocs(q);
       return snap.docs.map(d => d.data());
     } catch (e: any) {
-      console.warn('getDocs offline error', e.message);
-      return [];
+      console.warn('getQuizAttempts composite indexed query failed, falling back to memory sort:', e?.message || e);
+      try {
+        const fallbackQ = query(collection(db, 'quizAttempts'), where('userId', '==', userId));
+        const snap = await getDocs(fallbackQ);
+        return snap.docs
+          .map(d => d.data())
+          .sort((a: any, b: any) => {
+            const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : (a.timestamp?.seconds ? a.timestamp.seconds * 1000 : new Date(a.timestamp || 0).getTime());
+            const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : (b.timestamp?.seconds ? b.timestamp.seconds * 1000 : new Date(b.timestamp || 0).getTime());
+            return timeB - timeA;
+          })
+          .slice(0, 100);
+      } catch (fallbackError: any) {
+        console.warn('getQuizAttempts fallback also failed:', fallbackError?.message || fallbackError);
+        return [];
+      }
     }
   }
 
@@ -188,13 +202,27 @@ export class DatabaseService {
     return id;
   }
   static async getExamAttempts(userId: string) {
-    const q = query(collection(db, 'examAttempts'), where('userId', '==', userId), orderBy('timestamp', 'desc'), limit(50));
     try {
+      const q = query(collection(db, 'examAttempts'), where('userId', '==', userId), orderBy('timestamp', 'desc'), limit(50));
       const snap = await getDocs(q);
       return snap.docs.map(d => d.data());
     } catch (e: any) {
-      console.warn('getExamAttempts offline error', e.message);
-      return [];
+      console.warn('getExamAttempts composite indexed query failed, falling back to memory sort:', e?.message || e);
+      try {
+        const fallbackQ = query(collection(db, 'examAttempts'), where('userId', '==', userId));
+        const snap = await getDocs(fallbackQ);
+        return snap.docs
+          .map(d => d.data())
+          .sort((a: any, b: any) => {
+            const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : (a.timestamp?.seconds ? a.timestamp.seconds * 1000 : new Date(a.timestamp || 0).getTime());
+            const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : (b.timestamp?.seconds ? b.timestamp.seconds * 1000 : new Date(b.timestamp || 0).getTime());
+            return timeB - timeA;
+          })
+          .slice(0, 50);
+      } catch (fallbackError: any) {
+        console.warn('getExamAttempts fallback also failed:', fallbackError?.message || fallbackError);
+        return [];
+      }
     }
   }
 
