@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { HandwrittenSolutionTab } from '../components/tutor/HandwrittenSolutionTab';
+import { GeminiChatbotTab } from '../components/tutor/GeminiChatbotTab';
 import { triggerHaptic } from '../utils/androidBridge';
 import { TextbookPhotoTab } from '../components/tutor/TextbookPhotoTab';
 import { VivaFeynmanTab } from '../components/tutor/VivaFeynmanTab';
@@ -50,7 +51,7 @@ export const AITutorPage: React.FC = () => {
     language,
   } = useApp();
 
-  const [activeTutorTab, setActiveTutorTab] = useState<'doubt' | 'handwritten' | 'textbook_photo' | 'viva_feynman'>('doubt');
+  const [activeTutorTab, setActiveTutorTab] = useState<'chat' | 'doubt' | 'handwritten' | 'textbook_photo' | 'viva_feynman'>('chat');
   const [questionText, setQuestionText] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>(globalSubject || 'science');
   const [selectedClass, setSelectedClass] = useState<ClassLevel>((globalClass || user?.classLevel || '10') as ClassLevel);
@@ -297,6 +298,18 @@ export const AITutorPage: React.FC = () => {
       {/* Tutor Mode Navigation Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         <button
+          onClick={() => setActiveTutorTab('chat')}
+          className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center space-x-2 whitespace-nowrap transition-all cursor-pointer ${
+            activeTutorTab === 'chat'
+              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>Gemini Multi-Turn Chatbot</span>
+        </button>
+
+        <button
           onClick={() => setActiveTutorTab('doubt')}
           className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold flex items-center space-x-2 whitespace-nowrap transition-all cursor-pointer ${
             activeTutorTab === 'doubt'
@@ -344,6 +357,10 @@ export const AITutorPage: React.FC = () => {
           <span>Viva Voce &amp; Feynman Mode</span>
         </button>
       </div>
+
+      {activeTutorTab === 'chat' && (
+        <GeminiChatbotTab />
+      )}
 
       {activeTutorTab === 'handwritten' && (
         <HandwrittenSolutionTab currentClass={selectedClass} currentSubject={selectedSubject} />

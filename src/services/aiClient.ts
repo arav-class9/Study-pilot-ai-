@@ -135,6 +135,48 @@ export async function callBackendAI<T = any>(
 }
 
 // -------------------------------------------------------------
+// Multi-Turn Gemini Chatbot
+// -------------------------------------------------------------
+export interface GeminiChatMessagePart {
+  text?: string;
+  inlineData?: {
+    mimeType: string;
+    data: string;
+  };
+}
+
+export interface GeminiChatMessage {
+  role: 'user' | 'model';
+  parts: GeminiChatMessagePart[];
+}
+
+export interface MultiTurnChatParams {
+  messages: GeminiChatMessage[];
+  roleId?: string;
+  systemInstruction?: string;
+  taskComplexity?: 'general' | 'complex' | 'fast';
+  classLevel?: string;
+  subject?: string;
+  useSearchGrounding?: boolean;
+}
+
+export interface MultiTurnChatResult {
+  reply: string;
+  modelUsed: string;
+  roleId: string;
+  timestamp: string;
+  groundingSources?: Array<{ title?: string; uri?: string }>;
+  searchQueries?: string[];
+}
+
+export async function sendMultiTurnGeminiChat(params: MultiTurnChatParams): Promise<MultiTurnChatResult> {
+  return await callBackendAI<MultiTurnChatResult>('/api/ai/chat', {
+    method: 'POST',
+    body: params,
+  });
+}
+
+// -------------------------------------------------------------
 // Formula Solver
 // -------------------------------------------------------------
 export interface FormulaSolverResult {

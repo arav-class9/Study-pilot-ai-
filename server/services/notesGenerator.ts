@@ -225,17 +225,15 @@ Execute the Global Research Pipeline now:
   };
 
   try {
-    // Stage 1: Grounded Search Generation
+    // Stage 1: Structured Notes Generation
     const response = await generateContentWithRetry({
       primaryModel: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.8-flash',
+      fallbackModel: 'gemini-3.1-flash-lite',
       contents: [{ text: userPrompt }],
       config: {
         systemInstruction,
-        tools: [{ googleSearch: {} }], // Enable Google Search Grounding!
         responseMimeType: 'application/json',
         responseSchema: noteOutputSchema,
-        temperature: 0.2,
       },
       maxRetries: 2,
     });

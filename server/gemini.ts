@@ -38,13 +38,20 @@ export interface GenerateContentRetryOptions {
   primaryModel?: string;
   fallbackModel?: string;
   maxRetries?: number;
+  useSearchGrounding?: boolean;
+}
+
+export interface GeneratedContentResult {
+  text: string;
+  groundingMetadata?: any;
+  modelUsed?: string;
 }
 
 /**
  * Robust Gemini content generator that automatically handles 503 (high demand), 
  * 429 rate limits, and transient network errors with multi-model fallback and backoff.
  */
-export async function generateContentWithRetry(options: GenerateContentRetryOptions): Promise<{ text: string }> {
+export async function generateContentWithRetry(options: GenerateContentRetryOptions): Promise<GeneratedContentResult> {
   const apiKey = getApiKey();
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY environment variable is missing in Vercel setup. Please add GEMINI_API_KEY in Vercel Environment Variables.');
@@ -87,12 +94,20 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
     const model = modelsToTry[mIdx];
     
     // Prepare clean config: gemini-3.8-flash does not accept deprecated sampling params
-    const cleanConfig = options.config ? { ...options.config } : undefined;
+    const cleanConfig = options.config ? { ...options.config } : {};
     if (cleanConfig && (model.startsWith('gemini-3.8') || model.startsWith('gemini-4'))) {
       delete cleanConfig.temperature;
       delete cleanConfig.topP;
       delete cleanConfig.topK;
       delete cleanConfig.candidateCount;
+    }
+
+    // Attach Google Search Grounding tool on gemini-3.8-flash if requested AND responseSchema is NOT used
+    if (options.useSearchGrounding && model === 'gemini-3.8-flash' && !cleanConfig.responseSchema) {
+      cleanConfig.tools = cleanConfig.tools || [];
+      if (!cleanConfig.tools.some((t: any) => t.googleSearch)) {
+        cleanConfig.tools.push({ googleSearch: {} });
+      }
     }
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -104,7 +119,9 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
         });
 
         const text = response.text || '';
-        return { text };
+        const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+
+        return { text, groundingMetadata, modelUsed: model };
       } catch (error: any) {
         lastError = error;
         const errorMessage = error?.message || String(error);
@@ -136,6 +153,11 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
 
         console.warn(`[Gemini API] Attempt ${attempt + 1}/${maxRetries + 1} for model ${model}:`, errorMessage);
 
+        // If error occurs and tools (like googleSearch) were attached, strip tools on retry to rule out tool restrictions
+        if (cleanConfig.tools && cleanConfig.tools.length > 0) {
+          delete cleanConfig.tools;
+        }
+
         // If model is deprecated or not found, switch immediately without retrying
         if (isDeprecatedOrNotFound && mIdx < modelsToTry.length - 1) {
           console.warn(`[Gemini API] Model ${model} is not available (404), switching immediately to fallback model ${modelsToTry[mIdx + 1]}...`);
@@ -144,18 +166,18 @@ export async function generateContentWithRetry(options: GenerateContentRetryOpti
 
         // Add backoff delay before switching model or retrying to clear temporary demand spikes
         if (isTransient || isQuotaExhausted) {
-          const delayMs = 600 + Math.random() * 600;
+          const delayMs = (attempt + 1) * 800 + Math.random() * 500;
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
 
         // If high demand (503) or quota (429), switch to next available fallback model if attempts exhausted
-        if ((isTransient || isQuotaExhausted) && mIdx < modelsToTry.length - 1) {
-          console.warn(`[Gemini API] Switching from ${model} to fallback model ${modelsToTry[mIdx + 1]}...`);
+        if ((isTransient || isQuotaExhausted) && attempt >= maxRetries && mIdx < modelsToTry.length - 1) {
+          console.warn(`[Gemini API] Attempts exhausted for ${model}, switching to fallback model ${modelsToTry[mIdx + 1]}...`);
           break; // Break inner loop to try next model
         }
 
         if (attempt < maxRetries && (isQuotaExhausted || isTransient)) {
-          const delayMs = (attempt + 1) * 800 + Math.random() * 400;
+          const delayMs = (attempt + 1) * 1000 + Math.random() * 500;
           console.warn(`[Gemini API] Retrying ${model} in ${Math.round(delayMs)}ms...`);
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         } else {

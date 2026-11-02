@@ -23,6 +23,7 @@ import { generateFullBookTest } from './services/ncertFullBookTestService.ts';
 import { generateTeacherWorksheet } from './services/teacherToolsService.ts';
 import { answerWithTextbookRAG } from './services/ncertRAGService.ts';
 import { evaluateCustomAIResponse } from './services/aiEvaluation.ts';
+import { processMultiTurnChat } from './services/geminiChatService.ts';
 import {
   generatePomodoroSchedule,
   generateFeynmanBreakdown,
@@ -71,6 +72,29 @@ apiRouter.post('/telemetry/error', (req: Request, res: Response) => {
 apiRouter.use(aiRouterExtended);
 apiRouter.use(requireAuth);
 apiRouter.use(checkUsageLimits);
+
+// Multi-Turn Gemini Chatbot
+apiRouter.post('/chat', async (req: Request, res: Response) => {
+  try {
+    const { messages, roleId, systemInstruction, taskComplexity, classLevel, subject } = req.body;
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ success: false, error: 'Messages array is required for multi-turn chat.' });
+    }
+
+    const result = await processMultiTurnChat({
+      messages,
+      roleId,
+      systemInstruction,
+      taskComplexity,
+      classLevel,
+      subject,
+    });
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('API /chat error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to process Gemini chat message' });
+  }
+});
 
 // Notes Chat (Chat with your Notes)
 apiRouter.post('/notes-chat', async (req: Request, res: Response) => {
